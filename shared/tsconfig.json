@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+      "baseUrl": "./",
+      "paths": {
+        "@hyteck/shared/*": ["./*"]
+      },
+      "outDir": "dist",
+      "module": "commonjs",
+      "target": "es6",
+      "declaration": true
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist"]
+  }
+  

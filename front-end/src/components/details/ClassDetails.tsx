@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchClassById } from '../../services/ClassService';
+import { IClass } from '@hyteck/shared';
 
 const ClassDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [classItem, setClassItem] = useState<any>(null);
+  const [classItem, setClassItem] = useState<IClass>();
 
   useEffect(() => {
     const getClass = async () => {
@@ -22,11 +23,11 @@ const ClassDetails: React.FC = () => {
   return (
     <div>
       <h2>Class Details</h2>
-      <p>Class Name: {classItem.className}</p>
-      <p>Day of Week: {classItem.dayOfWeek}</p>
+      <p>Class Name: {classItem.name}</p>
+      <p>Matrícula: {classItem.enrollmentFee}</p>
+      <p>Mensalidade: {classItem.monthlyFee}</p>
       <p>Start Time: {classItem.startTime}</p>
       <p>End Time: {classItem.endTime}</p>
-      <p>Student ID: {classItem.studentId}</p>
       {/* Adicione mais detalhes conforme necessário */}
     </div>
   );

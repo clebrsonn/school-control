@@ -1,6 +1,6 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/controllers/StudentsController.ts
 import { Request, Response } from 'express';
-import { createStudent, getStudents, getStudentsByParentId, getStudentById, updateStudentById, deleteStudentById } from '../services/StudentService';
+import { createStudent, getStudents, getStudentsByParentId, getStudentById, updateStudentById, deleteStudentById, enrollStudent } from '../services/StudentService';
 
 export const addStudent = async (req: Request, res: Response) => {
   try {
@@ -63,6 +63,16 @@ export const deleteStudent = async (req: Request, res: Response) => {
       return;
     }
     res.status(200).send({ message: 'Student deleted successfully' });
+  } catch (error: any) {
+    res.status(400).send({ message: error.message });
+  }
+};
+
+export const enrollStudant = async (req: Request, res: Response) => {
+  try {
+    console.log('req.body', req.body);
+    const classId = await enrollStudent(req.params.id, req.body);
+    res.status(201).send(classId);
   } catch (error: any) {
     res.status(400).send({ message: error.message });
   }

@@ -1,98 +1,124 @@
-// filepath: /e:/IdeaProjects/school-control/frontend/src/components/ClassManager.tsx
 import React, { useState, useEffect } from 'react';
 import { fetchClasses, addClass } from '@services/ClassService';
-import ErrorMessage from '../ErrorMessage';
-import { Button, Form, InputGroup, Row } from 'react-bootstrap';
+import { Button, Form, Container, ListGroup } from 'react-bootstrap';
+import { IClass } from '@hyteck/shared';
 
 const ClassManager: React.FC = () => {
-  const [classes, setClasses] = useState([]);
-  const [className, setClassName] = useState('');
-  const [dayOfWeek, setDayOfWeek] = useState('');
+  const [classes, setClasses] = useState<IClass[]>([]);
+  const [name, setName] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [studentId, setStudentId] = useState('');
+  const [weekdays, setWeekdays] = useState<string[]>([]);
+  const [enrollmentFee, setEnrollmentFee] = useState('');
+  const [monthlyFee, setMonthlyFee] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const getClasses = async () => {
       try {
-        const classes = await fetchClasses();
-        setClasses(classes);
-      } catch (err: any) {
+        const classData = await fetchClasses();
+        setClasses(classData);
+      } catch (err) {
         setError(err.message || 'Failed to fetch classes');
       }
     };
+
     getClasses();
   }, []);
 
   const handleAddClass = async () => {
     try {
       const newClass = {
-        className,
-        dayOfWeek,
+        name,
         startTime,
         endTime,
-        studentId,
+        weekdays,
+        enrollmentFee: parseFloat(enrollmentFee),
+        monthlyFee: parseFloat(monthlyFee),
       };
       const addedClass = await addClass(newClass);
       setClasses([...classes, addedClass]);
-      setClassName('');
-      setDayOfWeek('');
+      setName('');
       setStartTime('');
       setEndTime('');
-      setStudentId('');
+      setWeekdays([]);
+      setEnrollmentFee('');
+      setMonthlyFee('');
       setError(null);
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'Failed to add class');
     }
   };
 
   return (
-    <div>
-      <h1>Class Manager</h1>
-      <ErrorMessage message={error} />
-      
-      <Form.Control
-        type="text"
-        placeholder="Class Name"
-        value={className}
-        onChange={(e) => setClassName(e.target.value)}
-      />
-      <Form.Control
-        type="text"
-        placeholder="Day of Week"
-        value={dayOfWeek}
-        onChange={(e) => setDayOfWeek(e.target.value)}
-      />
-      <Form.Control
-        type="text"
-        placeholder="Start Time"
-        value={startTime}
-        onChange={(e) => setStartTime(e.target.value)}
-      />
-      <Form.Control
-        type="text"
-        placeholder="End Time"
-        value={endTime}
-        onChange={(e) => setEndTime(e.target.value)}
-      />
-      <Form.Control
-        type="text"
-        placeholder="Student ID"
-        value={studentId}
-        onChange={(e) => setStudentId(e.target.value)}
-      />
-        <Button onClick={handleAddClass}>Add Class</Button>
-      
-      
-      <ul>
-        {classes.map((classItem: any) => (
-          <li key={classItem._id}>
-            {classItem.className} - {classItem.dayOfWeek} - {classItem.startTime} - {classItem.endTime}
-          </li>
+    <Container>
+      <h1>Classes</h1>
+      {error && <div className="alert alert-danger">{error}</div>}
+      <Form>
+        <Form.Group controlId="formClassName">
+          <Form.Label>Nome</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Class Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group controlId="formClassStartTime">
+          <Form.Label>Horário de início</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Start Time"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group controlId="formClassEndTime">
+          <Form.Label>horário de término</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="End Time"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group controlId="formClassWeekdays">
+          <Form.Label>Weekdays</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Weekdays (comma separated)"
+            value={weekdays.join(', ')}
+            onChange={(e) => setWeekdays(e.target.value.split(',').map(day => day.trim()))}
+          />
+        </Form.Group>
+        <Form.Group controlId="formClassEnrollmentFee">
+          <Form.Label>Matrícula</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Enrollment Fee"
+            value={enrollmentFee}
+            onChange={(e) => setEnrollmentFee(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group controlId="formClassMonthlyFee">
+          <Form.Label>Mensalidade</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Monthly Fee"
+            value={monthlyFee}
+            onChange={(e) => setMonthlyFee(e.target.value)}
+          />
+        </Form.Group>
+        <Button onClick={handleAddClass} className="mt-3">Add Class</Button>
+      </Form>
+      <ListGroup className="mt-3">
+        {classes?.map((classItem) => (
+          <ListGroup.Item key={classItem._id}>
+            {classItem.name}  - {classItem.startTime} - {classItem.endTime} - Enrollment Fee: {classItem.enrollmentFee} - Monthly Fee: {classItem.monthlyFee}
+          </ListGroup.Item>
         ))}
-      </ul>
-    </div>
+      </ListGroup>
+    </Container>
   );
 };
 

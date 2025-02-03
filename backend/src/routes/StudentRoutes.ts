@@ -1,10 +1,12 @@
 import { Router } from 'express';
-import { addStudent, fetchStudents, fetchStudentsByParentId, fetchStudentById, updateStudent, deleteStudent } from '../controllers/StudentsController';
+import { addStudent, fetchStudents, fetchStudentsByParentId, fetchStudentById, updateStudent, deleteStudent, enrollStudant } from '../controllers/StudentsController';
 
 const router = Router();
 
 // Rota para adicionar um novo estudante
 router.post('/', addStudent);
+
+router.post('/:id/enroll', enrollStudant);
 
 // Rota para buscar todos os estudantes
 router.get('/', fetchStudents);

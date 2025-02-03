@@ -1,5 +1,6 @@
 // filepath: /e:/IdeaProjects/school-control/frontend/src/services/PaymentService.ts
 
+import { ITuition } from "@hyteck/shared";
 import { get } from "../config/axios/get";
 import { post } from "../config/axios/post";
 
@@ -8,20 +9,17 @@ export const fetchPayments = async () => {
   return response;
 };
 
-export const addPayment = async (paymentData: any) => {
+export const addPayment = async (paymentData: ITuition): Promise<ITuition> => {
 
-  if (!paymentData.discountId) {
-    delete paymentData.discountId;
-  }
-  const response = await post('/payments', paymentData);
+  const response = await post<ITuition, ITuition>('/payments', paymentData);
   return response;
 };
 
-export const fetchPaymentById = async (id: string) => {
-  const response = await get(`/payments/${id}`);
+export const fetchPaymentById = async (id: string): Promise<ITuition> => {
+  const response = await get<ITuition>(`/payments/${id}`);
   return response;
 };
 
-export const fetchPaymentsByParentId = async (parentId: string) => {
-  return await get(`/payments/parent/${parentId}`);
+export const fetchPaymentsByParentId = async (parentId: string): Promise<ITuition[]>=> {
+  return await get<ITuition[]>(`/payments/parent/${parentId}`);
 };

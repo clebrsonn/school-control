@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { fetchPayments, addPayment } from '@services/PaymentService';
-import { fetchParents } from '@services/ParentService';
-import ErrorMessage from '@components/ErrorMessage';
-import { Button, Container, Form, ListGroup } from 'react-bootstrap';
-import { Parent, Payment } from '@types';
+import { Form, Button, Container, ListGroup } from 'react-bootstrap';
+import { fetchPayments, addPayment } from '../../services/PaymentService';
+import ErrorMessage from '../ErrorMessage';
+import { ITuition } from '@hyteck/shared';
 
 const PaymentManager: React.FC = () => {
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [payments, setPayments] = useState<ITuition[]>([]);
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState('');
   const [discountId, setDiscountId] = useState('');
   const [parentId, setParentId] = useState('');
-  const [parents, setParents] = useState<Parent[]>([]);
+  const [classId, setClassId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -24,28 +23,19 @@ const PaymentManager: React.FC = () => {
       }
     };
 
-    const getParents = async () => {
-      try {
-        const parents = await fetchParents();
-        setParents(parents);
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch parents');
-      }
-    };
-
     getPayments();
-    getParents();
   }, []);
 
   const handleAddPayment = async () => {
     try {
-      const newPayment = { amount: parseFloat(amount), date, discountId, parentId };
+      const newPayment = { amount: parseFloat(amount), date, discountId, parentId, classId };
       const addedPayment = await addPayment(newPayment);
       setPayments([...payments, addedPayment]);
       setAmount('');
       setDate('');
       setDiscountId('');
       setParentId('');
+      setClassId('');
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to add payment');
@@ -60,7 +50,7 @@ const PaymentManager: React.FC = () => {
         <Form.Group controlId="formPaymentAmount">
           <Form.Label>Valor</Form.Label>
           <Form.Control
-            type="text"
+            type="number"
             placeholder="Valor"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -74,7 +64,7 @@ const PaymentManager: React.FC = () => {
             onChange={(e) => setDate(e.target.value)}
           />
         </Form.Group>
-        <Form.Group controlId="formDiscountId">
+        <Form.Group controlId="formPaymentDiscountId">
           <Form.Label>ID do Desconto</Form.Label>
           <Form.Control
             type="text"
@@ -83,20 +73,23 @@ const PaymentManager: React.FC = () => {
             onChange={(e) => setDiscountId(e.target.value)}
           />
         </Form.Group>
-        <Form.Group controlId="formParentId">
-          <Form.Label>Responsável</Form.Label>
+        <Form.Group controlId="formPaymentParentId">
+          <Form.Label>ID do Responsável</Form.Label>
           <Form.Control
-            as="select"
+            type="text"
+            placeholder="ID do Responsável"
             value={parentId}
             onChange={(e) => setParentId(e.target.value)}
-          >
-            <option value="">Selecione um responsável</option>
-            {parents.map((parent) => (
-              <option key={parent._id} value={parent._id}>
-                {parent.nome}
-              </option>
-            ))}
-          </Form.Control>
+          />
+        </Form.Group>
+        <Form.Group controlId="formPaymentClassId">
+          <Form.Label>ID da Classe</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="ID da Classe"
+            value={classId}
+            onChange={(e) => setClassId(e.target.value)}
+          />
         </Form.Group>
         <Button variant="primary" onClick={handleAddPayment} className="mt-3">
           Salvar

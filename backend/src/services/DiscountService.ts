@@ -1,11 +1,11 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/services/DiscountService.ts
-import Discount, { IDiscount } from '../models/Discount';
+import { Discount, IDiscount } from "@hyteck/shared";
 
 export const createDiscount = async (data: IDiscount) => {
   const discount = new Discount(data);
-  return await discount.save();
+  return discount.save();
 };
 
 export const getDiscounts = async () => {
-  return await Discount.find();
+  return Discount.find();
 };

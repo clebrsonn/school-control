@@ -1,24 +1,23 @@
-import Mensalidade, { IMensalidade } from '../models/MonthyFee';
-import Parent from '../models/Parent';
+import {Tuition, ITuition, Responsible} from '@hyteck/shared';
 
-export const createMensalidade = async (data: IMensalidade) => {
-  const parentExists = await Parent.findById(data.parentId);
+export const createMensalidade = async (data: ITuition) => {
+  const parentExists = await Responsible.findById(data.responsible);
   if (!parentExists) {
     throw new Error('Parent not found');
   }
 
-  const mensalidade = new Mensalidade(data);
+  const mensalidade = new Tuition(data);
   return await mensalidade.save();
 };
 
 export const getMensalidadesByParentId = async (parentId: string) => {
-  return await Mensalidade.find({ parentId }).populate('parentId');
+  return await Tuition.find({ parentId }).populate('parentId');
 };
 
-export const updateMensalidadeById = async (id: string, data: Partial<IMensalidade>) => {
-  return await Mensalidade.findByIdAndUpdate(id, data, { new: true }).populate('parentId');
+export const updateMensalidadeById = async (id: string, data: Partial<ITuition>) => {
+  return await Tuition.findByIdAndUpdate(id, data, { new: true }).populate('parentId');
 };
 
 export const deleteMensalidadeById = async (id: string) => {
-  return await Mensalidade.findByIdAndDelete(id);
+  return await Tuition.findByIdAndDelete(id);
 };

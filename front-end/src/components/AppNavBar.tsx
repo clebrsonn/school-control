@@ -6,8 +6,8 @@ import { Link } from 'react-router-dom';
 
 export default function AppNavbar() {
   return (
-    <Navbar expand="lg" className="bg-body-tertiary">
-      <Container>
+    <Navbar expand="lg" className="bg-body-tertiary" data-bs-theme="dark">
+      <Container >
         <Navbar.Brand href="/">School Control Dashboard</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">

@@ -1,23 +1,23 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/services/responsavelService.ts
-import Parent, { IParent } from '../models/Parent';
+import { Responsible, IResponsible } from '@hyteck/shared';
 
-export const createParent = async (data: IParent) => {
-  const parent = new Parent(data);
+export const createParent = async (data: IResponsible) => {
+  const parent = new Responsible(data);
   return await parent.save();
 };
 
 export const getParents = async () => {
-  return await Parent.find();
+  return await Responsible.find();
 };
 
 export const getParentById = async (id: string) => {
-  return await Parent.findById(id);
+  return await Responsible.findById(id);
 };
 
-export const updateParentById = async (id: string, data: Partial<IParent>) => {
-  return await Parent.findByIdAndUpdate(id, data, { new: true });
+export const updateParentById = async (id: string, data: Partial<IResponsible>) => {
+  return await Responsible.findByIdAndUpdate(id, data, { new: true });
 };
 
 export const deleteParentById = async (id: string) => {
-  return await Parent.findByIdAndDelete(id);
+  return await Responsible.findByIdAndDelete(id);
 };

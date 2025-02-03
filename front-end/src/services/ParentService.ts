@@ -1,3 +1,4 @@
+import { IResponsible } from '@hyteck/shared';
 import { axiosDelete } from '../config/axios/delete';
 import { get } from '../config/axios/get';
 import { post } from '../config/axios/post';
@@ -8,18 +9,18 @@ export const fetchParents = async () => {
   return response;
 };
 
-export const addParent = async (parentData: any) => {
-  const response = await post('/parents', parentData);
+export const addParent = async (parentData: IResponsible): Promise<IResponsible> => {
+  const response = await post<IResponsible, IResponsible>('/parents', parentData);
   return response;
 };
 
-export const fetchParentById = async (id: string) => {
-  const response = await get(`/parents/${id}`);
+export const fetchParentById = async (id: string): Promise<IResponsible> => {
+  const response = await get<IResponsible>(`/parents/${id}`);
   return response;
 };
 
-export const updateParent = async (id: string, parentData: any) => {
-  const response = await axiosPut(`/parents/${id}`, parentData);
+export const updateParent = async (id: string, parentData: Partial<IResponsible>): Promise<Partial<IResponsible>> => {
+  const response = await axiosPut<Partial<IResponsible>, IResponsible>(`/parents/${id}`, parentData);
   return response;
 };
 

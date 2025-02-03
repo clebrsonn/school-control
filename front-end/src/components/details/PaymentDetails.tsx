@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchPaymentById } from '../../services/PaymentService';
+import { ITuition } from '@hyteck/shared';
 
 const PaymentDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [payment, setPayment] = useState<any>(null);
+  const [payment, setPayment] = useState<ITuition>();
 
   useEffect(() => {
     const getPayment = async () => {
@@ -23,9 +24,9 @@ const PaymentDetails: React.FC = () => {
     <div>
       <h2>Payment Details</h2>
       <p>Amount: {payment.amount}</p>
-      <p>Date: {payment.date}</p>
-      <p>Student ID: {payment.studentId}</p>
-      <p>Discount ID: {payment.discountId}</p>
+      <p>Date: {payment.dueDate.getDate()}</p>
+      <p>Matrícula: {payment.enrollment}</p>
+      <p>Status: {payment.status}</p>
       {/* Adicione mais detalhes conforme necessário */}
     </div>
   );

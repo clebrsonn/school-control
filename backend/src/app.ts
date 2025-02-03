@@ -9,7 +9,11 @@ import ClassRoutesRouter from './routes/ClassRoutes';
 import MonthyFeeRoutesRouter from './routes/MonthyFeeRoutes';
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: '*', // Permitir todas as origens. Para maior segurança, especifique os domínios permitidos.
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 mongoose.connect('mongodb://localhost:27017/financial_manager').then(() => {
@@ -18,7 +22,7 @@ mongoose.connect('mongodb://localhost:27017/financial_manager').then(() => {
     console.error('Error connecting to MongoDB:', error);
   });
   
-  
+
 app.use('/parents', ParentRoutesRouter);
 app.use('/students', StudentRoutesRouter);
 app.use('/payments', PaymentRoutesRouter);

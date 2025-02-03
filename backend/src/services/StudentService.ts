@@ -1,5 +1,8 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/services/StudentService.ts
-import Student, { IStudent } from '../models/Student';
+import { Student, IStudent, Enrollment, IEnrollment } from '@hyteck/shared/';
+import { getClassById } from './ClassService';
+import mongoose from 'mongoose';
+import {createPayment} from "./PaymentService";
 
 export const createStudent = async (data: IStudent) => {
   const student = new Student(data);
@@ -11,11 +14,11 @@ export const getStudents = async () => {
 };
 
 export const getStudentsByParentId = async (parentId: string) => {
-  return await Student.find({ parentId });
+  return await Student.find({ responsible: parentId }).populate('responsible');
 };
 
 export const getStudentById = async (id: string) => {
-  return await Student.findById(id);
+  return await Student.findById(id).populate('responsible');
 };
 
 export const updateStudentById = async (id: string, data: Partial<IStudent>) => {
@@ -25,3 +28,22 @@ export const updateStudentById = async (id: string, data: Partial<IStudent>) => 
 export const deleteStudentById = async (id: string) => {
   return await Student.findByIdAndDelete(id);
 };
+
+export const enrollStudent = async (studentId: string, enroll: Partial<IEnrollment>) => {
+  let student= Student.findById(studentId);
+  if(!student){
+    throw new Error('Student not found');
+  }
+  // const clazz= getClassById(enroll.class );
+  // if(!clazz){
+  //   throw new Error('Class not found');
+  // }
+  const enrollment: Partial<IEnrollment> = {
+    student: new mongoose.Types.ObjectId(studentId),
+    fee:30.0,
+    ...enroll
+    };
+
+  return await createPayment(enrollment)
+
+}

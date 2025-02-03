@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import Modal from 'react-modal';
 import { fetchParentById } from '@services/ParentService';
 import { fetchStudentsByParentId } from '@services/StudentService';
@@ -7,13 +7,13 @@ import { fetchMonthlyFeesByParentId, addMonthlyFee } from '@services/MonthlyFeeS
 import StudentManager from '../managers/StudentManager';
 import ErrorMessage from '@components/ErrorMessage';
 import { Button, Container, Form, ListGroup, Row, Col } from 'react-bootstrap';
-import { Parent, Student, MonthlyFee } from '../../models/types';
+import { IResponsible, IStudent, ITuition} from '@hyteck/shared';
 
 const ParentDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [parent, setParent] = useState<Parent | null>(null);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [monthlyFees, setMonthlyFees] = useState<MonthlyFee[]>([]);
+  const [parent, setParent] = useState<IResponsible>();
+  const [students, setStudents] = useState<IStudent[]>([]);
+  const [monthlyFees, setMonthlyFees] = useState<ITuition[]>([]);
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -89,34 +89,38 @@ const ParentDetails: React.FC = () => {
     <Container>
       <Row className="align-items-center mb-3">
         <Col>
-          <h1>Parent Details</h1>
+          <h1>Responsável</h1>
         </Col>
         <Col className="text-end">
           <Button variant="primary" onClick={() => openModal('student')} className="me-2">
-            Add Student
+            Adicionar Aluno
           </Button>
           <Button variant="primary" onClick={() => openModal('monthlyFee')}>
-            Add Monthly Fee
+            Adicionar Pagamento
           </Button>
         </Col>
       </Row>
 
-      <p>Name: {parent.nome}</p>
-      <p>ID: {parent._id}</p>
+      <p>Name: {parent.name}</p>
+      <p>Email: {parent.email}</p>
+      <p>Phone: {parent.phone}</p>
       {/* Adicione mais detalhes conforme necessário */}
 
       <h2>Students</h2>
-      <ul>
+
+      <ListGroup className="mt-3">
         {students.map((student) => (
-          <li key={student._id}>{student.nome}</li>
+          <ListGroup.Item key={student._id} className="bg-dark text-white">
+            <Link to={`/students/${student._id}`}>{student.name}</Link>
+          </ListGroup.Item>
         ))}
-      </ul>
+      </ListGroup>
 
       <h2>Monthly Fees</h2>
       <ListGroup className="mt-3">
-        {monthlyFees.map((monthlyFee) => (
-          <ListGroup.Item key={monthlyFee._id}>
-            {monthlyFee.amount} - {monthlyFee.dueDate} - {monthlyFee.isPaid ? 'Paid' : 'Unpaid'}
+        {monthlyFees?.map((monthlyFee) => (
+          <ListGroup.Item key={monthlyFee._id as string}>
+            {monthlyFee.amount} - {new Date(monthlyFee.dueDate).toLocaleDateString()} - {monthlyFee.status}
           </ListGroup.Item>
         ))}
       </ListGroup>
@@ -129,7 +133,7 @@ const ParentDetails: React.FC = () => {
         {modalType === 'student' && (
           <>
             <h2>Add Student</h2>
-            <StudentManager parentId={id} closeModal={closeModal} />
+            <StudentManager responsible={id} closeModal={closeModal} />
           </>
         )}
         {modalType === 'monthlyFee' && (

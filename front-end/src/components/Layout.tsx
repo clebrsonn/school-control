@@ -7,9 +7,7 @@ import { Container } from 'react-bootstrap';
 
 const Layout: React.FC = ({ children }) => {
   return (
-    <Container data-bs-theme="dark">
-      <AppNavbar />
-     
+    <Container>
       {children}
       <ToastContainer position="bottom-right" />
     </Container>

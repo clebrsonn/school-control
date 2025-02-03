@@ -1,10 +1,11 @@
+import { ITuition } from "@hyteck/shared";
 import { axiosDelete } from "../config/axios/delete";
 import { get } from "../config/axios/get";
 import { post } from "../config/axios/post";
 import { axiosPut } from "../config/axios/put";
 
-export const fetchMonthlyFeesByParentId = async (parentId: string) => {
-  const response = await get(`/mensalidades/parent/${parentId}`);
+export const fetchMonthlyFeesByParentId = async (parentId: string) :Promise<ITuition[]> => {
+  const response = await get<ITuition[]>(`/payments/parent/${parentId}`);
   return response;
 };
 
