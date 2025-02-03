@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 import ParentRoutesRouter from './routes/ParentRoutes';
 import StudentRoutesRouter from './routes/StudentRoutes';
 import PaymentRoutesRouter from './routes/PaymentRoutes';
@@ -9,6 +10,8 @@ import ClassRoutesRouter from './routes/ClassRoutes';
 import EnrollmentRoutes from "./routes/EnrollmentRoutes";
 const app = express();
 
+dotenv.config();
+
 app.use(cors({
   origin: '*', // Permitir todas as origens. Para maior segurança, especifique os domínios permitidos.
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -16,7 +19,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-mongoose.connect('mongodb://localhost:27017/financial_manager').then(() => {
+mongoose.connect(process.env.MONGO_URL || '').then(() => {
     console.log('Connected to MongoDB');
   }).catch((error) => {
     console.error('Error connecting to MongoDB:', error);

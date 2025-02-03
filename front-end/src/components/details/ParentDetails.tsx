@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import Modal from 'react-modal';
 import { fetchParentById } from '@services/ParentService';
 import { fetchStudentsByParentId } from '@services/StudentService';
-import { fetchMonthlyFeesByParentId, addMonthlyFee } from '@services/MonthlyFeeService';
+import { fetchMonthlyFeesByParentId } from '@services/MonthlyFeeService';
 import StudentManager from '../managers/StudentManager';
 import ErrorMessage from '@components/ErrorMessage';
 import { Button, Container, Form, ListGroup, Row, Col } from 'react-bootstrap';

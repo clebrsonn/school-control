@@ -13,11 +13,12 @@ export default function AppNavbar() {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link href="/">Home</Nav.Link>
-            <Nav.Link href="/parents">Parents Manager</Nav.Link>
-            <Nav.Link href="/students">Student Manager</Nav.Link>
-            <Nav.Link href="/payments">Payment Manager</Nav.Link>
-            <Nav.Link href="/classes">Class Manager</Nav.Link>
-          
+            <Nav.Link href="/parents">Responsáveis</Nav.Link>
+            <Nav.Link href="/students">Estudentes</Nav.Link>
+            <Nav.Link href="/payments">Pagamentos</Nav.Link>
+            <Nav.Link href="/classes">Turmas</Nav.Link>
+            <Nav.Link href="/discounts">Descontos</Nav.Link>
+
         
             <NavDropdown title="Dropdown" id="basic-nav-dropdown">
               <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>

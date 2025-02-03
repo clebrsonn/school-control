@@ -7,4 +7,5 @@ export interface ITuition extends mongoose.Document{
   paymentDate?: Date;
   responsible: mongoose.Types.ObjectId;
   enrollment: mongoose.Types.ObjectId;
+  discount?: mongoose.Types.ObjectId
 }

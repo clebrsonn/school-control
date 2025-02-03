@@ -1,12 +1,19 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/services/StudentService.ts
 import { Student, IStudent, Enrollment, IEnrollment } from '@hyteck/shared/';
 import { getClassById } from './ClassService';
-import mongoose from 'mongoose';
+import mongoose, {Types} from 'mongoose';
 import {createPayment} from "./PaymentService";
+import {getParentById, updateParentById} from "./ParentService";
 
 export const createStudent = async (data: IStudent) => {
-  const student = new Student(data);
-  return await student.save();
+  let student = new Student(data);
+  const responsible=await getParentById(student.responsible as unknown as string);
+  student= await student.save();
+  if (responsible) {
+    await updateParentById(responsible._id as string, {students: [...(responsible.students || []), student._id as Types.ObjectId]});
+  }
+
+  return student;
 };
 
 export const getStudents = async () => {
@@ -38,6 +45,7 @@ export const enrollStudent = async (studentId: string, enroll: Partial<IEnrollme
   // if(!clazz){
   //   throw new Error('Class not found');
   // }
+
   const enrollment: Partial<IEnrollment> = {
     student: new mongoose.Types.ObjectId(studentId),
     fee:30.0,

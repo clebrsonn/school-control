@@ -4,6 +4,7 @@ import { ITuition } from "../types";
 const TuitionSchema = new mongoose.Schema({
   responsible: { type: Schema.Types.ObjectId, ref: "Responsible", required: true },
   enrollment: { type: Schema.Types.ObjectId, ref: "Enrollment", required: true },
+  discount: { type: mongoose.Schema.Types.ObjectId, ref: "Discount", default: 0 },
   amount: { type: Number, required: true },
   dueDate: { type: Date, required: true },
   status: { type: String, enum: ["pending", "paid", "late"], default: "pending" },

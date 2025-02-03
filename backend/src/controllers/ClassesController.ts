@@ -1,4 +1,3 @@
-// filepath: /e:/IdeaProjects/school-control/backend/src/controllers/ClassesController.ts
 import { Request, Response } from 'express';
 import { createClass, getClasses } from '../services/ClassService';
 

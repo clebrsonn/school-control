@@ -11,7 +11,7 @@ export const getParents = async () => {
 };
 
 export const getParentById = async (id: string) => {
-  return await Responsible.findById(id);
+  return await Responsible.findById(id).populate('students');
 };
 
 export const updateParentById = async (id: string, data: Partial<IResponsible>) => {

@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
+import {Document, Types} from "mongoose";
 
-export interface IEnrollment extends mongoose.Document{
+export interface IEnrollment extends Document{
   fee: number;
-  discount: string;
+  discount?: Types.ObjectId;
   createdAt: Date;
-  student: mongoose.Types.ObjectId;
-  classId: mongoose.Types.ObjectId;
+  student: Types.ObjectId;
+  classId: Types.ObjectId;
 }

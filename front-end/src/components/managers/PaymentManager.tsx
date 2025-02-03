@@ -106,4 +106,5 @@ const PaymentManager: React.FC = () => {
   );
 };
 
+
 export default PaymentManager;

@@ -9,7 +9,7 @@ import { IResponsible } from '@hyteck/shared';
 const ParentManager: React.FC = () => {
   const [parents, setParents] = useState<IResponsible[]>([]);
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('N/A');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -54,15 +54,15 @@ const ParentManager: React.FC = () => {
             onChange={(e) => setName(e.target.value)}
           />
         </Form.Group>
-        <Form.Group controlId="formParentEmail">
-          <Form.Label>E-mail</Form.Label>
-          <Form.Control
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </Form.Group>
+        {/*<Form.Group controlId="formParentEmail">*/}
+        {/*  <Form.Label>E-mail</Form.Label>*/}
+        {/*  <Form.Control*/}
+        {/*    type="email"*/}
+        {/*    placeholder="Email"*/}
+        {/*    value={email}*/}
+        {/*    onChange={(e) => setEmail(e.target.value)}*/}
+        {/*  />*/}
+        {/*</Form.Group>*/}
         <Form.Group controlId="formParentPhone">
           <Form.Label>Telefone</Form.Label>
           <Form.Control
@@ -78,7 +78,7 @@ const ParentManager: React.FC = () => {
       </Form>
       <h2>Parents List</h2>
       <ul>
-        {parents.map((parent) => (
+        {parents?.map((parent) => (
           <li key={parent._id}>
             <Link to={`/parents/${parent._id}`}>{parent.name}</Link>
           </li>

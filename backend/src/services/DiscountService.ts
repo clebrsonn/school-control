@@ -9,3 +9,7 @@ export const createDiscount = async (data: IDiscount) => {
 export const getDiscounts = async () => {
   return Discount.find();
 };
+
+export const getDiscountsByType = async (type: string) => {
+  return Discount.findOne({ type });
+};
