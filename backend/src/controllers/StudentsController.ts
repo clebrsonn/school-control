@@ -1,10 +1,13 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/controllers/StudentsController.ts
 import { Request, Response } from 'express';
 import { createStudent, getStudents, getStudentsByParentId, getStudentById, updateStudentById, deleteStudentById, enrollStudent } from '../services/StudentService';
+import {IStudent} from "@hyteck/shared";
 
 export const addStudent = async (req: Request, res: Response) => {
   try {
-    const student = await createStudent(req.body);
+    console.log('addStudent', req.body);
+    const student: IStudent = await createStudent(req.body);
+    await enrollStudent(student._id as string, {classId: req.body?.classId});
     res.status(201).send(student);
   } catch (error: any) {
     res.status(400).send({ message: error.message });

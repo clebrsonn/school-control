@@ -6,7 +6,7 @@ import StudentRoutesRouter from './routes/StudentRoutes';
 import PaymentRoutesRouter from './routes/PaymentRoutes';
 import DiscountRoutesRouter from './routes/DiscountRoutes';
 import ClassRoutesRouter from './routes/ClassRoutes';
-import MonthyFeeRoutesRouter from './routes/MonthyFeeRoutes';
+import EnrollmentRoutes from "./routes/EnrollmentRoutes";
 const app = express();
 
 app.use(cors({
@@ -21,13 +21,12 @@ mongoose.connect('mongodb://localhost:27017/financial_manager').then(() => {
   }).catch((error) => {
     console.error('Error connecting to MongoDB:', error);
   });
-  
 
 app.use('/parents', ParentRoutesRouter);
 app.use('/students', StudentRoutesRouter);
 app.use('/payments', PaymentRoutesRouter);
 app.use('/discounts', DiscountRoutesRouter);
 app.use('/classes', ClassRoutesRouter);
-app.use('/mensalidades', MonthyFeeRoutesRouter);
+app.use("/enrollments", EnrollmentRoutes);
 
 export default app;

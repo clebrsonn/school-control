@@ -57,13 +57,13 @@ export const getPaymentsByParentId = async (responsible: string) => {
 };
 
 export const getPaymentById = async (id: string) => {
-  return await Enrollment.findById(id).populate('student');
+  return await Tuition.findById(id).populate('student');
 };
 
 export const updatePaymentById = async (id: string, data: Partial<IEnrollment>) => {
-  return await Enrollment.findByIdAndUpdate(id, data, { new: true }).populate('student').populate('classId');
+  return await Tuition.findByIdAndUpdate(id, data, { new: true }).populate('student').populate('classId');
 };
 
 export const deletePaymentById = async (id: string) => {
-  return await Enrollment.findByIdAndDelete(id);
+  return await Tuition.findByIdAndDelete(id);
 };
