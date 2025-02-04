@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Container, ListGroup } from 'react-bootstrap';
-import { fetchPayments, addPayment } from '../../services/PaymentService';
+import { fetchPayments, createPayment } from '../../services/PaymentService';
 import ErrorMessage from '../ErrorMessage';
 import { ITuition } from '@hyteck/shared';
+import notification from "../Notification.tsx";
 
 const PaymentManager: React.FC = () => {
   const [payments, setPayments] = useState<ITuition[]>([]);
@@ -29,7 +30,7 @@ const PaymentManager: React.FC = () => {
   const handleAddPayment = async () => {
     try {
       const newPayment = { amount: parseFloat(amount), date, discountId, parentId, classId };
-      const addedPayment = await addPayment(newPayment);
+      const addedPayment = await createPayment(newPayment);
       setPayments([...payments, addedPayment]);
       setAmount('');
       setDate('');
@@ -42,67 +43,86 @@ const PaymentManager: React.FC = () => {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      await deletePaymentById(id);
+      setPayments(payments.filter((student) => student._id !== id));
+      notification("Estudante removido com sucesso.");
+    } catch {
+      setError("Erro ao remover o estudante.");
+    }
+  };
+
+
   return (
-    <Container className="bg-dark text-white p-4">
-      <h1>Gerenciar Pagamentos</h1>
-      {error && <ErrorMessage message={error} />}
-      <Form>
-        <Form.Group controlId="formPaymentAmount">
-          <Form.Label>Valor</Form.Label>
-          <Form.Control
-            type="number"
-            placeholder="Valor"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group controlId="formPaymentDate">
-          <Form.Label>Data</Form.Label>
-          <Form.Control
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group controlId="formPaymentDiscountId">
-          <Form.Label>ID do Desconto</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="ID do Desconto"
-            value={discountId}
-            onChange={(e) => setDiscountId(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group controlId="formPaymentParentId">
-          <Form.Label>ID do Responsável</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="ID do Responsável"
-            value={parentId}
-            onChange={(e) => setParentId(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group controlId="formPaymentClassId">
-          <Form.Label>ID da Classe</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="ID da Classe"
-            value={classId}
-            onChange={(e) => setClassId(e.target.value)}
-          />
-        </Form.Group>
-        <Button variant="primary" onClick={handleAddPayment} className="mt-3">
-          Salvar
-        </Button>
-      </Form>
-      <ListGroup className="mt-3">
-        {payments.map((payment) => (
-          <ListGroup.Item key={payment._id} className="bg-dark text-white">
-            {payment.amount} - {payment.date} - {payment.discountId ? payment.discountId : 'No Discount'} - {payment.parentId.nome}
-          </ListGroup.Item>
-        ))}
-      </ListGroup>
-    </Container>
+      <Container className="bg-dark text-white p-4">
+        <h1>Gerenciar Pagamentos</h1>
+        {error && <ErrorMessage message={error} />}
+        <Form>
+          <Form.Group controlId="formPaymentAmount">
+            <Form.Label>Valor</Form.Label>
+            <Form.Control
+                type="number"
+                placeholder="Valor"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="formPaymentDate">
+            <Form.Label>Data</Form.Label>
+            <Form.Control
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="formPaymentDiscountId">
+            <Form.Label>ID do Desconto</Form.Label>
+            <Form.Control
+                type="text"
+                placeholder="ID do Desconto"
+                value={discountId}
+                onChange={(e) => setDiscountId(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="formPaymentParentId">
+            <Form.Label>ID do Responsável</Form.Label>
+            <Form.Control
+                type="text"
+                placeholder="ID do Responsável"
+                value={parentId}
+                onChange={(e) => setParentId(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="formPaymentClassId">
+            <Form.Label>ID da Classe</Form.Label>
+            <Form.Control
+                type="text"
+                placeholder="ID da Classe"
+                value={classId}
+                onChange={(e) => setClassId(e.target.value)}
+            />
+          </Form.Group>
+          <Button variant="primary" onClick={handleAddPayment} className="mt-3">
+            Salvar
+          </Button>
+        </Form>
+        <ListGroup className="mt-3">
+          {payments.map((payment) => (
+              <tr key={payment._id}>
+                <td>{payment.responsible?.name}</td>
+                <td>R$ {payment.amount.toFixed(2)}</td>
+                <td>{new Date(payment.dueDate).toLocaleDateString()}</td>
+                <td>
+                  <Button variant="danger" onClick={() => handleDelete(payment._id)}>
+                    Excluir
+                  </Button>
+                </td>
+              </tr>
+
+          ))}
+        </ListGroup>
+      </Container>
   );
 };
 

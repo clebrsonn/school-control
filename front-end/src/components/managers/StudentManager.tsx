@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { fetchStudentsByParentId, fetchStudents, addStudent } from '@services/StudentService';
+import { fetchStudentsByParentId, fetchStudents, createStudent } from '@services/StudentService';
 import { fetchClasses } from '@services/ClassService';
 import { Link } from 'react-router-dom';
 import ErrorMessage from '@components/ErrorMessage';
 import { Button, Container, Form, ListGroup } from 'react-bootstrap';
 import { IStudent, IClass } from '@hyteck/shared';
 import notification from '../Notification';
+import {deleteStudent} from "../../services/StudentService.ts";
 
 interface StudentManagerProps {
   responsible: string | undefined;
@@ -50,7 +51,7 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible, closeModal
   const handleAddStudent = async () => {
     try {
       const newStudent = { name, responsible, classId };
-      const addedStudent = await addStudent(newStudent);
+      const addedStudent = await createStudent(newStudent);
       setStudents([...students, addedStudent]);
       setName('');
       setClassId('');
@@ -61,6 +62,17 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible, closeModal
       setError(err.message || 'Failed to add student');
     }
   };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteStudent(id);
+      setStudents(students.filter((student) => student._id !== id));
+      notification("Estudante removido com sucesso.", "success");
+    } catch {
+      setError("Erro ao remover o estudante.");
+    }
+  };
+
 
   return (
     <Container>
@@ -97,9 +109,16 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible, closeModal
       </Form>
       <ListGroup className="mt-3">
         {students.map((student: IStudent) => (
-          <ListGroup.Item key={student._id}>
-            <Link to={`/students/${student._id}`}>{student.name}</Link>
-          </ListGroup.Item>
+
+            <tr key={student._id}>
+              <td><Link to={`/students/${student._id}`}>{student.name}</Link>
+              </td>
+              <td>
+                <Button variant="danger" onClick={() => handleDelete(student._id)}>
+                  Excluir
+                </Button>
+              </td>
+            </tr>
         ))}
       </ListGroup>
     </Container>

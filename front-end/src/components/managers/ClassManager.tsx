@@ -1,124 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import { fetchClasses, addClass } from '@services/ClassService';
-import { Button, Form, Container, ListGroup } from 'react-bootstrap';
-import { IClass } from '@hyteck/shared';
+import React, { useEffect, useState } from "react";
+import { Button, Form, Table, Alert } from "react-bootstrap";
+import { IClass } from "@hyteck/shared";
+import { fetchClasses, createClass, deleteClass } from "@services/ClassService";
 
 const ClassManager: React.FC = () => {
   const [classes, setClasses] = useState<IClass[]>([]);
-  const [name, setName] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
-  const [weekdays, setWeekdays] = useState<string[]>([]);
-  const [enrollmentFee, setEnrollmentFee] = useState('');
-  const [monthlyFee, setMonthlyFee] = useState('');
+  const [name, setName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const getClasses = async () => {
       try {
-        const classData = await fetchClasses();
-        setClasses(classData);
-      } catch (err) {
-        setError(err.message || 'Failed to fetch classes');
+        const fetchedClasses = await fetchClasses();
+        setClasses(fetchedClasses);
+      } catch {
+        setError("Erro ao carregar as turmas.");
       }
     };
-
     getClasses();
   }, []);
 
-  const handleAddClass = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name) {
+      setError("Por favor, insira o nome da turma.");
+      return;
+    }
     try {
-      const newClass = {
-        name,
-        startTime,
-        endTime,
-        weekdays,
-        enrollmentFee: parseFloat(enrollmentFee),
-        monthlyFee: parseFloat(monthlyFee),
-      };
-      const addedClass = await addClass(newClass);
-      setClasses([...classes, addedClass]);
-      setName('');
-      setStartTime('');
-      setEndTime('');
-      setWeekdays([]);
-      setEnrollmentFee('');
-      setMonthlyFee('');
-      setError(null);
-    } catch (err) {
-      setError(err.message || 'Failed to add class');
+      const newClass = await createClass({ name });
+      setClasses([...classes, newClass]);
+      setName("");
+      setSuccessMessage("Turma criada com sucesso!");
+    } catch {
+      setError("Erro ao criar a turma.");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteClass(id);
+      setClasses(classes.filter((clazz) => clazz._id !== id));
+      setSuccessMessage("Turma removida com sucesso.");
+    } catch {
+      setError("Erro ao remover a turma.");
     }
   };
 
   return (
-    <Container>
-      <h1>Classes</h1>
-      {error && <div className="alert alert-danger">{error}</div>}
-      <Form>
-        <Form.Group controlId="formClassName">
-          <Form.Label>Nome</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Class Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group controlId="formClassStartTime">
-          <Form.Label>Horário de início</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Start Time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group controlId="formClassEndTime">
-          <Form.Label>horário de término</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="End Time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group controlId="formClassWeekdays">
-          <Form.Label>Weekdays</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Weekdays (comma separated)"
-            value={weekdays.join(', ')}
-            onChange={(e) => setWeekdays(e.target.value.split(',').map(day => day.trim()))}
-          />
-        </Form.Group>
-        <Form.Group controlId="formClassEnrollmentFee">
-          <Form.Label>Matrícula</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enrollment Fee"
-            value={enrollmentFee}
-            onChange={(e) => setEnrollmentFee(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group controlId="formClassMonthlyFee">
-          <Form.Label>Mensalidade</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Monthly Fee"
-            value={monthlyFee}
-            onChange={(e) => setMonthlyFee(e.target.value)}
-          />
-        </Form.Group>
-        <Button onClick={handleAddClass} className="mt-3">Add Class</Button>
-      </Form>
-      <ListGroup className="mt-3">
-        {classes?.map((classItem) => (
-          <ListGroup.Item key={classItem._id}>
-            {classItem.name}  - {classItem.startTime} - {classItem.endTime} - Enrollment Fee: {classItem.enrollmentFee} - Monthly Fee: {classItem.monthlyFee}
-          </ListGroup.Item>
-        ))}
-      </ListGroup>
-    </Container>
+      <div>
+        <h2>Gerenciamento de Turmas</h2>
+
+        {error && <Alert variant="danger">{error}</Alert>}
+        {successMessage && <Alert variant="success">{successMessage}</Alert>}
+
+        <Form onSubmit={handleSubmit}>
+          <Form.Group controlId="className">
+            <Form.Label>Nome da Turma</Form.Label>
+            <Form.Control
+                type="text"
+                placeholder="Exemplo: Turma A"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+            />
+          </Form.Group>
+
+          <Button type="submit" className="mt-3">
+            Adicionar Turma
+          </Button>
+        </Form>
+
+        <h3 className="mt-4">Lista de Turmas</h3>
+        <Table striped bordered hover>
+          <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Ações</th>
+          </tr>
+          </thead>
+          <tbody>
+          {classes.map((clazz) => (
+              <tr key={clazz._id}>
+                <td>{clazz.name}</td>
+                <td>
+                  <Button variant="danger" onClick={() => handleDelete(clazz._id)}>
+                    Excluir
+                  </Button>
+                </td>
+              </tr>
+          ))}
+          </tbody>
+        </Table>
+      </div>
   );
 };
 

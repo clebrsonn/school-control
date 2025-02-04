@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { fetchParents, addParent } from '@services/ParentService';
+import { fetchParents, createParent } from '@services/ParentService';
 import { Link } from 'react-router-dom';
 import ErrorMessage from '@components/ErrorMessage';
 import notification from '@components/Notification';
 import { Button, Form } from 'react-bootstrap';
 import { IResponsible } from '@hyteck/shared';
+import {deleteParent} from "../../services/ParentService.ts";
 
 const ParentManager: React.FC = () => {
   const [parents, setParents] = useState<IResponsible[]>([]);
@@ -28,7 +29,7 @@ const ParentManager: React.FC = () => {
   const handleAddParent = async () => {
     try {
       const newParent = { name, email, phone, students: [] };
-      const addedParent = await addParent(newParent);
+      const addedParent = await createParent(newParent);
       setParents([...parents, addedParent]);
       setName('');
       setEmail('');
@@ -39,6 +40,16 @@ const ParentManager: React.FC = () => {
       setError(err.message || 'Failed to add parent');
     }
   };
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteParent(id);
+      setParents(parents.filter((parent) => parent._id !== id));
+      notification("Responsável removido com sucesso.");
+    } catch {
+      setError("Erro ao remover o responsável.");
+    }
+  };
+
 
   return (
     <div>
@@ -79,9 +90,16 @@ const ParentManager: React.FC = () => {
       <h2>Parents List</h2>
       <ul>
         {parents?.map((parent) => (
-          <li key={parent._id}>
-            <Link to={`/parents/${parent._id}`}>{parent.name}</Link>
-          </li>
+
+            <tr key={parent._id}>
+              <td><Link to={`/parents/${parent._id}`}>{parent.name}</Link></td>
+              <td>{parent.phone}</td>
+              <td>
+                <Button variant="danger" onClick={() => handleDelete(parent._id)}>
+                  Excluir
+                </Button>
+              </td>
+            </tr>
         ))}
       </ul>
     </div>
