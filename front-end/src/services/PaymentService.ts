@@ -9,7 +9,7 @@ export const fetchPayments = async () => {
   return response;
 };
 
-export const addPayment = async (paymentData: ITuition): Promise<ITuition> => {
+export const createPayment = async (paymentData: ITuition): Promise<ITuition> => {
 
   const response = await post<ITuition, ITuition>('/payments', paymentData);
   return response;
