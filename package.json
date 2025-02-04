@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"pnpm --prefix backend run dev\" \"pnpm --prefix front-end run dev\"",
-    "build": "concurrently \"pnpm --prefix backend run start\" \"pnpm --prefix front-end run build\"",
+    "build": "concurrently \"pnpm --prefix backend run dev\" \"pnpm --prefix front-end run build\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
