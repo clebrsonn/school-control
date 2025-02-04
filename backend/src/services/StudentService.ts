@@ -4,54 +4,49 @@ import { getClassById } from './ClassService';
 import mongoose, {Types} from 'mongoose';
 import {createPayment} from "./PaymentService";
 import {getParentById, updateParentById} from "./ParentService";
+import {BaseService} from "./generics/BaseService";
 
-export const createStudent = async (data: IStudent) => {
-  let student = new Student(data);
-  const responsible=await getParentById(student.responsible as unknown as string);
-  student= await student.save();
-  if (responsible) {
-    await updateParentById(responsible._id as string, {students: [...(responsible.students || []), student._id as Types.ObjectId]});
+export class StudentService extends BaseService<IStudent> {
+  constructor() {
+    super(Student);
   }
 
-  return student;
-};
+  create= async (data: IStudent) => {
+    let student = new Student(data);
+    const responsible=await getParentById(student.responsible as unknown as string);
+    student= await student.save();
+    if (responsible) {
+      await updateParentById(responsible._id as string, {students: [...(responsible.students || []), student._id as Types.ObjectId]});
+    }
+    await this.enrollStudent(student._id as string, {classId: data.classId as unknown as Types.ObjectId});
 
-export const getStudents = async () => {
-  return await Student.find();
-};
 
-export const getStudentsByParentId = async (parentId: string) => {
-  return await Student.find({ responsible: parentId }).populate('responsible');
-};
+    return student;
+  };
 
-export const getStudentById = async (id: string) => {
-  return await Student.findById(id).populate('responsible');
-};
 
-export const updateStudentById = async (id: string, data: Partial<IStudent>) => {
-  return await Student.findByIdAndUpdate(id, data, { new: true });
-};
+  getStudentsByParentId = async (parentId: string) => {
+    return await Student.find({ responsible: parentId }).populate('responsible');
+  };
 
-export const deleteStudentById = async (id: string) => {
-  return await Student.findByIdAndDelete(id);
-};
+  findById = async (id: string) => {
+    return await Student.findById(id).populate('responsible');
+  };
 
-export const enrollStudent = async (studentId: string, enroll: Partial<IEnrollment>) => {
-  let student= Student.findById(studentId);
-  if(!student){
-    throw new Error('Student not found');
-  }
-  // const clazz= getClassById(enroll.class );
-  // if(!clazz){
-  //   throw new Error('Class not found');
-  // }
+  enrollStudent = async (studentId: string, enroll: Partial<IEnrollment>) => {
+    let student= Student.findById(studentId);
+    if(!student){
+      throw new Error('Student not found');
+    }
 
-  const enrollment: Partial<IEnrollment> = {
-    student: new mongoose.Types.ObjectId(studentId),
-    fee:30.0,
-    ...enroll
+    const enrollment: Partial<IEnrollment> = {
+      student: new mongoose.Types.ObjectId(studentId),
+      fee:30.0,
+      ...enroll
     };
 
-  return await createPayment(enrollment)
+    return await createPayment(enrollment)
+
+  }
 
 }

@@ -1,10 +1,10 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/services/PaymentService.ts
 import {Enrollment, IEnrollment, ITuition, Tuition} from '@hyteck/shared';
-import {getStudentById, getStudentsByParentId} from "./StudentService";
 import mongoose from 'mongoose';
 import {getParentById} from "./ParentService";
 import {getDiscountsByType} from "./DiscountService";
 import {createEnrollment, updateEnrollmentById} from "./EnrollmentService";
+import {StudentService} from "./StudentService";
 
 export const createPayment = async (data: Partial<IEnrollment>) => {
   const payment = await createEnrollment(data);
@@ -18,7 +18,7 @@ const generatePaymentRecurrences = async (data: IEnrollment) => {
 
   const actualMonth= today.getMonth();
 
-  const student= await getStudentById(data.student as unknown as string)
+  const student= await new StudentService().findById(data.student as unknown as string)
   const parent= (await getParentById(student?.responsible as unknown as string));
 
   const discount= parent?.students && parent.students.length > 1 ? await getDiscountsByType('tuition'): null;

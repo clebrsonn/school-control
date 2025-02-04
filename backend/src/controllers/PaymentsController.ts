@@ -1,8 +1,6 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/controllers/PaymentsController.ts
 import { Request, Response } from 'express';
 import { createPayment, getPayments, getPaymentsByParentId, getPaymentById, updatePaymentById, deletePaymentById } from '../services/PaymentService';
-import {fetchStudentsByParentId} from "./StudentsController";
-import {getStudentsByParentId} from "../services/StudentService";
 
 export const addPayment = async (req: Request, res: Response) => {
   try {

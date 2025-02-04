@@ -1,26 +1,21 @@
 import { Router } from 'express';
-import { addStudent, fetchStudents, fetchStudentsByParentId, fetchStudentById, updateStudent, deleteStudent, enrollStudant } from '../controllers/StudentsController';
+import {StudentController} from "../controllers/StudentsController";
 
 const router = Router();
+const studentController = new StudentController();
 
-// Rota para adicionar um novo estudante
-router.post('/', addStudent);
+router.post("/", studentController.create);
+router.get("/", studentController.findAll);
+router.get("/:id", studentController.findById);
+router.put("/:id", studentController.update);
+router.delete("/:id", studentController.delete);
 
-router.post('/:id/enroll', enrollStudant);
 
-// Rota para buscar todos os estudantes
-router.get('/', fetchStudents);
+router.post('/:id/enroll', studentController.enrollStudant);
+
 
 // Rota para buscar estudantes por ID do responsável
-router.get('/parent/:parentId', fetchStudentsByParentId);
+router.get('/parent/:parentId', studentController.fetchStudentsByParentId);
 
-// Rota para buscar um estudante por ID
-router.get('/:id', fetchStudentById);
-
-// Rota para atualizar um estudante por ID
-router.put('/:id', updateStudent);
-
-// Rota para deletar um estudante por ID
-router.delete('/:id', deleteStudent);
 
 export default router;
