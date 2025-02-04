@@ -15,7 +15,7 @@ importers:
   backend:
     dependencies:
       '@hyteck/shared':
-        specifier: link:..\shared
+        specifier: link:../shared
         version: link:../shared
       cors:
         specifier: ^2.8.5
@@ -52,7 +52,7 @@ importers:
   front-end:
     dependencies:
       '@hyteck/shared':
-        specifier: link:..\shared
+        specifier: link:../shared
         version: link:../shared
       axios:
         specifier: ^1.7.9
