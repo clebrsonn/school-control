@@ -5,4 +5,5 @@ export interface IStudent extends mongoose.Document{
   name: string;
   birthDate: Date;
   responsible: mongoose.Types.ObjectId;
+  classId: string;
 }
