@@ -1,0 +1,12 @@
+ services:
+  - type: web
+    name: backend
+    rootDir: backend
+    buildCommand: pnpm install
+    startCommand: pnpm run start
+
+  - type: static
+    name: front-end
+    rootDir: front-end
+    buildCommand: pnpm install && pnpm run build
+    publishPath: dist
