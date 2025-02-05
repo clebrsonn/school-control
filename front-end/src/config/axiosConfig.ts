@@ -1,11 +1,8 @@
 // filepath: /e:/IdeaProjects/school-control/frontend/src/axiosConfig.ts
 import axios from 'axios';
-import dotenv from 'dotenv';
 import notification from '../components/Notification';
-dotenv.config();
 
-
-const API_URL = process.env.SERVICE_URL ?? 'http://192.168.1.12:5000';
+const API_URL = import.meta.env.VITE_SERVICE_URL ?? 'http://192.168.1.12:5000';
 
 
 const axiosInstance = axios.create({
