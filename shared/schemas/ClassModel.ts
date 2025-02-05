@@ -9,4 +9,4 @@ const ClassSchema = new mongoose.Schema({
   monthlyFee: { type: Number, required: true },
 });
 
-export const Class = mongoose.model<IClass>("Class", ClassSchema);
+export const ClassModel = mongoose.model<IClass>("Class", ClassSchema);
