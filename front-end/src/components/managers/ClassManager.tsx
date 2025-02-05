@@ -1,75 +1,114 @@
-import React, { useEffect, useState } from "react";
-import { Button, Form, Table, Alert } from "react-bootstrap";
-import { IClass } from "@hyteck/shared";
-import { fetchClasses, createClass, deleteClass } from "@services/ClassService";
+import React, { useState, useEffect } from 'react';
+import { fetchClasses, createClass, deleteClass } from '@services/ClassService';
+import { Button, Form, Container, Table } from 'react-bootstrap';
+import { IClass } from '@hyteck/shared';
+import notification from "../Notification";
 
 const ClassManager: React.FC = () => {
   const [classes, setClasses] = useState<IClass[]>([]);
-  const [name, setName] = useState<string>("");
+  const [name, setName] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [enrollmentFee, setEnrollmentFee] = useState('');
+  const [monthlyFee, setMonthlyFee] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const getClasses = async () => {
       try {
-        const fetchedClasses = await fetchClasses();
-        setClasses(fetchedClasses);
-      } catch {
-        setError("Erro ao carregar as turmas.");
+        const classData = await fetchClasses();
+        setClasses(classData);
+      } catch (err) {
+        setError(err.message || 'Failed to fetch classes');
       }
     };
+
     getClasses();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name) {
-      setError("Por favor, insira o nome da turma.");
-      return;
-    }
+  const handleAddClass = async () => {
     try {
-      const newClass = await createClass({ name });
-      setClasses([...classes, newClass]);
-      setName("");
-      setSuccessMessage("Turma criada com sucesso!");
-    } catch {
-      setError("Erro ao criar a turma.");
+      const newClass = {
+        name,
+        startTime,
+        endTime,
+        enrollmentFee: parseFloat(enrollmentFee),
+        monthlyFee: parseFloat(monthlyFee),
+      };
+      const addedClass = await createClass(newClass);
+      setClasses([...classes, addedClass]);
+      setName('');
+      setStartTime('');
+      setEndTime('');
+      setEnrollmentFee('');
+      setMonthlyFee('');
+      setError(null);
+    } catch (err) {
+      setError(err.message || 'Failed to add class');
     }
   };
-
   const handleDelete = async (id: string) => {
     try {
       await deleteClass(id);
       setClasses(classes.filter((clazz) => clazz._id !== id));
-      setSuccessMessage("Turma removida com sucesso.");
+      notification("Turma removida com sucesso.");
     } catch {
       setError("Erro ao remover a turma.");
     }
   };
 
   return (
-      <div>
-        <h2>Gerenciamento de Turmas</h2>
-
-        {error && <Alert variant="danger">{error}</Alert>}
-        {successMessage && <Alert variant="success">{successMessage}</Alert>}
-
-        <Form onSubmit={handleSubmit}>
-          <Form.Group controlId="className">
-            <Form.Label>Nome da Turma</Form.Label>
+      <Container>
+        <h1>Classes</h1>
+        {error && <div className="alert alert-danger">{error}</div>}
+        <Form>
+          <Form.Group controlId="formClassName">
+            <Form.Label>Nome</Form.Label>
             <Form.Control
                 type="text"
-                placeholder="Exemplo: Turma A"
+                placeholder="Class Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
             />
           </Form.Group>
-
-          <Button type="submit" className="mt-3">
-            Adicionar Turma
-          </Button>
+          <Form.Group controlId="formClassStartTime">
+            <Form.Label>Horário de início</Form.Label>
+            <Form.Control
+                type="text"
+                placeholder="Start Time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="formClassEndTime">
+            <Form.Label>horário de término</Form.Label>
+            <Form.Control
+                type="text"
+                placeholder="End Time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="formClassEnrollmentFee">
+            <Form.Label>Matrícula</Form.Label>
+            <Form.Control
+                type="text"
+                placeholder="Enrollment Fee"
+                value={enrollmentFee}
+                onChange={(e) => setEnrollmentFee(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="formClassMonthlyFee">
+            <Form.Label>Mensalidade</Form.Label>
+            <Form.Control
+                type="text"
+                placeholder="Monthly Fee"
+                value={monthlyFee}
+                onChange={(e) => setMonthlyFee(e.target.value)}
+            />
+          </Form.Group>
+          <Button onClick={handleAddClass} className="mt-3">Add Class</Button>
         </Form>
-
         <h3 className="mt-4">Lista de Turmas</h3>
         <Table striped bordered hover>
           <thead>
@@ -91,7 +130,7 @@ const ClassManager: React.FC = () => {
           ))}
           </tbody>
         </Table>
-      </div>
+      </Container>
   );
 };
 

@@ -3,7 +3,7 @@ import { fetchParents, createParent } from '@services/ParentService';
 import { Link } from 'react-router-dom';
 import ErrorMessage from '@components/ErrorMessage';
 import notification from '@components/Notification';
-import { Button, Form } from 'react-bootstrap';
+import {Button, Form, Table} from 'react-bootstrap';
 import { IResponsible } from '@hyteck/shared';
 import {deleteParent} from "../../services/ParentService.ts";
 
@@ -88,20 +88,41 @@ const ParentManager: React.FC = () => {
         </Button>
       </Form>
       <h2>Parents List</h2>
-      <ul>
+      <Table striped bordered hover responsive>
+        <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Telefone</th>
+          <th>Ações</th>
+        </tr>
+        </thead>
+        <tbody>
         {parents?.map((parent) => (
-
             <tr key={parent._id}>
-              <td><Link to={`/parents/${parent._id}`}>{parent.name}</Link></td>
+              <td>
+                <Link to={`/parents/${parent._id}`}>{parent.name}</Link>
+              </td>
               <td>{parent.phone}</td>
               <td>
-                <Button variant="danger" onClick={() => handleDelete(parent._id)}>
+                <Button
+                    variant="danger"
+                    onClick={() => handleDelete(parent._id)}
+                    size="sm"
+                >
                   Excluir
                 </Button>
               </td>
             </tr>
         ))}
-      </ul>
+        {parents.length === 0 && (
+            <tr>
+              <td colSpan={3} className="text-center">
+                Nenhum responsável encontrado.
+              </td>
+            </tr>
+        )}
+        </tbody>
+      </Table>
     </div>
   );
 };
