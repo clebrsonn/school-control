@@ -1,15 +1,13 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/services/DiscountService.ts
 import { Discount, IDiscount } from "@hyteck/shared";
+import {BaseService} from "./generics/BaseService";
 
-export const createDiscount = async (data: IDiscount) => {
-  const discount = new Discount(data);
-  return discount.save();
-};
+export class DiscountService extends BaseService<IDiscount>{
+  constructor() {
+    super(Discount);
+  }
 
-export const getDiscounts = async () => {
-  return Discount.find();
-};
-
-export const getDiscountsByType = async (type: string) => {
-  return Discount.findOne({ type });
-};
+  findByType = async (type: string) => {
+    return Discount.findOne({ type });
+  };
+}

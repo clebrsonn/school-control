@@ -1,22 +1,23 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/services/StudentService.ts
-import { Student, IStudent, Enrollment, IEnrollment } from '@hyteck/shared/';
-import { getClassById } from './ClassService';
+import { Student, IStudent, IEnrollment } from '@hyteck/shared/';
 import mongoose, {Types} from 'mongoose';
-import {createPayment} from "./PaymentService";
-import {getParentById, updateParentById} from "./ParentService";
+import {ParentService} from "./ParentService";
 import {BaseService} from "./generics/BaseService";
+import {EnrollmentService} from "./EnrollmentService";
 
 export class StudentService extends BaseService<IStudent> {
+  parentService = new ParentService();
+  enrollmentService = new EnrollmentService();
   constructor() {
     super(Student);
   }
 
   create= async (data: IStudent) => {
     let student = new Student(data);
-    const responsible=await getParentById(student.responsible as unknown as string);
+    const responsible=await this.parentService.findById(student.responsible as unknown as string);
     student= await student.save();
     if (responsible) {
-      await updateParentById(responsible._id as string, {students: [...(responsible.students || []), student._id as Types.ObjectId]});
+      await this.parentService.update(responsible._id as string, {students: [...(responsible.students || []), student._id as Types.ObjectId]});
     }
     await this.enrollStudent(student._id as string, {classId: data.classId as unknown as Types.ObjectId});
 
@@ -45,7 +46,7 @@ export class StudentService extends BaseService<IStudent> {
       ...enroll
     };
 
-    return await createPayment(enrollment)
+    return await this.enrollmentService.create(enrollment)
 
   }
 

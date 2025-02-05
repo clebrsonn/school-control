@@ -1,28 +1,38 @@
 import {Enrollment, IEnrollment} from "@hyteck/shared";
+import {BaseService} from "./generics/BaseService";
 
-export const createEnrollment = async (data: Partial<IEnrollment>) => {
-    const enrollment = new Enrollment(data);
-    return await enrollment.save();
-};
+import {PaymentService} from "./PaymentService";
 
-export const getAllEnrollments = async () => {
-    return await Enrollment.find().populate("student").populate("classId");
-};
 
-export const getEnrollmentById = async (id: string) => {
-    return await Enrollment.findById(id).populate("student").populate("classId");
-};
+export class EnrollmentService extends BaseService<IEnrollment>{
+    _paymentService = new PaymentService();
 
-export const updateEnrollmentById = async (id: string, data: Partial<IEnrollment>) => {
-    return await Enrollment.findByIdAndUpdate(id, data, { new: true })
-        .populate("student")
-        .populate("classId");
-};
+    constructor() {
+        super(Enrollment);
+    }
 
-export const deleteEnrollmentById = async (id: string) => {
-    return await Enrollment.findByIdAndDelete(id);
-};
+    // Getter para obter a instância de PaymentService quando necessário
+    private get paymentService(): PaymentService {
+        if (!this._paymentService) {
+            // Aqui carregamos a dependência de forma tardia
+            const { PaymentService } = require("./PaymentService");
+            this._paymentService = new PaymentService();
+        }
+        return this._paymentService;
+    }
 
-export const getEnrollmentsByStudentId = async (studentId: string) => {
-    return Enrollment.find({ student: studentId }).populate("student").populate("classId");
-};
+
+    create = async (data: Partial<IEnrollment>) => {
+        const instance = new this.model(data);
+        const payment = await instance.save();
+        await this.paymentService.generatePaymentRecurrences(payment);
+        return payment;
+    };
+
+
+    getEnrollmentsByStudentId = async (studentId: string) => {
+        return Enrollment.find({ student: studentId }).populate("student").populate("classId");
+    };
+
+
+}

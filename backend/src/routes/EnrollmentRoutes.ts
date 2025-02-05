@@ -1,19 +1,9 @@
-import { Router } from "express";
-import {
-    createEnrollmentController,
-    getAllEnrollmentsController,
-    getEnrollmentByIdController,
-    updateEnrollmentByIdController,
-    deleteEnrollmentByIdController, getEnrollmentsByStudentIdController,
-} from "../controllers/EnrollmentsController";
+import {createBaseRouter} from "./BaseRoutes";
+import {EnrollmentsController} from "../controllers/EnrollmentsController";
 
-const router = Router();
+const enrollmentController = new EnrollmentsController();
+const router =createBaseRouter(enrollmentController);
 
-router.post("/", createEnrollmentController); // Criar
-router.get("/", getAllEnrollmentsController); // Buscar todos
-router.get("/:id", getEnrollmentByIdController); // Buscar por ID
-router.put("/:id", updateEnrollmentByIdController); // Atualizar por ID
-router.delete("/:id", deleteEnrollmentByIdController); // Deletar por ID
-router.get("/student/:studentId", getEnrollmentsByStudentIdController);
+router.get("/student/:studentId", enrollmentController.findByStudentId);
 
 export default router;

@@ -1,10 +1,7 @@
-// filepath: /e:/IdeaProjects/school-control/backend/src/routes/ClassRoutes.ts
-import { Router } from 'express';
-import { addClass, fetchClasses } from '../controllers/ClassesController';
+import {ClassesController} from "../controllers/ClassesController";
+import {createBaseRouter} from "./BaseRoutes";
 
-const router = Router();
-
-router.post('/', addClass);
-router.get('/', fetchClasses);
+const classesController = new ClassesController();
+const router = createBaseRouter(classesController);
 
 export default router;

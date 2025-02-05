@@ -1,14 +1,9 @@
-// filepath: /e:/IdeaProjects/school-control/backend/src/routes/PaymentRoutes.ts
-import { Router } from 'express';
-import { addPayment, fetchPayments, fetchPaymentsByParentId, fetchPaymentById, updatePayment, deletePayment } from '../controllers/PaymentsController';
+import {createBaseRouter} from "./BaseRoutes";
+import {PaymentsController} from "../controllers/PaymentsController";
 
-const router = Router();
+const paymentsController = new PaymentsController();
+const router = createBaseRouter(paymentsController);
 
-router.post('/', addPayment);
-router.get('/', fetchPayments);
-router.get('/parent/:parentId', fetchPaymentsByParentId);
-router.get('/:id', fetchPaymentById);
-router.put('/:id', updatePayment);
-router.delete('/:id', deletePayment);
+router.get('/parent/:parentId', paymentsController.fetchPaymentsByParentId);
 
 export default router;
