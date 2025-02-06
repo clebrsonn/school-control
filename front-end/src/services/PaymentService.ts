@@ -3,6 +3,7 @@
 import { ITuition } from "@hyteck/shared";
 import { get } from "../config/axios/get";
 import { post } from "../config/axios/post";
+import {axiosDelete} from "../config/axios/delete.ts";
 
 export const fetchPayments = async () => {
   const response = await get('/payments');
@@ -22,4 +23,8 @@ export const fetchPaymentById = async (id: string): Promise<ITuition> => {
 
 export const fetchPaymentsByParentId = async (parentId: string): Promise<ITuition[]>=> {
   return await get<ITuition[]>(`/payments/parent/${parentId}`);
+};
+
+export const deletePaymentById = async (id: string) => {
+  return await axiosDelete<ITuition>(`/payments/${id}`);
 };

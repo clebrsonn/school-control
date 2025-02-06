@@ -22,8 +22,8 @@ export const axiosPut = async <TRequest, TResponse>(
 
     return response.data;
   } catch (error) {
-    const message = (error as AxiosError<{ message: string }>).response?.data
-      ?.message;
+    const axiosError = error as AxiosError<TResponse>;
+    const message = axiosError.message;
 
     notification(`Error while updating ${url}. ${message ?? ''}`, 'error');
     throw error;

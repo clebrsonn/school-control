@@ -7,6 +7,7 @@ import { Button, Container, Form, ListGroup } from 'react-bootstrap';
 import { IStudent, IClass } from '@hyteck/shared';
 import notification from '../Notification';
 import {deleteStudent} from "../../services/StudentService.ts";
+import ListRegistries from "../pieces/ListRegistries.tsx";
 
 interface StudentManagerProps {
   responsible: string | undefined;
@@ -107,20 +108,9 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible, closeModal
           Salvar
         </Button>
       </Form>
-      <ListGroup className="mt-3">
-        {students.map((student: IStudent) => (
+      <h2>Alunos</h2>
+      <ListRegistries data={students} entityName={'student'}  onDelete={handleDelete}></ListRegistries>
 
-            <tr key={student._id}>
-              <td><Link to={`/students/${student._id}`}>{student.name}</Link>
-              </td>
-              <td>
-                <Button variant="danger" onClick={() => handleDelete(student._id)}>
-                  Excluir
-                </Button>
-              </td>
-            </tr>
-        ))}
-      </ListGroup>
     </Container>
   );
 };

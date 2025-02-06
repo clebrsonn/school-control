@@ -6,6 +6,7 @@ import notification from '@components/Notification';
 import {Button, Form, Table} from 'react-bootstrap';
 import { IResponsible } from '@hyteck/shared';
 import {deleteParent} from "../../services/ParentService.ts";
+import ListRegistries from "../pieces/ListRegistries.tsx";
 
 const ParentManager: React.FC = () => {
   const [parents, setParents] = useState<IResponsible[]>([]);
@@ -87,42 +88,9 @@ const ParentManager: React.FC = () => {
           Save
         </Button>
       </Form>
-      <h2>Parents List</h2>
-      <Table striped bordered hover responsive>
-        <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Telefone</th>
-          <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        {parents?.map((parent) => (
-            <tr key={parent._id}>
-              <td>
-                <Link to={`/parents/${parent._id}`}>{parent.name}</Link>
-              </td>
-              <td>{parent.phone}</td>
-              <td>
-                <Button
-                    variant="danger"
-                    onClick={() => handleDelete(parent._id)}
-                    size="sm"
-                >
-                  Excluir
-                </Button>
-              </td>
-            </tr>
-        ))}
-        {parents.length === 0 && (
-            <tr>
-              <td colSpan={3} className="text-center">
-                Nenhum responsável encontrado.
-              </td>
-            </tr>
-        )}
-        </tbody>
-      </Table>
+      <h2>Responsáveis</h2>
+        <ListRegistries data={parents} entityName={'parent'}  onDelete={handleDelete}></ListRegistries>
+
     </div>
   );
 };

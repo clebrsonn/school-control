@@ -12,8 +12,8 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    notification(error.response?.data?.message ?? error.response?.data, 'error');
-    const errorMessage = error.response ? error.response.data?.message : error;
+    notification(error.response?.data?.error ?? error.response?.data, 'error');
+    const errorMessage = error.response.data ? error.response.data.details?.message : error;
     return Promise.reject(new Error(errorMessage));
   }
 );

@@ -81,8 +81,7 @@ const StudentDetails: React.FC = () => {
               <h4>Matrícula Atual</h4>
               {enrollment.map((enroll) => (
                   <>
-                    <p>{enroll.student?.name}</p>
-                    <p>Turma Atual ID: {enroll.classId._id}</p>
+                    <p>Turma Atual: {enroll.classId?.name}</p>
                     <p>Data da Matrícula: {new Date(enroll.createdAt).toLocaleDateString()}</p>
                   </>
               ))}

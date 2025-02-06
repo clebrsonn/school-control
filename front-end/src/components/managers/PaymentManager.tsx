@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Container, ListGroup } from 'react-bootstrap';
-import { fetchPayments, createPayment } from '../../services/PaymentService';
+import {fetchPayments, createPayment, deletePaymentById} from '@services/PaymentService';
 import ErrorMessage from '../ErrorMessage';
 import { ITuition } from '@hyteck/shared';
 import notification from "../Notification.tsx";
+import ListRegistries from "../pieces/ListRegistries.tsx";
 
 const PaymentManager: React.FC = () => {
   const [payments, setPayments] = useState<ITuition[]>([]);
@@ -47,9 +48,9 @@ const PaymentManager: React.FC = () => {
     try {
       await deletePaymentById(id);
       setPayments(payments.filter((student) => student._id !== id));
-      notification("Estudante removido com sucesso.");
+      notification("Pagamento removido com sucesso.");
     } catch {
-      setError("Erro ao remover o estudante.");
+      setError("Erro ao remover o pagamento.");
     }
   };
 
@@ -107,21 +108,9 @@ const PaymentManager: React.FC = () => {
             Salvar
           </Button>
         </Form>
-        <ListGroup className="mt-3">
-          {payments.map((payment) => (
-              <tr key={payment._id}>
-                <td>{payment.responsible?.name}</td>
-                <td>R$ {payment.amount.toFixed(2)}</td>
-                <td>{new Date(payment.dueDate).toLocaleDateString()}</td>
-                <td>
-                  <Button variant="danger" onClick={() => handleDelete(payment._id)}>
-                    Excluir
-                  </Button>
-                </td>
-              </tr>
+     <h2 className="mt-4">Pagamentos</h2>
+        <ListRegistries data={payments} entityName={'payment'}  onDelete={handleDelete}></ListRegistries>
 
-          ))}
-        </ListGroup>
       </Container>
   );
 };

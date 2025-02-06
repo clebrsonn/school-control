@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button, Form, Table, Alert } from "react-bootstrap";
 import { IDiscount } from "@hyteck/shared";
 import { fetchDiscounts, createDiscount, deleteDiscount } from "@services/DiscountService";
+import ListRegistries from "../pieces/ListRegistries.tsx";
 
 const DiscountManager: React.FC = () => {
     const [discounts, setDiscounts] = useState<IDiscount[]>([]); // Lista de descontos
@@ -116,32 +117,8 @@ const DiscountManager: React.FC = () => {
             </Form>
 
             <h3 className="mt-4">Lista de Descontos</h3>
-            <Table striped bordered hover>
-                <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Valor</th>
-                    <th>Validade</th>
-                    <th>Tipo</th>
-                    <th>Ações</th>
-                </tr>
-                </thead>
-                <tbody>
-                {discounts.map((discount) => (
-                    <tr key={discount._id}>
-                        <td>{discount.name}</td>
-                        <td>R$ {discount.value.toFixed(2)}</td>
-                        <td>{new Date(discount.validUntil).toLocaleDateString()}</td>
-                        <td>{discount.type === "enroll" ? "Matrícula" : "Mensalidade"}</td>
-                        <td>
-                            <Button variant="danger" onClick={() => handleDelete(discount._id)}>
-                                Excluir
-                            </Button>
-                        </td>
-                    </tr>
-                ))}
-                </tbody>
-            </Table>
+            <ListRegistries data={discounts} entityName={'discount'}  onDelete={handleDelete}></ListRegistries>
+
         </div>
     );
 };

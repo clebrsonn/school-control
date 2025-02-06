@@ -21,12 +21,12 @@ export const post = async <TRequest, TResponse>(
     const response = await axiosInstance.post<TResponse>(url, data, config);
 
     return response.data;
-  } catch (error) {
-    const message = (error as AxiosError<{ message: string }>).response?.data
-      ?.message;
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<TResponse>;
+    const message = axiosError.message;
 
     notification(`Error while posting ${url}. ${message ?? ''}`, 'error');
 
-    throw error;
+    throw axiosError;
   }
 };

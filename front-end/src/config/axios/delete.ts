@@ -1,4 +1,4 @@
-import { AxiosError, AxiosRequestConfig } from "axios";
+import {AxiosError, AxiosRequestConfig} from "axios";
 import axiosInstance from "../axiosConfig";
 import notification from "../../components/Notification";
 

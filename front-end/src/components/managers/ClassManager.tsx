@@ -3,6 +3,7 @@ import { fetchClasses, createClass, deleteClass } from '@services/ClassService';
 import { Button, Form, Container, Table } from 'react-bootstrap';
 import { IClass } from '@hyteck/shared';
 import notification from "../Notification";
+import ListRegistries from "../pieces/ListRegistries.tsx";
 
 const ClassManager: React.FC = () => {
   const [classes, setClasses] = useState<IClass[]>([]);
@@ -110,26 +111,7 @@ const ClassManager: React.FC = () => {
           <Button onClick={handleAddClass} className="mt-3">Add Class</Button>
         </Form>
         <h3 className="mt-4">Lista de Turmas</h3>
-        <Table striped bordered hover>
-          <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Ações</th>
-          </tr>
-          </thead>
-          <tbody>
-          {classes.map((clazz) => (
-              <tr key={clazz._id}>
-                <td>{clazz.name}</td>
-                <td>
-                  <Button variant="danger" onClick={() => handleDelete(clazz._id)}>
-                    Excluir
-                  </Button>
-                </td>
-              </tr>
-          ))}
-          </tbody>
-        </Table>
+        <ListRegistries data={classes} entityName={'classe'}  onDelete={handleDelete}></ListRegistries>
       </Container>
   );
 };
