@@ -14,6 +14,7 @@ export class PaymentService extends BaseService<ITuition>{
 
   constructor() {
     super(Tuition);
+    this.populateFields=['enrollment', 'responsible'];
   }
 
   private get enrollmentService(): EnrollmentService {

@@ -1,15 +1,8 @@
-import mongoose, { Model, Document } from "mongoose";
+import mongoose, {Model, Document, Query} from "mongoose";
 
-interface IBaseService<T extends Document> {
-    create(data: Partial<T>): Promise<T>;
-    findAll(): Promise<T[]>;
-    findById(id: string): Promise<T | null>;
-    update(id: string, data: Partial<T>): Promise<T | null>;
-    delete(id: string): Promise<boolean>;
-}
-
-export class BaseService<T extends Document> implements IBaseService<T> {
+export class BaseService<T extends Document> {
     protected model: Model<T>;
+    protected populateFields: string | string[] = [];
 
     constructor(model: Model<T>) {
         this.model = model;
@@ -21,11 +14,11 @@ export class BaseService<T extends Document> implements IBaseService<T> {
     }
 
     async findAll(): Promise<T[]> {
-        return this.model.find().exec();
+        return this.applyPopulates(this.model.find()).exec();
     }
 
     async findById(id: string): Promise<T | null> {
-        return this.model.findById(id).exec();
+        return this.applyPopulates(this.model.findById(id)).exec();
     }
 
     async update(id: string, data: Partial<T>): Promise<T | null> {
@@ -36,4 +29,16 @@ export class BaseService<T extends Document> implements IBaseService<T> {
         const result = await this.model.findByIdAndDelete(id).exec();
         return result !== null;
     }
+
+    private applyPopulates(query: Query<any, T>, ): Query<any, T> {
+        if (Array.isArray(this.populateFields)) {
+            // Aplica múltiplos populates
+            this.populateFields.forEach(field => query.populate(field));
+        } else {
+            // Aplica um único populate
+            query.populate(this.populateFields);
+        }
+        return query;
+    }
+
 }

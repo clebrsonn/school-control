@@ -10,7 +10,10 @@ export class StudentService extends BaseService<IStudent> {
   enrollmentService = new EnrollmentService();
   constructor() {
     super(Student);
+    this.populateFields=['responsible'];
   }
+
+
 
   create= async (data: IStudent) => {
     let student = new Student(data);
@@ -28,10 +31,6 @@ export class StudentService extends BaseService<IStudent> {
 
   getStudentsByParentId = async (parentId: string) => {
     return await Student.find({ responsible: parentId }).populate('responsible');
-  };
-
-  findById = async (id: string) => {
-    return await Student.findById(id).populate('responsible');
   };
 
   enrollStudent = async (studentId: string, enroll: Partial<IEnrollment>) => {

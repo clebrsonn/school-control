@@ -5,5 +5,6 @@ import {BaseService} from "./generics/BaseService";
 export class ParentService extends BaseService<IResponsible>{
   constructor() {
     super(Responsible);
+    this.populateFields= ['students'];
   }
 }
