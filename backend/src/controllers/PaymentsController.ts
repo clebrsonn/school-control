@@ -1,34 +1,36 @@
-import {NextFunction, Request, Response} from 'express';
-import {BaseController} from "./generics/BaseController";
-import {ITuition} from "@hyteck/shared";
-import {PaymentService} from "../services/PaymentService";
+import { NextFunction, Request, Response } from 'express';
+import { BaseController } from './generics/BaseController';
+import { ITuition } from '@hyteck/shared';
+import { PaymentService } from '../services/PaymentService';
 
 const paymentService = new PaymentService();
-export class PaymentsController extends BaseController<ITuition>{
+
+export class PaymentsController extends BaseController<ITuition> {
   constructor() {
     super(paymentService);
   }
 
-  fetchPaymentsByParentId = async (req: Request, res: Response) => {
+  // Get payments by parent ID
+  fetchPaymentsByParentId = async (req: Request, res: Response, next: NextFunction) => {
+    const { parentId } = req.params; // Extract parent ID from request
+
     try {
-      const payments = await paymentService.getPaymentsByParentId(req.params.parentId);
-      res.status(200).send(payments);
-    } catch (error: any) {
-      res.status(400).send({ message: error.message });
+      const payments = await paymentService.getPaymentsByParentId(parentId);
+      res.status(200).json(payments);
+    } catch (error) {
+      next(error); // Delegate error to the generic error handler
     }
   };
 
+  // Get monthly debt for a specific parent
   getMonthlyDebt = async (req: Request, res: Response, next: NextFunction) => {
+    const { parentId } = req.params; // Extract parent ID from request
+
     try {
-      const {parentId} = req.params; // Obtém o ID do responsável na requisição
-      console.log('parentId', parentId);
       const totalDebt = await paymentService.getMonthlyDebtByParentId(parentId);
-
-      res.json({success: true, totalDebt});
+      res.status(200).json(totalDebt);
     } catch (error) {
-      next(error); // Encaminha para o handler de erros genérico
+      next(error); // Delegate error to the generic error handler
     }
-
-  }
-
+  };
 }
