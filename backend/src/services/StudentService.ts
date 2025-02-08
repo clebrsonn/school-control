@@ -1,5 +1,5 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/services/StudentService.ts
-import { Student, IStudent, IEnrollment } from '@hyteck/shared/';
+import {IEnrollment, IStudent, Student} from '@hyteck/shared/';
 import mongoose, {Types} from 'mongoose';
 import {ParentService} from "./ParentService";
 import {BaseService} from "./generics/BaseService";

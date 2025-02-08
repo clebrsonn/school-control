@@ -8,6 +8,7 @@ import PaymentRoutesRouter from './routes/PaymentRoutes';
 import DiscountRoutesRouter from './routes/DiscountRoutes';
 import ClassRoutesRouter from './routes/ClassRoutes';
 import EnrollmentRoutes from "./routes/EnrollmentRoutes";
+import {errorHandler} from "./middleware/ErrorHandler";
 const app = express();
 
 dotenv.config();
@@ -31,5 +32,7 @@ app.use('/payments', PaymentRoutesRouter);
 app.use('/discounts', DiscountRoutesRouter);
 app.use('/classes', ClassRoutesRouter);
 app.use("/enrollments", EnrollmentRoutes);
+
+app.use(errorHandler);
 
 export default app;

@@ -1,4 +1,3 @@
-// filepath: /e:/IdeaProjects/school-control/backend/src/services/PaymentService.ts
 import { IEnrollment, ITuition, Tuition} from '@hyteck/shared';
 import {BaseService} from "./generics/BaseService";
 import {EnrollmentService} from "./EnrollmentService";
@@ -19,13 +18,11 @@ export class PaymentService extends BaseService<ITuition>{
 
   private get enrollmentService(): EnrollmentService {
     if (!this._enrollmentService) {
-      // Aqui carregamos a dependência de forma tardia
       const { EnrollmentService } = require("./EnrollmentService");
       this._enrollmentService = new EnrollmentService();
     }
     return this._enrollmentService;
   }
-
 
   getPaymentsByParentId = async (responsible: string) => {
     return Tuition.find({ responsible }).populate('enrollment').sort({ dueDate: 1 });
@@ -58,10 +55,47 @@ export class PaymentService extends BaseService<ITuition>{
         discount: discount?._id as mongoose.Types.ObjectId | undefined
       };
       const payment = new Tuition(paymentData);
-      console.log('payment', payment);
       await payment.save();
     }
   };
+
+  async getMonthlyDebtByParentId(responsible: string) {
+    // Obtém a data inicial e final do mês atual
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    // Agregação para calcular o total do mês
+    const result = await Tuition.aggregate([
+      {
+        $match: {
+          // Filtra pelos pagamentos do responsável
+          responsible: new mongoose.Types.ObjectId(responsible),
+          // dueDate: {
+          //   $gte: firstDayOfMonth, // Pagamentos a partir do primeiro dia do mês
+          //   $lte: lastDayOfMonth,  // Até o último dia do mês
+          // },
+        },
+      },
+      {
+        $group: {
+          _id:  {
+            month: { $month: "$dueDate" }, // Extrair o mês da data de vencimento
+            year: { $year: "$dueDate" },  // Garantir agrupamento também por ano
+          },
+          // Agrupa todos os documentos (não agrega valores por campo específico)
+          totalDebt: { $sum: "$amount" }, // Soma o campo "amount"
+        },
+      },{
+        $sort: { "_id.month": 1, "_id.amount": 1 }, // Ordena por mês e pelo valor de amount
+      }
+
+    ]);
+
+    // Se não encontrar dados, considera a dívida como zero
+    return result;
+  }
+
 
 
 }
