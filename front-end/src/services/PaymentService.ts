@@ -28,3 +28,7 @@ export const fetchPaymentsByParentId = async (parentId: string): Promise<ITuitio
 export const deletePaymentById = async (id: string) => {
   return await axiosDelete<ITuition>(`/payments/${id}`);
 };
+
+export const groupPaymentsByParentId = async (parentId: string): Promise<ITuition[]>=> {
+  return await get<ITuition[]>(`/payments//parent/debt/${parentId}`);
+};
