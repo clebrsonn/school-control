@@ -1,78 +1,87 @@
 import React from 'react';
-import {Button, Table} from 'react-bootstrap';
-import {Document} from "mongoose";
+import { Button, Table } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
-import {Link} from 'react-router-dom';
-
-// Define as props do componente
-interface EntityTableProps<T> {
-    data: T[]; // Lista de dados genéricos
-    entityName: string; // Nome da entidade (ex.: "responsável")
-    onDelete?: (id: string) => void; // Função para exclusão (opcional)
+interface IEntity {
+    _id: string;
+    [key: string]: any;
 }
 
-const EntityTable = <T extends Document>({
-                                                    data,
-                                                    entityName,
-                                                    onDelete,
-                                                }: EntityTableProps<T>) => {
-    // Obtemos as chaves das colunas automaticamente do primeiro item da lista
-    const columns = data.length > 0 ? Object.keys(data[0]).filter((key) => key !== '_id' && key !== '__v') : [];
+interface EntityTableProps<T extends IEntity> {
+    data: T[];
+    entityName: string;
+    onDelete?: (id: string) => void;
+    action?: (id: string) => void;
+}
+
+const EntityTable = <T extends IEntity>({ data, entityName, onDelete, action }: EntityTableProps<T>) => {
+    const columns = data.length > 0 ? Object.keys(data[0]).filter(key => key !== '_id' && key !== '__v') : [];
+    const formatDate = (dateString: string) => {
+        const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+        return new Date(dateString).toLocaleDateString('pt-BR', options);
+    };
+
+    const isDate = (value: any): boolean => {
+        // Verifica se é uma instância de Date
+        if (value instanceof Date) {
+            return true;
+        }
+        // Verifica se é uma string e se pode ser convertida em uma data válida
+        const date = new Date(value);
+        return !isNaN(date.getTime());
+    };
 
     return (
-        <Table striped bordered hover responsive>
-            <thead>
-            <tr>
-                {columns.map((column, index) => (
-                    <th key={index}>{column}</th>
-                ))}
-                {onDelete && <th>Ações</th>} {/* Exibimos a coluna de "Ações" se o onDelete estiver definido */}
-            </tr>
-            </thead>
-            <tbody>
-            {data?.map((item) => (
-                <tr key={item._id}>
-                    {/* Itera sobre todas as propriedades do objeto com as chaves dinâmicas */}
-                    {columns.map((column, index) => (
-                        <td key={`${item._id}-${index}`}>
-                            {column === 'name' ? ( // Caso a chave seja "name", adiciona link
-                                <Link to={`/${entityName}s/${item._id}`}>
-                                    {(item as Record<string, any>)[column]}
-                                </Link>
-                            ) : (
-                                typeof (item as Record<string, any>)[column] === 'object' ?
-                                    (Array.isArray((item as Record<string, any>)[column]) ?
-                                        ((
-                                            (item as Record<string, any>)[column]
-                                        )?.map(o => o.name).join(", ") || '-'):
-                                    ((item as Record<string, any>)[column]?.name || '-')) :
-                                    (item as Record<string, any>)[column]
-                            )}
-                        </td>
-                    ))}
-                    {/* Adiciona a coluna de ações para excluir, se fornecido */}
-                    {onDelete && (
-                        <td>
-                            <Button
-                                variant="danger"
-                                onClick={() => onDelete(item._id)}
-                                size="sm"
-                            >
-                                Excluir
-                            </Button>
-                        </td>
+      <Table striped bordered hover responsive>
+        <thead>
+          <tr>
+            {columns.map((column, index) => <th key={index}>{column}</th>)}
+            {(action || onDelete) && <th>Ações</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map(item => (
+            <tr key={item._id}>
+              {columns.map((column, index) => (
+                <td key={`${item._id}-${index}`}>
+                  {column === 'name' ? (
+                    <Link to={`/${entityName}s/${item._id}`}>{item[column]}</Link>
+                  ) : (
+                    typeof item[column] === 'object'
+                      ? (Array.isArray(item[column])
+                          ? (item[column]?.map((o: any) => o.name).join(", ") || '-')
+                          : (item[column]?.name || '-'))
+                      : item[column]
+                  )}
+                </td>
+              ))}
+                <td>
+
+                {onDelete && (
+                  <Button variant="danger" size="sm" onClick={() => onDelete(item._id)}>
+                    Excluir
+                  </Button>
+                )}
+                    {action && (
+
+                    <Button variant="primary" size="sm" onClick={() => action(item._id)}>
+                        Marcar como pago
+                    </Button>
                     )}
-                </tr>
-            ))}
-            {data.length === 0 && (
-                <tr>
-                    <td colSpan={columns.length + (onDelete ? 1 : 0)} className="text-center">
-                        Nenhum {entityName} encontrado.
-                    </td>
-                </tr>
-            )}
-            </tbody>
-        </Table>
+
+                </td>
+
+                  </tr>
+          ))}
+          {data.length === 0 && (
+            <tr>
+              <td colSpan={columns.length + (onDelete ? 1 : 0)} className="text-center">
+                Nenhum {entityName} encontrado.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </Table>
     );
 };
 
