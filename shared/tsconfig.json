@@ -9,7 +9,7 @@
       "target": "es6",
       "declaration": true
     },
-    "include": ["src/**/*"],
+    "include": ["**/*.ts"],
     "exclude": ["node_modules", "dist"]
   }
   

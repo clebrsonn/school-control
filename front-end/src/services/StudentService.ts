@@ -20,7 +20,7 @@ export const fetchStudentById = async (id: string) => {
 };
 
 export const fetchStudentsByParentId = async (parentId: string) => {
-    const response = await get(`/students/parent/${parentId}`);
+    const response = await get<IStudent[]>(`/students/parent/${parentId}`);
     return response;
   };
 

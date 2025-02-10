@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { createParent, fetchParents, deleteParent } from '@services/ParentService';
+import React, {useEffect, useState} from 'react';
+import {createParent, deleteParent, fetchParents} from '@services/ParentService';
 import ErrorMessage from '@components/ErrorMessage';
 import notification from '@components/Notification';
-import { Button, Form } from 'react-bootstrap';
-import { IResponsible } from '@hyteck/shared';
+import {Button, Form} from 'react-bootstrap';
+import {IResponsible} from '@hyteck/shared';
 import ListRegistries from '../pieces/ListRegistries.tsx';
 
 // Constants for reusable initial states

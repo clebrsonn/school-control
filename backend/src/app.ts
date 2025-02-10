@@ -20,6 +20,15 @@ app.use(cors({
 }));
 app.use(express.json());
 
+mongoose.set('debug', (collectionName, method, query, doc) => {
+  console.debug('[Mongoose Query]', {
+    collectionName,
+    method,
+    query,
+    doc: doc || undefined,
+  });
+});
+
 mongoose.connect(process.env.MONGO_URL || '').then(() => {
     console.log('Connected to MongoDB');
   }).catch((error) => {

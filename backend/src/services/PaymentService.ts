@@ -87,7 +87,7 @@ export class PaymentService extends BaseService<ITuition>{
           totalDebt: { $sum: "$amount" }, // Soma o campo "amount"
         },
       },{
-        $sort: { "_id.month": 1, "_id.amount": 1 }, // Ordena por mês e pelo valor de amount
+        $sort: { "_id.year": 1,"_id.month": 1,  "_id.amount": 1 }, // Ordena por mês e pelo valor de amount
       }
 
     ]);

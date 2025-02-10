@@ -1,20 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { fetchStudentsByParentId, fetchStudents, createStudent } from '@services/StudentService';
-import { fetchClasses } from '@services/ClassService';
-import { Link } from 'react-router-dom';
+import React, {useEffect, useState} from 'react';
+import {createStudent, fetchStudents, fetchStudentsByParentId} from '@services/StudentService';
+import {fetchClasses} from '@services/ClassService';
 import ErrorMessage from '@components/ErrorMessage';
-import { Button, Container, Form, ListGroup } from 'react-bootstrap';
-import { IStudent, IClass } from '@hyteck/shared';
+import {Button, Container, Form} from 'react-bootstrap';
+import {IClass, IStudent} from '@hyteck/shared';
 import notification from '../Notification';
 import {deleteStudent} from "../../services/StudentService.ts";
 import ListRegistries from "../pieces/ListRegistries.tsx";
 
 interface StudentManagerProps {
   responsible: string | undefined;
-  closeModal: () => void;
 }
 
-const StudentManager: React.FC<StudentManagerProps> = ({ responsible, closeModal }) => {
+const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
   const [students, setStudents] = useState<IStudent[]>([]);
   const [classes, setClasses] = useState<IClass[]>([]);
   const [name, setName] = useState('');
@@ -57,7 +55,6 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible, closeModal
       setName('');
       setClassId('');
       setError(null);
-      closeModal();
       notification('Aluno adicionado com sucesso', 'success');
     } catch (err: any) {
       setError(err.message || 'Failed to add student');
