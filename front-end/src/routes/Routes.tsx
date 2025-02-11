@@ -9,6 +9,7 @@ import StudentDetails from '../components/details/StudentDetails';
 import PaymentDetails from '../components/details/PaymentDetails';
 import ClassDetails from '../components/details/ClassDetails';
 import DiscountManager from "../components/managers/DiscountManager.tsx";
+import HomeReport from '../components/HomeReport.tsx';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -23,7 +24,7 @@ const AppRoutes: React.FC = () => {
             <Route path="/payments/:id" element={<PaymentDetails/>}/>
             <Route path="/classes/:id" element={<ClassDetails/>}/>
 
-            <Route path="/" element={<h2>Welcome to the School Control Dashboard</h2>}/>
+            <Route path="/" element={<HomeReport/>}/>
         </Routes>
     );
 };

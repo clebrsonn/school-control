@@ -1,10 +1,22 @@
-import {createBaseRouter} from "./BaseRoutes";
-import {PaymentsController} from "../controllers/PaymentsController";
+import { Router } from 'express';
+import { PaymentsController } from '../controllers/PaymentsController';
 
 const paymentsController = new PaymentsController();
-const router = createBaseRouter(paymentsController);
+const router = Router();
+if (paymentsController.create) router.post("/", paymentsController.create);
+if (paymentsController.findAll) router.get("/", paymentsController.findAll);
 
 router.get('/parent/:parentId', paymentsController.fetchPaymentsByParentId);
 router.get('/parent/debt/:parentId', paymentsController.getMonthlyDebt);
+router.get('/grouped/all', paymentsController.groupPaymentsByMonthAndParent);
+router.get('/late', paymentsController.getLatePayments);
+router.get('/total-estimated', paymentsController.getTotalEstimatedForCurrentMonth);
+router.get('/on-time-payers', paymentsController.getOnTimePayers);
+router.get('/most-late-payers', paymentsController.getMostLatePayers);
+
+
+
+router.get("/:id", paymentsController.findById);
+
 
 export default router;

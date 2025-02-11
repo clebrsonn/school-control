@@ -31,10 +31,30 @@ export const deletePaymentById = async (id: string) => {
 };
 
 export const groupPaymentsByParentId = async (parentId: string): Promise<ITuition[]>=> {
-  return await get<ITuition[]>(`/payments//parent/debt/${parentId}`);
+  return await get<ITuition[]>(`/payments/parent/debt/${parentId}`);
 };
 
 export const updatePayment = async (id: string, paymentData: Partial<ITuition>): Promise<ITuition> => {
   const response = await axiosPut<Partial<ITuition>, ITuition>(`/payments/${id}`, paymentData);
   return response;
 }
+
+export const groupPaymentsByMonthAndParent = async (): Promise<any[]> => {
+  return await get<any[]>('/payments/grouped/all');
+};
+
+export const fetchLatePayments = async () => {
+  return await get<ITuition[]>('/payments/late');
+};
+
+export const fetchTotalEstimatedForCurrentMonth = async () => {
+  return await get<number>('/payments/total-estimated');
+};
+
+export const fetchOnTimePayers = async () => {
+  return await get<any[]>('/payments/on-time-payers');
+};
+
+export const fetchMostLatePayers = async () => {
+  return await get<any[]>('/payments/most-late-payers');
+};
