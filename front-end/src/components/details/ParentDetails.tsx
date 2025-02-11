@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {Link, useParams} from 'react-router-dom';
 import Modal from 'react-modal';
 import ErrorMessage from '@components/ErrorMessage';
-import {Button, Col, Container, ListGroup, Row} from 'react-bootstrap';
+import {Button, Col, Container, ListGroup, Row, Table} from 'react-bootstrap';
 import {ITuition} from '@hyteck/shared';
 import {createPayment, fetchPaymentsByParentId, updatePayment} from "../../services/PaymentService.ts";
 import {ModalType, ModalTypes} from "../../types/modal.ts";
@@ -29,15 +29,47 @@ const ParentDetails: React.FC = () => {
     loadPayments();
   }, [id]);
 
-  const handleMarkAsPaid = async (paymentId: string) => {
+  const groupPaymentsByMonth = (payments: ITuition[]): { [month: string]: ITuition[] } => {
+    const groupedPayments: { [month: string]: ITuition[] } = {};
+    payments.forEach(payment => {
+      const month = new Date(payment.dueDate).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+      if (!groupedPayments[month]) {
+        groupedPayments[month] = [];
+      }
+      groupedPayments[month].push(payment);
+    });
+    return groupedPayments;
+  };
+
+  const groupedPayments = groupPaymentsByMonth(payments);
+
+
+  const handleMarkMonthAsPaid = async (month: string) => {
     try {
-      const updatedPayment = await updatePayment(paymentId, { status: "paid" });
-      setPayments(payments.map(p => p._id === paymentId ? updatedPayment : p));
-      notification("Pagamento atualizado com sucesso!", "success");
+      const paymentsToPay = groupedPayments[month];
+      const updatedPayments = await Promise.all(paymentsToPay.map(payment => updatePayment(payment._id, { status: 'paid' })));
+
+      setPayments(prevPayments => {
+        return prevPayments.map(p => {
+          const updatedPayment = updatedPayments.find(up => up._id === p._id);
+          return updatedPayment || p;
+        });
+      });
+
+      notification("Pagamentos do mês atualizados com sucesso!", "success");
+
     } catch (error: any) {
-      notification(error.message || "Erro ao atualizar pagamento.", "error");
+      notification(error.message || "Erro ao atualizar pagamentos do mês.", "error");
     }
   };
+
+
+  const formatDate = (dateString: string | Date): string => { // Aceita string ou Date
+    const date = new Date(dateString); // Cria um objeto Date
+    const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+    return date.toLocaleDateString('pt-BR', options);
+  };
+
 
   if (error) return <ErrorMessage message={error} />;
   if (!parent) return <LoadingSpinner />;
@@ -79,23 +111,49 @@ const ParentDetails: React.FC = () => {
           ))}
         </ListGroup>
 
-        <h2>Monthly Fees</h2>
-        <ListGroup className="mt-3">
-          {monthlyFees?.map((monthlyFee) => (
-            <ListGroup.Item key={monthlyFee._id as string}>
-              {monthlyFee.totalDebt} - {new Date(monthlyFee?._id?.year, monthlyFee?._id?.month -1, 10).toLocaleDateString()}
-            </ListGroup.Item>
-          ))}
-        </ListGroup>
+        {/*<h2>Monthly Fees</h2>*/}
+        {/*<ListGroup className="mt-3">*/}
+        {/*  {monthlyFees?.map((monthlyFee) => (*/}
+        {/*    <ListGroup.Item key={monthlyFee._id as string}>*/}
+        {/*      {monthlyFee.totalDebt} - {new Date(monthlyFee?._id?.year, monthlyFee?._id?.month -1, 10).toLocaleDateString()}*/}
+        {/*    </ListGroup.Item>*/}
+        {/*  ))}*/}
+        {/*</ListGroup>*/}
 
         <h2>Payments</h2>
-        {payments.map(payment => (
-          <div key={payment._id}>
-            <span>{payment.dueDate} - R$ {payment.amount} - {payment.status}</span>
-            {payment.status !== "paid" && (
-              <button onClick={() => handleMarkAsPaid(payment._id)}>Marcar como pago</button>
-            )}
-          </div>
+        {Object.entries(groupedPayments).map(([month, monthPayments]) => (
+            <div key={month}>
+              <h3>{month}</h3>
+              <Table striped bordered hover>
+                <thead>
+                <tr>
+                  <th>Vencimento</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                {monthPayments.map(payment => (
+                    <tr key={payment._id}>
+                      <td>{formatDate(payment.dueDate)}</td>
+                      <td>R$ {payment.amount}</td>
+                      <td>{payment.status}</td>
+                    </tr>
+                ))}
+                </tbody>
+              </Table>
+              <Button
+                  onClick={() => handleMarkMonthAsPaid(month)}
+                  disabled={monthPayments.every(p => p.status === 'paid')}
+              >
+                Pagar {monthPayments.reduce((sum, p) => {
+                if(p.status != 'paid') {
+                  return sum + p.amount;
+                }
+                return sum;
+              }, 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </Button>
+            </div>
         ))}
 
         <Modal isOpen={modalIsOpen} onRequestClose={() => setModalIsOpen(false)}>
