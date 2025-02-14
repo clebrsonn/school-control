@@ -1,26 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Button, Container, ListGroup } from 'react-bootstrap';
-import { fetchPayments, createPayment, deletePaymentById, groupPaymentsByMonthAndParent } from '@services/PaymentService';
+import React, {useEffect, useState} from 'react';
+import {Container, ListGroup} from 'react-bootstrap';
+import {groupPaymentsByMonthAndParent} from '@services/PaymentService';
 import ErrorMessage from '../ErrorMessage';
-import { ITuition } from '@hyteck/shared';
-import notification from "../Notification.tsx";
-import ListRegistries from "../pieces/ListRegistries.tsx";
+import {ITuition} from '@hyteck/shared';
 
 const PaymentManager: React.FC = () => {
-  const [payments, setPayments] = useState<ITuition[]>([]);
+  // const [payments, setPayments] = useState<ITuition[]>([]);
   const [groupedPayments, setGroupedPayments] = useState<any[]>([]);
-  const [amount, setAmount] = useState('');
-  const [date, setDate] = useState('');
-  const [discountId, setDiscountId] = useState('');
-  const [parentId, setParentId] = useState('');
-  const [classId, setClassId] = useState('');
+  // const [amount, setAmount] = useState('');
+  // const [date, setDate] = useState('');
+  // const [discountId, setDiscountId] = useState('');
+  // const [parentId, setParentId] = useState('');
+  // const [classId, setClassId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const getPayments = async () => {
       try {
-        const payments = await fetchPayments();
-        setPayments(payments);
+        // const payments = await fetchPayments();
+        // setPayments(payments);
         const grouped = await groupPaymentsByMonthAndParent();
         setGroupedPayments(grouped);
       } catch (err: any) {
@@ -31,37 +29,37 @@ const PaymentManager: React.FC = () => {
     getPayments();
   }, []);
 
-  const handleAddPayment = async () => {
-    try {
-      const newPayment = { amount: parseFloat(amount), date, discountId, parentId, classId };
-      const addedPayment = await createPayment(newPayment);
-      setPayments([...payments, addedPayment]);
-      setAmount('');
-      setDate('');
-      setDiscountId('');
-      setParentId('');
-      setClassId('');
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to add payment');
-    }
-  };
+  // const handleAddPayment = async () => {
+  //   try {
+  //     const newPayment = { amount: parseFloat(amount), date, discountId, parentId, classId };
+  //     const addedPayment = await createPayment(newPayment);
+  //     setPayments([...payments, addedPayment]);
+  //     setAmount('');
+  //     setDate('');
+  //     setDiscountId('');
+  //     setParentId('');
+  //     setClassId('');
+  //     setError(null);
+  //   } catch (err: any) {
+  //     setError(err.message || 'Failed to add payment');
+  //   }
+  // };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deletePaymentById(id);
-      setPayments(payments.filter((student) => student._id !== id));
-      notification("Pagamento removido com sucesso.");
-    } catch {
-      setError("Erro ao remover o pagamento.");
-    }
-  };
+  // const handleDelete = async (id: string) => {
+  //   try {
+  //     await deletePaymentById(id);
+  //     setPayments(payments.filter((student) => student._id !== id));
+  //     notification("Pagamento removido com sucesso.");
+  //   } catch {
+  //     setError("Erro ao remover o pagamento.");
+  //   }
+  // };
 
   return (
     <Container className="bg-dark text-white p-4">
       <h1>Gerenciar Pagamentos</h1>
       {error && <ErrorMessage message={error} />}
-      <Form>
+      {/* <Form>
         <Form.Group controlId="formPaymentAmount">
           <Form.Label>Valor</Form.Label>
           <Form.Control
@@ -109,15 +107,12 @@ const PaymentManager: React.FC = () => {
         <Button variant="primary" onClick={handleAddPayment} className="mt-3">
           Salvar
         </Button>
-      </Form>
-      <h2 className="mt-4">Pagamentos</h2>
-      <ListRegistries data={payments} entityName={'payment'} onDelete={handleDelete}></ListRegistries>
-      <h2 className="mt-4">Pagamentos Agrupados</h2>
+      </Form> */}
+      {/* <h2 className="mt-4">Pagamentos Agrupados</h2> */}
       {groupedPayments.map((group) => (
         <div key={`${group.year}-${group.month}-${group.responsible}`}>
           <h3>{`${group.month}/${group.year} - ${group.responsible.name}`}</h3>
           <p>Total Amount: {group.totalAmount}</p>
-          <p>Total Discount: {group.totalDiscount}</p>
           <ListGroup>
             {group.payments.map((payment: ITuition) => (
               <ListGroup.Item key={payment._id}>

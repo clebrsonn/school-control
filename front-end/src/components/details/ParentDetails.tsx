@@ -88,12 +88,12 @@ const ParentDetails: React.FC = () => {
             }} className="me-2">
               Adicionar Aluno
             </Button>
-            <Button variant="primary" onClick={() => {
+            {/* <Button variant="primary" onClick={() => {
               setModalType(ModalTypes.MONTHLY_FEE);
               setModalIsOpen(true);
             }}>
               Adicionar Pagamento
-            </Button>
+            </Button> */}
           </Col>
         </Row>
 

@@ -1,8 +1,8 @@
-import { IEnrollment, ITuition, Tuition } from '@hyteck/shared';
-import { BaseService } from "./generics/BaseService";
+import {IEnrollment, ITuition, Tuition} from '@hyteck/shared';
+import {BaseService} from "./generics/BaseService";
 import mongoose from "mongoose";
-import { DiscountService } from "./DiscountService";
-import { ParentService } from "./ParentService";
+import {DiscountService} from "./DiscountService";
+import {ParentService} from "./ParentService";
 import {EnrollmentService} from "./EnrollmentService";
 import {StudentService} from "./StudentService";
 
@@ -82,7 +82,6 @@ export class PaymentService extends BaseService<ITuition> {
             month: { $month: "$dueDate" }, // Extrair o mês da data de vencimento
             year: { $year: "$dueDate" },  // Garantir agrupamento também por ano
           },
-          // Agrupa todos os documentos (não agrega valores por campo específico)
           totalDebt: { $sum: "$amount" }, // Soma o campo "amount"
         },
       }, {

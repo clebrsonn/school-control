@@ -1,7 +1,7 @@
-import { NextFunction, Request, Response } from 'express';
-import { BaseController } from './generics/BaseController';
-import { ITuition } from '@hyteck/shared';
-import { PaymentService } from '../services/PaymentService';
+import {NextFunction, Request, Response} from 'express';
+import {BaseController} from './generics/BaseController';
+import {ITuition} from '@hyteck/shared';
+import {PaymentService} from '../services/PaymentService';
 
 const paymentService = new PaymentService();
 
@@ -39,7 +39,6 @@ export class PaymentsController extends BaseController<ITuition> {
   // Group payments by month and parent
   groupPaymentsByMonthAndParent = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log('asda')
       const groupedPayments = await paymentService.groupPaymentsByMonthAndParent();
       res.status(200).json(groupedPayments);
     } catch (error) {
