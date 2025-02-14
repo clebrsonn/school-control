@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { enrollStudent, fetchStudentById } from '@services/StudentService';
-import { fetchClasses } from '@services/ClassService';
-import { IClass, IEnrollment, IStudent } from '@hyteck/shared';
-import { Button, Container, Form } from 'react-bootstrap';
+import React, {useEffect, useState} from 'react';
+import {Link, useParams} from 'react-router-dom';
+import {enrollStudent, fetchStudentById} from '@services/StudentService';
+import {fetchClasses} from '@services/ClassService';
+import {IClass, IEnrollment, IResponsible, IStudent} from '@hyteck/shared';
+import {Button, Container, Form} from 'react-bootstrap';
 import ErrorMessage from '@components/ErrorMessage';
 import notification from '../Notification';
-import { fetchEnrollmentByStudent } from '../../services/MonthlyFeeService.ts';
+import {fetchEnrollmentByStudent} from '../../services/MonthlyFeeService.ts';
 
 const StudentDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -21,14 +21,19 @@ const StudentDetails: React.FC = () => {
         fetchClassData();
     }, [id]);
 
+    if (!id) {
+        setError('Invalid student ID.');
+        return;
+    }
+
     const fetchStudentData = async () => {
         try {
             // Fetch student and enrollment data
             const studentData = await fetchStudentById(id);
             const enrollmentData = await fetchEnrollmentByStudent(id);
             setStudent(studentData);
-            setEnrollments(enrollmentData || []);
-        } catch (err: any) {
+            setEnrollments(Array.isArray(enrollmentData) ? enrollmentData : []);
+        } catch (err: unknown) {
             setError('Failed to fetch student data.');
             console.error(err);
         }
@@ -38,7 +43,7 @@ const StudentDetails: React.FC = () => {
         try {
             const classData = await fetchClasses();
             setClasses(classData);
-        } catch (err: any) {
+        } catch (err: unknown) {
             setError('Failed to fetch class data.');
             console.error(err);
         }
@@ -54,7 +59,7 @@ const StudentDetails: React.FC = () => {
             setError(null);
             notification('Student successfully enrolled or updated!');
             fetchStudentData(); // Refresh data after enrollment
-        } catch (err: any) {
+        } catch (err: unknown) {
             setError(err.message || 'Failed to enroll student.');
         }
     };
@@ -74,7 +79,7 @@ const StudentDetails: React.FC = () => {
                 >
                     <option value="">Select a class</option>
                     {classes.map((classOption) => (
-                        <option key={classOption._id} value={classOption._id}>
+                        <option key={classOption._id as string} value={classOption._id as string}>
                             {classOption.name}
                         </option>
                     ))}
@@ -93,7 +98,7 @@ const StudentDetails: React.FC = () => {
             <p>
                 Parent:{' '}
                 <Link to={`/parents/${student.responsible._id}`}>
-                    {student.responsible.name}
+                    {(student.responsible as IResponsible).name}
                 </Link>
             </p>
             {error && <ErrorMessage message={error} />}

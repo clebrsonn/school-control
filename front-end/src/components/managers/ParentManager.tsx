@@ -1,13 +1,14 @@
 import React, {useEffect, useState} from 'react';
-import {createParent, deleteParent, fetchParents} from '@services/ParentService';
-import ErrorMessage from '@components/ErrorMessage';
-import notification from '@components/Notification';
+import {createParent, deleteParent, fetchParents} from '../../services/ParentService';
+import ErrorMessage from '../ErrorMessage';
+import notification from '../Notification';
 import {Button, Form} from 'react-bootstrap';
 import {IResponsible} from '@hyteck/shared';
 import ListRegistries from '../pieces/ListRegistries.tsx';
+import {LoadingSpinner} from '../LoadingSpinner.tsx';
 
 // Constants for reusable initial states
-const INITIAL_PARENT_STATE = { name: '', email: 'N/A', phone: '' };
+const INITIAL_PARENT_STATE = { name: '', phone: '' };
 
 const ParentManager: React.FC = () => {
     const [parents, setParents] = useState<IResponsible[]>([]);
@@ -20,7 +21,7 @@ const ParentManager: React.FC = () => {
             try {
                 const fetchedParents = await fetchParents();
                 setParents(fetchedParents);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 handleApiError(err, 'Failed to fetch parents');
             }
         };
@@ -28,8 +29,8 @@ const ParentManager: React.FC = () => {
     }, []);
 
     // Centralized error handler for API calls
-    const handleApiError = (err: any, defaultMessage: string) => {
-        setError(err.message || defaultMessage);
+    const handleApiError = (err: unknown, defaultMessage: string) => {
+        setError((err as Error).message || defaultMessage);
         console.error(err);
     };
 
@@ -47,7 +48,7 @@ const ParentManager: React.FC = () => {
             setFormState(INITIAL_PARENT_STATE);
             setError(null);
             notification('Parent added successfully', 'success');
-        } catch (err: any) {
+        } catch (err: unknown) {
             handleApiError(err, 'Failed to add parent');
         }
     };
@@ -58,10 +59,12 @@ const ParentManager: React.FC = () => {
             await deleteParent(id);
             setParents((prev) => prev.filter((parent) => parent._id !== id));
             notification('Responsável removido com sucesso.', 'success');
-        } catch (err: any) {
+        } catch (err: unknown) {
             handleApiError(err, 'Erro ao remover o responsável.');
         }
     };
+
+    if (!parents) return <LoadingSpinner />;
 
     return (
         <div>

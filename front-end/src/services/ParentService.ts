@@ -5,7 +5,7 @@ import {post} from '../config/axios/post';
 import {axiosPut} from '../config/axios/put';
 
 export const fetchParents = async () => {
-  const response = await get('/parents');
+  const response = await get<IResponsible[]>('/parents');
   return response;
 };
 
