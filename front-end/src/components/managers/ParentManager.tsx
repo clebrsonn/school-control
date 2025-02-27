@@ -14,19 +14,31 @@ const ParentManager: React.FC = () => {
     const [parents, setParents] = useState<IResponsible[]>([]);
     const [formState, setFormState] = useState(INITIAL_PARENT_STATE);
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+
 
     // Fetch parents when the component is mounted
     useEffect(() => {
         const getParents = async () => {
             try {
+                setLoading(true);
+
                 const fetchedParents = await fetchParents();
                 setParents(fetchedParents);
+                setLoading(false);
+
             } catch (err: unknown) {
                 handleApiError(err, 'Failed to fetch parents');
+                setLoading(false);
             }
         };
         getParents();
     }, []);
+
+    if (loading) {
+        return <LoadingSpinner />;
+    }
+
 
     // Centralized error handler for API calls
     const handleApiError = (err: unknown, defaultMessage: string) => {

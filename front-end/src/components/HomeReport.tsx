@@ -1,8 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { fetchLatePayments, fetchTotalEstimatedForCurrentMonth, fetchOnTimePayers, fetchMostLatePayers } from '@services/PaymentService';
-import { ITuition } from '@hyteck/shared';
-import { Container, ListGroup, Spinner } from 'react-bootstrap';
+import React, {useEffect, useState} from 'react';
+import {
+    fetchLatePayments,
+    fetchMostLatePayers,
+    fetchOnTimePayers,
+    fetchTotalEstimatedForCurrentMonth
+} from '@services/PaymentService';
+import {IResponsible, ITuition} from '@hyteck/shared';
+import {Container, ListGroup} from 'react-bootstrap';
 import ErrorMessage from './ErrorMessage';
+import {LoadingSpinner} from './LoadingSpinner';
 
 const HomeReport: React.FC = () => {
   const [latePayments, setLatePayments] = useState<ITuition[]>([]);
@@ -37,7 +43,7 @@ const HomeReport: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <Spinner animation="border" role="status"><span className="visually-hidden">Loading...</span></Spinner>;
+      return <LoadingSpinner />;
   }
 
   if (error) {
@@ -51,7 +57,7 @@ const HomeReport: React.FC = () => {
       <ListGroup>
         {latePayments.map(payment => (
           <ListGroup.Item key={payment._id}>
-            {payment.responsible.name} - {payment.amount} - {new Date(payment.dueDate).toLocaleDateString()}
+            {(payment.responsible as IResponsible).name} - {payment.amount} - {new Date(payment.dueDate).toLocaleDateString()}
           </ListGroup.Item>
         ))}
       </ListGroup>
