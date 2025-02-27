@@ -1,10 +1,10 @@
-import { Router } from 'express';
-import { PaymentsController } from '../controllers/PaymentsController';
+import {Router} from 'express';
+import {PaymentsController} from '../controllers/PaymentsController';
 
 const paymentsController = new PaymentsController();
 const router = Router();
 if (paymentsController.create) router.post("/", paymentsController.create);
-if (paymentsController.findAll) router.get("/", paymentsController.findAll);
+if (paymentsController.update) router.put("/:id", paymentsController.update);
 
 router.get('/parent/:parentId', paymentsController.fetchPaymentsByParentId);
 router.get('/parent/debt/:parentId', paymentsController.getMonthlyDebt);
