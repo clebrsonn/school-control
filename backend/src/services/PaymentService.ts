@@ -49,7 +49,7 @@ export class PaymentService extends BaseService<ITuition> {
         amount: monthlyFee,
         status: "pending",
         dueDate: dueDate,
-        responsible: student?.responsible._id,
+        responsible: student?.responsible._id as unknown as mongoose.Types.ObjectId,
         enrollment: data._id as unknown as mongoose.Types.ObjectId,
         discount: discount?._id as mongoose.Types.ObjectId | undefined
       };

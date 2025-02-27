@@ -2,7 +2,7 @@
     "compilerOptions": {
       "baseUrl": "./",
       "paths": {
-        "@hyteck/shared/*": ["./*"]
+        "@hyteck/shared/*": ["*"]
       },
       "outDir": "dist",
       "module": "commonjs",

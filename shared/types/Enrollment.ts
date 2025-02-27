@@ -1,7 +1,8 @@
 import {Document, Types} from "mongoose";
-import {IClass} from "@hyteck/shared/types/Class";
-import {IStudent} from "@hyteck/shared/types/Student";
-import {IDiscount} from "@hyteck/shared/types/Discount";
+import {IDiscount} from "./Discount";
+import {IStudent} from "./Student";
+import {IClass} from "./Class";
+
 
 export interface IEnrollment extends Document{
   fee: number;
