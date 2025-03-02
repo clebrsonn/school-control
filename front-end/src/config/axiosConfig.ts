@@ -1,9 +1,7 @@
-// filepath: /e:/IdeaProjects/school-control/frontend/src/axiosConfig.ts
 import axios from 'axios';
 import notification from '../components/Notification';
 
 const API_URL = import.meta.env.VITE_SERVICE_URL ?? 'http://192.168.1.12:5000';
-
 
 const axiosInstance = axios.create({
   baseURL: API_URL,

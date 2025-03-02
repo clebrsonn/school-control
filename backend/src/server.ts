@@ -1,4 +1,3 @@
-// filepath: /e:/IdeaProjects/school-control/backend/src/server.ts
 import app from './app';
 import dotenv from "dotenv";
 
