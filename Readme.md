@@ -16,7 +16,7 @@ Este repositório contém um sistema de controle escolar dividido em três parte
    cd school-control
 
 2. Instale as dependências:
-    ```pnpm install
+    ` pnpm install `
 
 3. Configure as variáveis de ambiente:
 
@@ -25,7 +25,7 @@ Este repositório contém um sistema de controle escolar dividido em três parte
 
 ## Scripts Disponíveis
 pnpm dev: Inicia o backend e o front-end em modo de desenvolvimento.
-pnpm build: Compila <vscode_annotation details='%5B%7B%22title%22%3A%22hardcoded-credentials%22%2C%22description%22%3A%22Embedding%20credentials%20in%20source%20code%20risks%20unauthorized%20access%22%7D%5D'> backend</vscode_annotation>o e o front-end para produção.
+pnpm build: Compila backend e o front-end para produção.
 
 
 ## Licença
