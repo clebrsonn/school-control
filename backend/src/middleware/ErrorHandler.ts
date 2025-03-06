@@ -1,10 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import {NextFunction, Request, Response} from 'express';
+import {Config} from "../utils/Config";
 
 // Custom error type to handle status codes in errors
 interface ErrorWithStatus extends Error {
     status?: number;
 }
-
 // Constants for default values
 const DEFAULT_STATUS = 500;
 const DEFAULT_MESSAGE = 'Internal server error';
@@ -22,10 +22,10 @@ export function errorHandler(
     const message = err.message || DEFAULT_MESSAGE;
 
     // Determine whether to include the stack trace (only in development)
-    const stack = process.env.NODE_ENV === 'production' ? undefined : err.stack;
+    const stack = Config.NODE_ENV === 'production' ? undefined : err.stack;
 
     // Log errors to console (avoid verbose logging in production)
-    if (process.env.NODE_ENV !== 'production') {
+    if (Config.NODE_ENV !== 'production') {
         console.error('[Error Handler]', err);
     }
 
@@ -34,4 +34,5 @@ export function errorHandler(
         message,
         stack,
     });
+    return next();
 }
