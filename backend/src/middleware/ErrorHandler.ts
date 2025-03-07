@@ -1,5 +1,6 @@
 import {NextFunction, Request, Response} from 'express';
 import {Config} from "../utils/Config";
+import {logger} from "../utils/Logger";
 
 // Custom error type to handle status codes in errors
 interface ErrorWithStatus extends Error {
@@ -16,7 +17,7 @@ export function errorHandler(
     res: Response,
     next: NextFunction
 ) {
-    console.error('[Error Handler]', err); // Log do erro no console
+
     // Determine status and message
     const status = err.status || DEFAULT_STATUS;
     const message = err.message || DEFAULT_MESSAGE;
@@ -24,10 +25,13 @@ export function errorHandler(
     // Determine whether to include the stack trace (only in development)
     const stack = Config.NODE_ENV === 'production' ? undefined : err.stack;
 
-    // Log errors to console (avoid verbose logging in production)
-    if (Config.NODE_ENV !== 'production') {
-        console.error('[Error Handler]', err);
-    }
+    logger.error({
+        message: message,
+        error: err,
+        stack: stack,
+        method: req.method,
+        url: req.url,
+    });
 
     // Send standardized error response
     res.status(status).json({

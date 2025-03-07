@@ -1,9 +1,8 @@
-import mongoose, {Model, Document, Query} from "mongoose";
+import {Document, Model, Query} from "mongoose";
 
 export class BaseService<T extends Document> {
     protected model: Model<T>;
     protected populateFields: string | string[] = [];
-
     constructor(model: Model<T>) {
         this.model = model;
     }

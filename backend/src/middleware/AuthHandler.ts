@@ -25,7 +25,6 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             res.status(401).send({message: 'Invalid token'});
             return;
         }
-        console.log(secret)
         jwt.verify(token, secret, (err, decoded) => {
             if (err) {
                 res.status(401).send({message: 'Failed to authenticate token'});

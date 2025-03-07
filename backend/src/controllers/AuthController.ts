@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import {IRole, IToken, IUser} from "@hyteck/shared";
 import {Types} from "mongoose";
 import {Config} from "../utils/Config";
+import {logger} from "../utils/Logger";
 
 const userService: UserService = new UserService();
 const tokenService: TokenService = new TokenService();
@@ -18,7 +19,7 @@ export class AuthController {
         try {
             const {username, email, password, roleName} = req.body;
             if (!username || !email || !password || !roleName) {
-                console.log(username, email, password, roleName);
+                logger.debug(`${username}, ${email}, ${password}, ${roleName}`);
                 res.status(400).send({message: 'Please provide all fields'});
                 return;
             }
@@ -28,16 +29,6 @@ export class AuthController {
                 return;
             }
 
-            // const existingUser = await userService.getByUsername(username);
-            // if (existingUser) {
-            //     res.status(400).send({message: 'Username already in use'});
-            //     return;
-            // }
-            // const existingEmail = await userService.getByEmail(email);
-            // if (existingEmail) {
-            //     res.status(400).send({message: 'Email already in use'});
-            //     return;
-            // }
             const user: Partial<IUser> = {
                 username,
                 email,
@@ -70,7 +61,6 @@ export class AuthController {
                 res.status(401).send({message: 'Invalid username or password'});
                 return;
             }
-            console.log('secret', this.secret);
 
             const token = jwt.sign({userId: user._id}, this.secret, {expiresIn: '1h'});
             const now = new Date();

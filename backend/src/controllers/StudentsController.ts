@@ -20,10 +20,8 @@ export class StudentController extends BaseController<IStudent> {
     }
   };
 
-
   enrollStudant = async (req: Request, res: Response) => {
     try {
-      console.log('req.body', req.body);
       const classId = await studentService.enrollStudent(req.params.id, req.body);
       res.status(201).send(classId);
     } catch (error: any) {
