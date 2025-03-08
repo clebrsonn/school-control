@@ -1,8 +1,11 @@
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
+import {useAuth} from "../config/context/AuthProvider.tsx";
 
 export default function AppNavbar() {
+  const { user, logout } = useAuth();
+
   return (
     <Navbar expand="lg" className="bg-body-tertiary" data-bs-theme="dark">
       <Container >
@@ -17,6 +20,16 @@ export default function AppNavbar() {
             <Nav.Link href="/classes">Turmas</Nav.Link>
             <Nav.Link href="/discounts">Descontos</Nav.Link>
 
+          </Nav>
+          <Nav className="navbar">
+              {user ? (
+                  <Nav.Link onClick={logout}>Logout</Nav.Link>
+              ) : (
+                  <>
+                    <Nav.Link href="/login">Login</Nav.Link>
+                    <Nav.Link href="/register">Register</Nav.Link>
+                  </>
+              )}
           </Nav>
         </Navbar.Collapse>
       </Container>

@@ -1,17 +1,21 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
+import {ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AppNavbar from './AppNavBar';
-import { Container } from 'react-bootstrap';
+import {Container} from 'react-bootstrap';
+import AppNavbar from "./AppNavBar.tsx";
 
-const Layout: React.FC = ({ children }) => {
-  return (
-    <Container>
-      {children}
-      <ToastContainer position="bottom-right" />
-    </Container>
-  );
+const Layout: React.FC = ({children}) => {
+    return (
+        <>
+            <AppNavbar/>
+
+            <Container>
+
+                {children}
+                <ToastContainer position="bottom-right"/>
+            </Container>
+        </>
+    );
 };
 
 export default Layout;
