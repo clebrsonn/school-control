@@ -17,20 +17,19 @@ import ProtectedRoute from "./ProtectedRoutes";
 const AppRoutes: React.FC = () => {
     return (
         <Routes>
-            <Route path="/login" element={<LoginPage/>}/>
-            <Route path="/register" element={<RegisterPage/>}/>
-            <Route element={<ProtectedRoute/>}>
-                <Route path="/parents" element={<ParentManager/>}/>
-                <Route path="/students" element={<StudentManager/>}/>
-                <Route path="/payments" element={<PaymentManager/>}/>
-                <Route path="/classes" element={<ClassManager/>}/>
-                <Route path="/discounts/" element={<DiscountManager/>}/>
-                <Route path="/parents/:id" element={<ParentDetails/>}/>
-                <Route path="/students/:id" element={<StudentDetails/>}/>
-                <Route path="/payments/:id" element={<PaymentDetails/>}/>
-                <Route path="/classes/:id" element={<ClassDetails/>}/>
-
-                <Route path="/" element={<HomeReport/>}/>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route element={<ProtectedRoute />}>
+                <Route path="/parents" element={<ParentManager />} />
+                <Route path="/students" element={<StudentManager />} />
+                <Route path="/payments" element={<PaymentManager />} />
+                <Route path="/classes" element={<ClassManager />} />
+                <Route path="/discounts/" element={<DiscountManager />} />
+                <Route path="/parents/:id" element={<ParentDetails />} />
+                <Route path="/students/:id" element={<StudentDetails />} />
+                <Route path="/payments/:id" element={<PaymentDetails />} />
+                <Route path="/classes/:id" element={<ClassDetails />} />
+                <Route path="/" element={<HomeReport />} />
             </Route>
         </Routes>
     );

@@ -6,9 +6,10 @@ import {
     register as registerService
 } from "../../services/AuthService";
 import {IUser} from "@hyteck/shared";
+import notification from "../../components/Notification.tsx";
 
 interface AuthContextType {
-    user: IUser | null;
+    user: Partial<IUser> | null;
     login: (email: string, password: string) => Promise<void>;
     register: (email: string, password: string) => Promise<void>;
     logout: () => void;
@@ -16,18 +17,29 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<IUser | null>(null);
+const AuthProvider = ({ children }: { children: ReactNode }) => {
+    const [user, setUser] = useState<Partial<IUser> | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (token) {
-            me({ headers: { Authorization: `Bearer ${token}` } })
-                .then(user => setUser(user))
-                .catch(() => {
+        const checkUser = async () => {
+            const token = localStorage.getItem("token");
+            if (token) {
+                try {
+                    const user = await me();
+                    setUser(user);
+                } catch (error: unknown) {
+                    notification(error as string, 'error')
                     logout();
-                });
-        }
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                setLoading(false);
+            }
+        };
+
+        checkUser();
     }, []);
 
     const login = async (email: string, password: string) => {
@@ -47,14 +59,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return (
         <AuthContext.Provider value={{ user, login, register, logout }}>
-            {children}
+            {!loading && children}
         </AuthContext.Provider>
     );
 };
 
+export default AuthProvider;
+
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (context === undefined) {
+    if (!context) {
         throw new Error("useAuth must be used within an AuthProvider");
     }
     return context;
