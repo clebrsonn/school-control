@@ -8,7 +8,7 @@ export interface IUser extends mongoose.Document {
     isActive: boolean;
     passwordResetToken?: string;
     passwordResetExpires?: Date;
-    role: Types.ObjectId | IRole; // Reference to Role model
+    role?: Types.ObjectId | IRole; // Reference to Role model
     createdAt: Date;
     updatedAt: Date;
     comparePassword(password: string): Promise<boolean>; // Method for password comparison

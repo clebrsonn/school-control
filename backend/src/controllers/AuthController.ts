@@ -36,7 +36,7 @@ export class AuthController {
                 role: role._id as Types.ObjectId
             };
             const newUser = await userService.create(user);
-            res.status(201).send({message: 'User created successfully', user: newUser});
+            res.status(201).send({error: 'User created successfully', user: newUser});
             return;
         } catch (error) {
             next(error);
@@ -48,17 +48,17 @@ export class AuthController {
             const userAgent = req.get('User-Agent');
             const {username, password} = req.body;
             if (!username || !password || !userAgent) {
-                res.status(400).send({message: 'Please provide all fields'});
+                res.status(400).send({error: 'Please provide all fields'});
                 return;
             }
             const user = await userService.getByUsername(username);
             if (!user) {
-                res.status(401).send({message: 'Invalid username or password'});
+                res.status(401).send({error: 'Invalid username or password'});
                 return;
             }
             const isPasswordValid = await user.comparePassword(password);
             if (!isPasswordValid) {
-                res.status(401).send({message: 'Invalid username or password'});
+                res.status(401).send({error: 'Invalid username or password'});
                 return;
             }
 
