@@ -6,13 +6,15 @@ import AuthProvider from "./config/context/AuthProvider";
 
 const App: React.FC = () => {
     return (
-        <AuthProvider>
-            <Router>
+        <Router>
+            <AuthProvider>
+
                 <Layout>
-                    <AppRoutes />
+                    <AppRoutes/>
                 </Layout>
-            </Router>
-        </AuthProvider>
+            </AuthProvider>
+        </Router>
+
     );
 };
 

@@ -1,4 +1,5 @@
 import {createContext, ReactNode, useContext, useEffect, useState} from "react";
+import {useLocation, useNavigate} from "react-router-dom";
 import {
     login as loginService,
     logout as logoutService,
@@ -17,9 +18,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AuthProvider = ({ children }: { children: ReactNode }) => {
+const AuthProvider = ({children}: { children: ReactNode }) => {
     const [user, setUser] = useState<Partial<IUser> | null>(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const checkUser = async () => {
@@ -45,10 +48,12 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     const login = async (email: string, password: string) => {
         const data = await loginService(email, password);
         setUser(data.user);
+        const from = (location.state as { from: { pathname: string } })?.from?.pathname || "/";
+        navigate(from, {replace: true});
     };
 
     const register = async (email: string, password: string) => {
-        const data = await registerService({ email, passwordHash: password } as Partial<IUser>);
+        const data = await registerService({email, passwordHash: password} as Partial<IUser>);
         setUser(data.user);
     };
 
@@ -58,7 +63,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout }}>
+        <AuthContext.Provider value={{user, login, register, logout}}>
             {!loading && children}
         </AuthContext.Provider>
     );
