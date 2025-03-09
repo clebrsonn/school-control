@@ -11,6 +11,7 @@ export class StudentService extends BaseService<IStudent> {
   constructor() {
     super(Student);
     this.populateFields=['responsible'];
+    this.sortFields={name:1};
   }
 
 
@@ -30,7 +31,7 @@ export class StudentService extends BaseService<IStudent> {
 
 
   getStudentsByParentId = async (parentId: string) => {
-    return await Student.find({ responsible: parentId }).populate('responsible');
+    return await Student.find({ responsible: parentId }).populate('responsible').sort({ name: 1 });
   };
 
   enrollStudent = async (studentId: string, enroll: Partial<IEnrollment>) => {

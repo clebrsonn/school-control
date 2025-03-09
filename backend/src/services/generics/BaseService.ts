@@ -3,6 +3,8 @@ import {Document, Model, Query} from "mongoose";
 export class BaseService<T extends Document> {
     protected model: Model<T>;
     protected populateFields: string | string[] = [];
+    protected sortFields: { [key: string]: 1 | -1 } = {};
+
     constructor(model: Model<T>) {
         this.model = model;
     }
@@ -13,15 +15,15 @@ export class BaseService<T extends Document> {
     }
 
     async findAll(): Promise<T[]> {
-        return this.applyPopulates(this.model.find()).exec();
+        return this.applySortFields(this.applyPopulates(this.model.find())).exec();
     }
 
     async findById(id: string): Promise<T | null> {
-        return this.applyPopulates(this.model.findById(id)).exec();
+        return this.applySortFields(this.applyPopulates(this.model.findById(id))).exec();
     }
 
     async update(id: string, data: Partial<T>): Promise<T | null> {
-        return this.model.findByIdAndUpdate(id, data, { new: true }).exec();
+        return this.model.findByIdAndUpdate(id, data, {new: true}).exec();
     }
 
     async delete(id: string): Promise<boolean> {
@@ -29,7 +31,7 @@ export class BaseService<T extends Document> {
         return result !== null;
     }
 
-    private applyPopulates(query: Query<any, T>, ): Query<any, T> {
+    private applyPopulates(query: Query<any, T>,): Query<any, T> {
         if (Array.isArray(this.populateFields)) {
             // Aplica múltiplos populates
             this.populateFields.forEach(field => query.populate(field));
@@ -40,4 +42,10 @@ export class BaseService<T extends Document> {
         return query;
     }
 
+    private applySortFields(query: Query<any, T>): Query<any, T> {
+        if (Object.keys(this.sortFields).length > 0) {
+            query.sort(this.sortFields);
+        }
+        return query;
+    }
 }
