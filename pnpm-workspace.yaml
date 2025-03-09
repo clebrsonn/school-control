@@ -2,3 +2,5 @@ packages:
   - shared
   - backend
   - front-end
+onlyBuiltDependencies:
+  - bcrypt
