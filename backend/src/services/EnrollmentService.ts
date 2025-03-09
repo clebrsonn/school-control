@@ -5,9 +5,10 @@ import {PaymentService} from "./PaymentService";
 import {ClassService} from "./ClassService";
 
 
-export class EnrollmentService extends BaseService<IEnrollment>{
+export class EnrollmentService extends BaseService<IEnrollment> {
     private _paymentService = new PaymentService();
     private classService = new ClassService();
+
     constructor() {
         super(Enrollment);
     }
@@ -16,7 +17,7 @@ export class EnrollmentService extends BaseService<IEnrollment>{
     private get paymentService(): PaymentService {
         if (!this._paymentService) {
             // Aqui carregamos a dependência de forma tardia
-            const { PaymentService } = require("./PaymentService");
+            const {PaymentService} = require("./PaymentService");
             this._paymentService = new PaymentService();
         }
         return this._paymentService;
@@ -24,7 +25,7 @@ export class EnrollmentService extends BaseService<IEnrollment>{
 
 
     create = async (data: Partial<IEnrollment>) => {
-        const enrollExist= await this.getEnrollmentsByStudentId(data.student as unknown as string);
+        const enrollExist = await this.getEnrollmentsByStudentId(data.student as unknown as string);
         enrollExist.forEach(async enroll => {
             await this.delete(enroll._id as string);
             await this.classService.delete(enroll.classId as unknown as string);
@@ -38,7 +39,7 @@ export class EnrollmentService extends BaseService<IEnrollment>{
 
 
     getEnrollmentsByStudentId = async (studentId: string) => {
-        return Enrollment.find({ student: studentId }).populate("student").populate("classId");
+        return Enrollment.find({student: studentId}).populate("student").populate("classId");
     };
 
 

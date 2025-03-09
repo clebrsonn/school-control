@@ -10,8 +10,6 @@ export class PaymentsController extends BaseController<ITuition> {
     super(paymentService);
   }
 
-  
-
   // Get payments by parent ID
   fetchPaymentsByParentId = async (req: Request, res: Response, next: NextFunction) => {
     const { parentId } = req.params; // Extract parent ID from request
@@ -82,4 +80,14 @@ export class PaymentsController extends BaseController<ITuition> {
       next(error);
     }
   };
+
+  getOpenPaymentCurrentMonth = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const mostLatePayers = await paymentService.fetchPendingPaymentsForCurrentMonth();
+      res.json(mostLatePayers);
+    } catch (error) {
+      next(error);
+    }
+  };
+
 }
