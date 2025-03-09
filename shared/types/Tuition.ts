@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import {IDiscount, IEnrollment, IResponsible} from "./";
 
-
 export interface ITuition extends mongoose.Document{
   amount: number;
   status: "pending" | "paid" | "late";

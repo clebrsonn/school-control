@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import {Router} from 'express';
 import {BaseController} from "../controllers/generics/BaseController";
 import {Document} from "mongoose";
 

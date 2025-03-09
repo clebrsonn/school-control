@@ -1,8 +1,6 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/controllers/StudentsController.ts
-import { Request, Response } from 'express';
-import {
-  StudentService
-} from '../services/StudentService';
+import {NextFunction, Request, Response} from 'express';
+import {StudentService} from '../services/StudentService';
 import {IStudent} from "@hyteck/shared";
 import {BaseController} from "./generics/BaseController";
 
@@ -13,19 +11,17 @@ export class StudentController extends BaseController<IStudent> {
     super(studentService);
   }
 
-   fetchStudentsByParentId = async (req: Request, res: Response) => {
+   fetchStudentsByParentId = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const students = await studentService.getStudentsByParentId(req.params.parentId);
       res.status(200).send(students);
     } catch (error: any) {
-      res.status(400).send({ message: error.message });
+        next(error)
     }
   };
 
-
   enrollStudant = async (req: Request, res: Response) => {
     try {
-      console.log('req.body', req.body);
       const classId = await studentService.enrollStudent(req.params.id, req.body);
       res.status(201).send(classId);
     } catch (error: any) {

@@ -4,3 +4,6 @@ export * from "./Class";
 export * from "./Enrollment";
 export * from "./Tuition";
 export * from "./Discount";
+export * from "./Role"
+export * from "./User"
+export * from "./Token"
