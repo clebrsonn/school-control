@@ -65,5 +65,4 @@ app.use("/enrollments", EnrollmentRoutes);
 
 app.use(errorHandler);
 
-
 export default app;
