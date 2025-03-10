@@ -1,37 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     fetchLatePayments,
     fetchMostLatePayers,
     fetchOnTimePayers,
+    fetchOpenPayments,
     fetchTotalEstimatedForCurrentMonth,
 } from '@services/PaymentService';
-import { IResponsible, ITuition } from '@hyteck/shared';
-import { Container, ListGroup, Row, Col } from 'react-bootstrap';
+import {IResponsible, ITuition} from '@hyteck/shared';
+import {Card, Col, Container, ListGroup, Row} from 'react-bootstrap';
 import ErrorMessage from './ErrorMessage';
-import { LoadingSpinner } from './LoadingSpinner';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement
-} from 'chart.js';
-import { Bar, Pie } from 'react-chartjs-2';
-
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement
-);
+import {LoadingSpinner} from './LoadingSpinner';
 
 const HomeReport: React.FC = () => {
+    const [openPayments, setOpenPayments] = useState<ITuition[]>([]);
     const [latePayments, setLatePayments] = useState<ITuition[]>([]);
     const [totalEstimated, setTotalEstimated] = useState<number>(0);
     const [onTimePayers, setOnTimePayers] = useState<any[]>([]);
@@ -48,16 +29,20 @@ const HomeReport: React.FC = () => {
                     totalEstimatedData,
                     onTimePayersData,
                     mostLatePayersData,
+                    openPaymentsData,
                 ] = await Promise.all([
                     fetchLatePayments(),
                     fetchTotalEstimatedForCurrentMonth(),
                     fetchOnTimePayers(),
                     fetchMostLatePayers(),
+                    fetchOpenPayments(),
                 ]);
                 setLatePayments(latePaymentsData);
                 setTotalEstimated(totalEstimatedData);
                 setOnTimePayers(onTimePayersData);
                 setMostLatePayers(mostLatePayersData);
+                setOpenPayments(openPaymentsData);
+
                 setLoading(false);
             } catch (err: any) {
                 setError(err.message || 'Failed to fetch data');
@@ -76,105 +61,83 @@ const HomeReport: React.FC = () => {
         return <ErrorMessage message={error} />;
     }
 
-    // Data for the Late Payments Bar Chart
-    const latePaymentsChartData = {
-        labels: latePayments.map(
-            (payment) =>
-                `${(payment.responsible as IResponsible).name} - ${new Date(payment.dueDate).toLocaleDateString()}`
-        ),
-        datasets: [
-            {
-                label: 'Valor em Atraso',
-                data: latePayments.map((payment) => payment.amount),
-                backgroundColor: 'rgba(255, 99, 132, 0.5)',
-            },
-        ],
-    };
-
-    // Data for the On-Time Payers Pie Chart
-    const onTimePayersChartData = {
-        labels: onTimePayers.map((payer) => payer.responsible.name),
-        datasets: [
-            {
-                label: 'Pagamentos em Dia',
-                data: onTimePayers.map((payer) => payer.count),
-                backgroundColor: [
-                    'rgba(54, 162, 235, 0.5)',
-                    'rgba(255, 206, 86, 0.5)',
-                    'rgba(75, 192, 192, 0.5)',
-                    'rgba(153, 102, 255, 0.5)',
-                    'rgba(255, 159, 64, 0.5)',
-                ],
-            },
-        ],
-    };
-
-    // Data for the Most Late Payers Pie Chart
-    const mostLatePayersChartData = {
-        labels: mostLatePayers.map((payer) => payer.responsible.name),
-        datasets: [
-            {
-                label: 'Atrasos',
-                data: mostLatePayers.map((payer) => payer.count),
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.5)',
-                    'rgba(255, 159, 64, 0.5)',
-                    'rgba(255, 206, 86, 0.5)',
-                    'rgba(75, 192, 192, 0.5)',
-                    'rgba(153, 102, 255, 0.5)',
-                ],
-            },
-        ],
-    };
-
     return (
         <Container>
             <h1>Relatório de Pagamentos</h1>
             <Row>
                 <Col md={12}>
-                    <h2>Total Estimado para o Mês Atual</h2>
-                    <p>R$ {totalEstimated.toFixed(2)}</p>
+                    <Card className="mb-4">
+                        <Card.Body>
+                            <Card.Title>Total Estimado para o Mês Atual</Card.Title>
+                            <Card.Text>R$ {totalEstimated.toFixed(2)}</Card.Text>
+                        </Card.Body>
+                    </Card>
                 </Col>
             </Row>
 
             <Row>
                 <Col md={6}>
-                    <h2>Pagamentos em Atraso</h2>
-                    <Bar data={latePaymentsChartData} />
-                    <ListGroup>
-                        {latePayments.map((payment) => (
-                            <ListGroup.Item key={payment._id}>
-                                {(payment.responsible as IResponsible).name} - R$ {payment.amount} -{' '}
-                                {new Date(payment.dueDate).toLocaleDateString()}
-                            </ListGroup.Item>
-                        ))}
-                    </ListGroup>
+                    <Card className="mb-4">
+                        <Card.Body>
+                            <Card.Title>Pagamentos em Aberto</Card.Title>
+                            <ListGroup className="mt-3">
+                                {openPayments.map((payment) => (
+                                    <ListGroup.Item key={payment._id}>
+                                        {(payment.responsible as IResponsible).name} - R$ {payment.totalAmount} -{' '}
+                                        {new Date(payment.year, payment.month, 10).toLocaleDateString()}
+                                    </ListGroup.Item>
+                                ))}
+                            </ListGroup>
+                        </Card.Body>
+                    </Card>
                 </Col>
 
                 <Col md={6}>
-                    <h2>Responsáveis que Pagam em Dia</h2>
-                    <Pie data={onTimePayersChartData} />
-                    <ListGroup>
-                        {onTimePayers.map((payer) => (
-                            <ListGroup.Item key={payer._id}>
-                                {payer.responsible.name} - {payer.count} pagamentos
-                            </ListGroup.Item>
-                        ))}
-                    </ListGroup>
+                    <Card className="mb-4">
+                        <Card.Body>
+                            <Card.Title>Pagamentos em Atraso</Card.Title>
+                            <ListGroup className="mt-3">
+                                {latePayments.map((payment) => (
+                                    <ListGroup.Item key={payment._id}>
+                                        {(payment.responsible as IResponsible).name} - R$ {payment.amount} -{' '}
+                                        {new Date(payment.dueDate).toLocaleDateString()}
+                                    </ListGroup.Item>
+                                ))}
+                            </ListGroup>
+                        </Card.Body>
+                    </Card>
                 </Col>
             </Row>
 
             <Row>
                 <Col md={6}>
-                    <h2>Responsáveis que Mais Atrasam</h2>
-                    <Pie data={mostLatePayersChartData} />
-                    <ListGroup>
-                        {mostLatePayers.map((payer) => (
-                            <ListGroup.Item key={payer._id}>
-                                {payer.responsible.name} - {payer.count} atrasos
-                            </ListGroup.Item>
-                        ))}
-                    </ListGroup>
+                    <Card className="mb-4">
+                        <Card.Body>
+                            <Card.Title>Responsáveis que Pagam em Dia</Card.Title>
+                            <ListGroup className="mt-3">
+                                {onTimePayers.map((payer) => (
+                                    <ListGroup.Item key={payer._id}>
+                                        {payer.responsible.name} - {payer.count} pagamentos
+                                    </ListGroup.Item>
+                                ))}
+                            </ListGroup>
+                        </Card.Body>
+                    </Card>
+                </Col>
+
+                <Col md={6}>
+                    <Card className="mb-4">
+                        <Card.Body>
+                            <Card.Title>Responsáveis que Mais Atrasam</Card.Title>
+                            <ListGroup className="mt-3">
+                                {mostLatePayers.map((payer) => (
+                                    <ListGroup.Item key={payer._id}>
+                                        {payer.responsible.name} - {payer.count} atrasos
+                                    </ListGroup.Item>
+                                ))}
+                            </ListGroup>
+                        </Card.Body>
+                    </Card>
                 </Col>
             </Row>
         </Container>

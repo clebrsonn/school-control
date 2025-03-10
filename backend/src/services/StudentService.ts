@@ -14,8 +14,6 @@ export class StudentService extends BaseService<IStudent> {
     this.sortFields={name:1};
   }
 
-
-
   create= async (data: IStudent) => {
     let student = new Student(data);
     const responsible=await this.parentService.findById(student.responsible as unknown as string);
