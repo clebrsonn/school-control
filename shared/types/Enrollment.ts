@@ -10,4 +10,6 @@ export interface IEnrollment extends Document{
   createdAt: Date;
   student: Types.ObjectId | IStudent;
   classId: Types.ObjectId | IClass;
+  active: Boolean;
+  tuitionAmount: number;
 }

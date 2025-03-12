@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import {IDiscount, IEnrollment, IResponsible} from "./";
+import {IResponsible} from "./";
 
 export interface ITuition extends mongoose.Document{
   amount: number;
@@ -7,6 +7,5 @@ export interface ITuition extends mongoose.Document{
   dueDate: Date;
   paymentDate?: Date;
   responsible:  mongoose.Types.ObjectId | IResponsible;
-  enrollment: mongoose.Types.ObjectId | IEnrollment;
-  discount?: mongoose.Types.ObjectId | IDiscount
+  // enrollment: mongoose.Types.ObjectId | IEnrollment;
 }

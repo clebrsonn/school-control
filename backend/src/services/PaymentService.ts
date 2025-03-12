@@ -1,4 +1,4 @@
-import {IEnrollment, ITuition, Tuition} from '@hyteck/shared';
+import {Enrollment, IEnrollment, ITuition, Tuition} from '@hyteck/shared';
 import {BaseService} from "./generics/BaseService";
 import mongoose from "mongoose";
 import {DiscountService} from "./DiscountService";
@@ -39,6 +39,22 @@ export class PaymentService extends BaseService<ITuition> {
         return Tuition.find({responsible}).populate('enrollment').sort({dueDate: 1});
     };
 
+    // Serviço para gerar mensalidades no início de cada mês
+    generateMonthlyTuitions = async () => {
+        const activeEnrollments = await Enrollment.find({ status: 'ATIVA' });
+        const currentDate = new Date();
+
+        activeEnrollments.forEach(async (enrollment) => {
+            const tuition = new Tuition({
+                enrollment: enrollment._id,
+                dueDate: new Date(currentDate.getFullYear(), currentDate.getMonth(), 10),
+                amount: enrollment.tuitionAmount,
+                status: 'pending',
+            });
+            await tuition.save();
+        });
+    };
+
     generatePaymentRecurrences = async (data: IEnrollment) => {
         const today = new Date();
         const actualMonth = today.getMonth();
@@ -49,9 +65,11 @@ export class PaymentService extends BaseService<ITuition> {
         const discount = parent?.students && parent.students.length > 1 ? await this.discountService.findByType('tuition') : null;
         const monthlyFee = 110 - (discount?.value ?? 0); // Valor da mensalidade
         const discountEnroll = parent?.students && parent.students.length > 1 ? await this.discountService.findByType('enroll') : null;
-        data.fee = data.fee - (discountEnroll?.value ?? 0);
 
-        await this.enrollmentService.update(data._id as string, {fee: data.fee});
+        if(parent) {
+            parent.discounts = [...parent.discounts, discount?._id, discountEnroll?._id];
+            await this.parentService.update(parent._id as unknown as string, parent);
+        }
 
         for (let i = 1; i <= 12 - actualMonth; i++) {
             const dueDate = new Date(today.getFullYear(), actualMonth + i, 10);
@@ -61,7 +79,6 @@ export class PaymentService extends BaseService<ITuition> {
                 dueDate: dueDate,
                 responsible: student?.responsible._id as unknown as mongoose.Types.ObjectId,
                 enrollment: data._id as unknown as mongoose.Types.ObjectId,
-                discount: discount?._id as mongoose.Types.ObjectId | undefined
             };
             const payment = new Tuition(paymentData);
             await payment.save();

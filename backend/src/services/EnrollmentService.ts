@@ -33,7 +33,7 @@ export class EnrollmentService extends BaseService<IEnrollment> {
 
         const instance = new this.model(data);
         const payment = await instance.save();
-        await this.paymentService.generatePaymentRecurrences(payment);
+        //await this.paymentService.generatePaymentRecurrences(payment);
         return payment;
     };
 
@@ -41,6 +41,43 @@ export class EnrollmentService extends BaseService<IEnrollment> {
     getEnrollmentsByStudentId = async (studentId: string) => {
         return Enrollment.find({student: studentId}).populate("student").populate("classId");
     };
+
+    renewEnrollment = async (enrollmentId: string) => {
+        const enrollment = await this.findById(enrollmentId);
+        if (!enrollment) {
+            throw new Error("Enrollment not found");
+        }
+        const newEnrollment = new Enrollment({
+            student: enrollment.student,
+            classId: enrollment.classId,
+            fee: enrollment.fee,
+            discount: enrollment.discount,
+            active: true,
+        });
+
+        return this.create(newEnrollment);
+    };
+
+
+    cancelEnrollment = async (enrollmentId: string) => {
+        const enrollment = await this.findById(enrollmentId);
+        if (!enrollment) {
+            throw new Error("Enrollment not found");
+        }
+
+        await this.paymentService.deleteMany({
+            enrollment: enrollment._id,
+            status: "pending",
+            dueDate: {$gte: new Date()},
+        });
+
+        enrollment.active = false;
+        await enrollment.save();
+
+
+        return enrollment;
+    };
+
 
 
 }
