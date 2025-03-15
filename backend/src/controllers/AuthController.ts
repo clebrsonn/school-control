@@ -62,7 +62,7 @@ export class AuthController {
                 return;
             }
 
-            const token = jwt.sign({userId: user._id}, this.secret, {expiresIn: '1h'});
+            const token = jwt.sign({userId: user._id}, this.secret, {expiresIn: parseInt(Config.TOKEN_EXPIRATION)});
             const now = new Date();
             const expiresAt = new Date(now.getTime() + 60 * 60 * 1000);
 

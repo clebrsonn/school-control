@@ -6,4 +6,4 @@ const authController = new AuthController();
 AuthRoutesRouter.post('/register', authController.register);
 AuthRoutesRouter.post('/login', authController.login);
 
-export default AuthRoutesRouter;
+export const AuthRoutes= AuthRoutesRouter;

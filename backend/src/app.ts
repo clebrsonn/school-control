@@ -1,22 +1,12 @@
 import express from 'express';
 import cors from 'cors';
-import mongoose from 'mongoose';
-import ParentRoutesRouter from './routes/ParentRoutes';
-import StudentRoutesRouter from './routes/StudentRoutes';
-import PaymentRoutesRouter from './routes/PaymentRoutes';
-import DiscountRoutesRouter from './routes/DiscountRoutes';
-import ClassRoutesRouter from './routes/ClassRoutes';
-import EnrollmentRoutes from "./routes/EnrollmentRoutes";
-import {errorHandler} from "./middleware/ErrorHandler";
-import {authMiddleware} from "./middleware/AuthHandler";
-import AuthRoutesRouter from "./routes/AuthRoutes";
-import {Config} from "./utils/Config";
-import userRoute from "./routes/UserRoutes";
+import './cron/cron';
+import {configureLogs, Database, routes} from "./config";
 import {logger} from "./utils/Logger";
+
 
 const app = express();
 
-var morgan = require('morgan')
 
 app.use(cors({
     origin: '*', // Permitir todas as origens. Para maior segurança, especifique os domínios permitidos.
@@ -24,45 +14,39 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
-app.use(morgan('combined'));
 
-mongoose.set('debug', (collectionName, method, query, doc) => {
-    logger.info({
-        collectionName,
-        method,
-        query,
-        doc: doc || undefined,
-    });
+Database.getInstance();
+
+configureLogs(app);
+
+routes(app);
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    //gracefulShutdown(); // Inicia shutdown controlado
+
+    logger.error('cbc ' +error)
 });
 
-mongoose.connect(Config.DB_URI).then(() => {
-    logger.debug('Connected to MongoDB');
-}).catch((error) => {
-    console.error('Error connecting to MongoDB:', error);
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection:', reason);
+    gracefulShutdown();
 });
 
-app.use((req, res, next) => {
-    logger.debug({
-        method: req.method,
-        url: req.url,
-        payload: req.body,
-        headers: req.headers,
-    });
-    next();
-});
 
-app.use('/auth', AuthRoutesRouter); // Add AuthRoutes
 
-app.use(authMiddleware);
+async function gracefulShutdown() {
+    try {
 
-app.use('/users', userRoute);
-app.use('/parents', ParentRoutesRouter);
-app.use('/students', StudentRoutesRouter);
-app.use('/payments', PaymentRoutesRouter);
-app.use('/discounts', DiscountRoutesRouter);
-app.use('/classes', ClassRoutesRouter);
-app.use("/enrollments", EnrollmentRoutes);
+        // 2. Fecha conexões com banco de dados
+        await Database.getInstance().closeConnection(); // [[6]]
 
-app.use(errorHandler);
+        console.log('Shutdown concluído. Saindo...');
+        process.exit(0);
+    } catch (error) {
+        console.error('Erro durante shutdown:', error);
+        process.exit(1); // Força saída após timeout [[3]]
+    }
+}
 
 export default app;

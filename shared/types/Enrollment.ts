@@ -1,15 +1,13 @@
-import {Document, Types} from "mongoose";
-import {IDiscount} from "./Discount";
+import mongoose, {Document, Types} from "mongoose";
 import {IStudent} from "./Student";
 import {IClass} from "./Class";
 
-
-export interface IEnrollment extends Document{
-  fee: number;
-  discount?: Types.ObjectId | IDiscount;
-  createdAt: Date;
+export interface IEnrollment extends Document {
   student: Types.ObjectId | IStudent;
-  classId: Types.ObjectId | IClass;
-  active: Boolean;
-  tuitionAmount: number;
+  classId: mongoose.Types.ObjectId | IClass;
+  fee: number;
+  tuitionAmount?: number;
+  createdAt?: Date;
+  active?: boolean;
+  endDate?: Date;
 }

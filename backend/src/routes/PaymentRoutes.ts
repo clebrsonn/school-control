@@ -19,5 +19,4 @@ router.get('/open-month', paymentsController.getOpenPaymentCurrentMonth);
 
 router.get("/:id", paymentsController.findById);
 
-
-export default router;
+export const paymentRoutes= router;

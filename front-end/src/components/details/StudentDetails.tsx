@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Link, useParams} from 'react-router-dom';
-import {enrollStudent, fetchStudentById} from '@services/StudentService';
+import {cancelEnrollment, enrollStudent, fetchStudentById} from '@services/StudentService';
 import {fetchClasses} from '@services/ClassService';
 import {IClass, IEnrollment, IResponsible, IStudent} from '@hyteck/shared';
 import {Button, Container, Form} from 'react-bootstrap';
@@ -15,6 +15,7 @@ const StudentDetails: React.FC = () => {
     const [classes, setClasses] = useState<IClass[]>([]);
     const [selectedClassId, setSelectedClassId] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
+    const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
     useEffect(() => {
         fetchStudentData();
@@ -64,6 +65,17 @@ const StudentDetails: React.FC = () => {
         }
     };
 
+    const handleCancelEnrollment = async (enrollmentId: string) => {
+        try {
+            await cancelEnrollment(enrollmentId);
+            setError(null);
+            notification('Enrollment successfully canceled!');
+            fetchStudentData(); // Refresh data after cancellation
+        } catch (err: unknown) {
+            setError(err.message || 'Failed to cancel enrollment.');
+        }
+    };
+
     if (!student) {
         return <div>Loading...</div>;
     }
@@ -110,6 +122,11 @@ const StudentDetails: React.FC = () => {
                         <div key={enroll._id}>
                             <p>Current Class: {enroll.classId?.name}</p>
                             <p>Enrollment Date: {new Date(enroll.createdAt).toLocaleDateString()}</p>
+                            {enroll.endDate && new Date(enroll.endDate) <= currentDate && (
+                                <Button variant="danger" onClick={() => handleCancelEnrollment(enroll._id)}>
+                                    Cancel Enrollment
+                                </Button>
+                            )}
                         </div>
                     ))}
                     <EnrollmentForm buttonLabel="Change Class" />

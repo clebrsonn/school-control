@@ -74,10 +74,11 @@ export class EnrollmentService extends BaseService<IEnrollment> {
         enrollment.active = false;
         await enrollment.save();
 
-
         return enrollment;
     };
 
-
+    findAcitveAndEndDateLessThanToday = async () => {
+        return Enrollment.find({active: true, endDate: {$lt: new Date()}});
+    }
 
 }

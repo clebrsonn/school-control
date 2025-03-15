@@ -4,4 +4,4 @@ import {createBaseRouter} from "./BaseRoutes";
 const classesController = new ClassesController();
 const router = createBaseRouter(classesController);
 
-export default router;
+export const classRoutes= router;
