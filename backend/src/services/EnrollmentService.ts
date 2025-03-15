@@ -32,9 +32,8 @@ export class EnrollmentService extends BaseService<IEnrollment> {
         });
 
         const instance = new this.model(data);
-        const payment = await instance.save();
         //await this.paymentService.generatePaymentRecurrences(payment);
-        return payment;
+        return await instance.save();
     };
 
 
