@@ -1,18 +1,33 @@
-import mongoose from "mongoose";
-import {IUser} from "../types";
+import mongoose, { Types } from "mongoose";
 import bcrypt from "bcryptjs";
+import { IRole } from "../types/Role";
 
+// Interface definition
+export interface IUser extends mongoose.Document {
+    username: string;
+    passwordHash: string;
+    email: string;
+    isActive: boolean;
+    passwordResetToken?: string;      // Optional in interface
+    passwordResetExpires?: Date;      // Optional in interface
+    role: Types.ObjectId | IRole;     // Can be either ObjectId or IRole type
+    createdAt: Date;                  // Added by timestamps
+    updatedAt: Date;                  // Added by timestamps
+    comparePassword(password: string): Promise<boolean>;
+}
+
+// Schema definition
 const UserSchema = new mongoose.Schema(
     {
-        username: { type: String, required: true, unique: true },
-        passwordHash: { type: String, required: true }, // Store the hashed password
-        email: { type: String, required: true, unique: true },
-        isActive: { type: Boolean, default: false },
-        passwordResetToken: { type: String, required: false },
-        passwordResetExpires: { type: Date, required: false },
-        role: { type: mongoose.Schema.Types.ObjectId, ref:  "Role", required: true }, // Add role field
+        username: { type: String, required: true, unique: true },     // Additional validation: unique
+        passwordHash: { type: String, required: true },               // Additional validation: required
+        email: { type: String, required: true, unique: true },        // Additional validation: unique, required
+        isActive: { type: Boolean, default: false },                  // Additional default value
+        passwordResetToken: { type: String, required: false },        // Explicit required: false
+        passwordResetExpires: { type: Date, required: false },        // Explicit required: false
+        role: { type: mongoose.Schema.Types.ObjectId, ref: "Role", required: true }, // Additional validation: required, ref
     },
-    { timestamps: true }
+    { timestamps: true }  // Automatically adds createdAt and updatedAt
 );
 
 // Hash password before saving
