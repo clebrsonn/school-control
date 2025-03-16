@@ -50,7 +50,7 @@ export class EnrollmentService extends BaseService<IEnrollment> {
             student: enrollment.student,
             classId: enrollment.classId,
             fee: enrollment.fee,
-            discount: enrollment.discount,
+            //discount: enrollment.discount,
             active: true,
         });
 

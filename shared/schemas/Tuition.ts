@@ -14,7 +14,7 @@ export interface ITuition extends Document {
 
 const TuitionSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
-  status: { type: String, required: true, enum: ["pending", "paid", "late"] },
+  status: { type: String, required: true, enum: ["pending", "paid", "paid late"] },
   dueDate: { type: Date, required: true },
   paymentDate: { type: Date, required: false },
   responsible: { type: mongoose.Schema.Types.ObjectId, ref: "Responsible", required: true },

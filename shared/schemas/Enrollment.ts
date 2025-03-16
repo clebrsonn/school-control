@@ -1,9 +1,8 @@
 import mongoose, { Document } from "mongoose";
-import { Student } from "./Student";
-import { Responsible } from "./Responsible";
-import { Discount } from "./Discount";
+import { IStudent, Student } from "./Student";
+import { IResponsible, Responsible } from "./Responsible";
+import { IDiscount, Discount } from "./Discount";
 import { IClass } from "./ClassModel";
-import { IStudent } from "./Student";
 
 // Interface definition
 export interface IEnrollment extends Document {

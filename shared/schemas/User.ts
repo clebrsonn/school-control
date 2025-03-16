@@ -1,6 +1,6 @@
 import mongoose, { Types } from "mongoose";
 import bcrypt from "bcryptjs";
-import { IRole } from "../types/Role";
+import { IRole } from "./Role";
 
 // Interface definition
 export interface IUser extends mongoose.Document {
