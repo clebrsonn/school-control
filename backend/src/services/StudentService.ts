@@ -49,10 +49,8 @@ export class StudentService extends BaseService<IStudent> {
   
   override async delete(id: string): Promise<boolean> {
     try {
-      // Get all enrollments for this student
-      const enrollments = await this.enrollmentService.getEnrollmentsByStudentId(id);
 
-      this.enrollmentService.deleteMany({student: id});
+      await this.enrollmentService.deleteMany({student: id});
             
       // Get the student to update the parent's students array
       const student = await this.findById(id);
