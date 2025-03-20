@@ -1,5 +1,11 @@
-import mongoose, { Schema, Document } from "mongoose";
-import { IResponsible } from "./Responsible";
+import mongoose, {Document, Schema} from "mongoose";
+import {IResponsible} from "./Responsible";
+
+export enum TuitionStatus {
+    PENDING = "pending",
+    PAID = "paid",
+    LATE = "paid late",
+}
 
 // Interface definition
 export interface ITuition extends Document {
@@ -14,7 +20,7 @@ export interface ITuition extends Document {
 
 const TuitionSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
-  status: { type: String, required: true, enum: ["pending", "paid", "paid late"] },
+  status: { type: String, required: true, enum: [TuitionStatus.PAID, TuitionStatus.PENDING, TuitionStatus.LATE] },
   dueDate: { type: Date, required: true },
   paymentDate: { type: Date, required: false },
   responsible: { type: mongoose.Schema.Types.ObjectId, ref: "Responsible", required: true },
@@ -23,9 +29,11 @@ const TuitionSchema = new mongoose.Schema({
 
 TuitionSchema.pre("save", function(next){
   if(this.dueDate < new Date()){
-    this.status = "paid late";
+    this.status = TuitionStatus.LATE;
   }
   next();
 });
+
+
 
 export const Tuition = mongoose.model<ITuition>("Tuition", TuitionSchema);

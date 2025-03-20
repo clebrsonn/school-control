@@ -1,7 +1,6 @@
-// filepath: /e:/IdeaProjects/school-control/frontend/src/services/StudentService.ts
-import { IStudent } from '@hyteck/shared';
-import { get } from '../config/axios/get';
-import { post } from '../config/axios/post';
+import {IStudent} from '@hyteck/shared';
+import {get} from '../config/axios/get';
+import {post} from '../config/axios/post';
 import {axiosDelete} from "../config/axios/delete.ts";
 
 export const fetchStudents = async () => {
@@ -31,5 +30,15 @@ export const fetchStudentsByParentId = async (parentId: string) => {
 
 export const deleteStudent= async (id: string) => {
   const response = await axiosDelete(`/students/${id}`);
+  return response;
+}
+
+export const cancelEnrollment = async (enrollmentId: string) => {
+  const response = await get(`/enrollments/${enrollmentId}/cancel`);
+  return response;
+}
+
+export const renewEnrollment = async (enrollmentId: string) => {
+  const response = await get<{ enrollmentId: string }>(`/enrollments/${enrollmentId}/renew`);
   return response;
 }

@@ -1,14 +1,11 @@
-import {Enrollment, IEnrollment} from "@hyteck/shared";
+import {Enrollment, IEnrollment, IStudent, TuitionStatus} from "@hyteck/shared";
 import {BaseService} from "./generics/BaseService";
 
 import {PaymentService} from "./PaymentService";
-import {ClassService} from "./ClassService";
 
 
 export class EnrollmentService extends BaseService<IEnrollment> {
     private _paymentService = new PaymentService();
-    private classService = new ClassService();
-
     constructor() {
         super(Enrollment);
     }
@@ -25,14 +22,10 @@ export class EnrollmentService extends BaseService<IEnrollment> {
 
 
     create = async (data: Partial<IEnrollment>) => {
-        const enrollExist = await this.getEnrollmentsByStudentId(data.student as unknown as string);
-        enrollExist.forEach(async enroll => {
-            await this.delete(enroll._id as string);
-            await this.classService.delete(enroll.classId as unknown as string);
-        });
+
+        await this.deleteMany({ student: data.student as unknown as string });
 
         const instance = new this.model(data);
-        //await this.paymentService.generatePaymentRecurrences(payment);
         return await instance.save();
     };
 
@@ -59,18 +52,23 @@ export class EnrollmentService extends BaseService<IEnrollment> {
 
 
     cancelEnrollment = async (enrollmentId: string) => {
+        this.populateFields = ["student"];
         const enrollment = await this.findById(enrollmentId);
         if (!enrollment) {
             throw new Error("Enrollment not found");
         }
-
+        const opened= await this.paymentService.getLatePaymentsByResponsible((enrollment.student  as IStudent).responsible._id as string);
+        if(opened.length > 0){
+            throw new Error("There are pending payments");
+        }
         await this.paymentService.deleteMany({
             enrollment: enrollment._id,
-            status: "pending",
+            status: TuitionStatus.PENDING,
             dueDate: {$gte: new Date()},
         });
 
         enrollment.active = false;
+        enrollment.endDate = new Date();
         await enrollment.save();
 
         return enrollment;

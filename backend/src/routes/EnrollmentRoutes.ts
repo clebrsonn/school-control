@@ -5,7 +5,7 @@ const enrollmentController = new EnrollmentsController();
 const router = createBaseRouter(enrollmentController);
 
 router.get("/student/:studentId", enrollmentController.findByStudentId);
-router.put("/:id/cancel", enrollmentController.cancelEnrollment);
-router.put("/:id/renew", enrollmentController.renewEnrollment);
+router.get("/:id/cancel", enrollmentController.cancelEnrollment);
+router.get("/:id/renew", enrollmentController.renewEnrollment);
 
 export const enrollmentRoutes = router;

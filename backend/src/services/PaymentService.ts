@@ -1,4 +1,4 @@
-import {ITuition, Tuition} from '@hyteck/shared';
+import {ITuition, Tuition, TuitionStatus} from '@hyteck/shared';
 import {BaseService} from "./generics/BaseService";
 import mongoose from "mongoose";
 import {EnrollmentService} from "./EnrollmentService";
@@ -29,15 +29,15 @@ export class PaymentService extends BaseService<ITuition> {
         const activeEnrollments = await this.enrollmentService.findAcitveAndEndDateLessThanToday();
         const currentDate = new Date();
 
-        activeEnrollments.forEach(async (enrollment) => {
-            const tuition = new Tuition({
-                enrollment: enrollment._id,
-                dueDate: Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), 10, 0, 0, 0, 0),
-                amount: enrollment.tuitionAmount,
-                status: 'pending',
-            });
-            await tuition.save();
-        });
+        const tuitions = activeEnrollments.map((enrollment) => ({
+            enrollment: enrollment._id,
+            dueDate: Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), 10, 0, 0, 0, 0),
+            amount: enrollment.tuitionAmount,
+            status: TuitionStatus.PENDING,
+        }));
+
+        await Tuition.insertMany(tuitions);
+
     };
 
     async getMonthlyDebtByParentId(responsible: string) {
@@ -45,7 +45,7 @@ export class PaymentService extends BaseService<ITuition> {
         const now = new Date();
 
         // Agregação para calcular o total do mês
-        const result = await Tuition.aggregate([
+        return await Tuition.aggregate([
             {
                 $match: {
                     // Filtra pelos pagamentos do responsável
@@ -69,7 +69,6 @@ export class PaymentService extends BaseService<ITuition> {
             }
 
         ]);
-        return result;
     }
 
     groupPaymentsByMonthAndParent = async () => {
@@ -118,8 +117,19 @@ export class PaymentService extends BaseService<ITuition> {
     };
 
     getLatePayments = async () => {
-        return Tuition.find({status: "late"}).populate('responsible').populate('enrollment');
+        return Tuition.find({
+            status: TuitionStatus.PENDING,
+            dueDate: {$gt: new Date()}
+        }).populate('responsible').populate('enrollment');
     };
+
+    getLatePaymentsByResponsible = async (responsibleId: string) => {
+        return Tuition.find({
+            status: TuitionStatus.PENDING,
+            responsible: responsibleId
+        }).populate('responsible').populate('enrollment');
+    };
+
 
     getTotalEstimatedForCurrentMonth = async () => {
         const now = new Date();
@@ -149,7 +159,8 @@ export class PaymentService extends BaseService<ITuition> {
     getOnTimePayers = async () => {
         return Tuition.aggregate([
             {
-                $match: {status: "paid"}
+                $match: {status: TuitionStatus.PAID
+                }
             },
             {
                 $group: {
@@ -177,7 +188,7 @@ export class PaymentService extends BaseService<ITuition> {
     getMostLatePayers = async () => {
         return Tuition.aggregate([
             {
-                $match: {status: "late"}
+                $match: {status: TuitionStatus.LATE}
             },
             {
                 $group: {
@@ -210,7 +221,7 @@ export class PaymentService extends BaseService<ITuition> {
         return Tuition.aggregate([
             {
                 $match: {
-                    status: "pending",
+                    status: TuitionStatus.PENDING,
                     dueDate: {
                         $gte: firstDayOfMonth,
                         $lte: lastDayOfMonth
