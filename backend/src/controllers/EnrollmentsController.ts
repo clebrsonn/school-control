@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { EnrollmentService } from "../services/EnrollmentService";
+import {NextFunction, Request, Response} from "express";
+import {EnrollmentService} from "../services/EnrollmentService";
 import {BaseController} from "./generics/BaseController";
 import {IEnrollment} from "@hyteck/shared";
 
@@ -10,7 +10,7 @@ export class EnrollmentsController extends BaseController<IEnrollment>{
         super(enrollmentService);
     }
 
-    findByStudentId = async (req: Request, res: Response) => {
+    findByStudentId = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { studentId } = req.params;
             const enrollments = await enrollmentService.getEnrollmentsByStudentId(studentId);
@@ -20,7 +20,29 @@ export class EnrollmentsController extends BaseController<IEnrollment>{
             }
             res.status(200).json(enrollments);
         } catch (error: any) {
-            res.status(500).json({ error: error.message });
+            next(error)
         }
     };
+
+    cancelEnrollment = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const enrollments = await enrollmentService.cancelEnrollment(id);
+            res.json(enrollments);
+        } catch (error: any) {
+            next(error)
+        }
+    };
+
+    renewEnrollment = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const enrollments = await enrollmentService.renewEnrollment(id);
+            res.json(enrollments);
+        } catch (error: any) {
+            next(error)
+        }
+    };
+
+
 }

@@ -8,5 +8,5 @@ export class Config {
     static readonly PORT: number = parseInt(process.env.PORT || "5000", 10);
     static readonly NODE_ENV: string = process.env.NODE_ENV || "development";
 
-    static readonly TOKEN_EXPIRATION: string = process.env.TOKEN_EXPIRATION || "1h";
+    static readonly TOKEN_EXPIRATION: string = process.env.TOKEN_EXPIRATION || '1000';
 }

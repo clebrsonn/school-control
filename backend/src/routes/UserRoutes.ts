@@ -2,11 +2,11 @@ import express from "express";
 import {UserController} from "../controllers/UsersController";
 
 const userController = new UserController();
-const userRoute = express.Router();
+const router = express.Router();
 
 
-userRoute.get('/logout', userController.logout);
-userRoute.get('/me', userController.userInfo);
+router.get('/logout', userController.logout);
+router.get('/me', userController.userInfo);
 
 
-export default userRoute;
+export const userRoutes=router;

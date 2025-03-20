@@ -1,8 +1,8 @@
 // filepath: /e:/IdeaProjects/school-control/frontend/src/services/PaymentService.ts
 
-import { ITuition } from "@hyteck/shared";
-import { get } from "../config/axios/get";
-import { post } from "../config/axios/post";
+import {ITuition} from "@hyteck/shared";
+import {get} from "../config/axios/get";
+import {post} from "../config/axios/post";
 import {axiosDelete} from "../config/axios/delete.ts";
 import {axiosPut} from "../config/axios/put.ts";
 
@@ -57,4 +57,8 @@ export const fetchOnTimePayers = async () => {
 
 export const fetchMostLatePayers = async () => {
   return await get<any[]>('/payments/most-late-payers');
+};
+
+export const fetchOpenPayments = async () => {
+  return await get<any[]>('/payments/open-month');
 };

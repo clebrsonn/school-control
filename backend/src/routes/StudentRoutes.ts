@@ -8,4 +8,4 @@ router.post('/:id/enroll', studentController.enrollStudant);
 
 router.get('/parent/:parentId', studentController.fetchStudentsByParentId);
 
-export default router;
+export const studentRoutes= router;

@@ -1,12 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import {Link, useParams} from 'react-router-dom';
-import {enrollStudent, fetchStudentById} from '@services/StudentService';
+import {cancelEnrollment, enrollStudent, fetchStudentById, renewEnrollment} from '@services/StudentService';
 import {fetchClasses} from '@services/ClassService';
 import {IClass, IEnrollment, IResponsible, IStudent} from '@hyteck/shared';
-import {Button, Container, Form} from 'react-bootstrap';
+import {Alert, Button, Container, Form} from 'react-bootstrap';
 import ErrorMessage from '@components/ErrorMessage';
-import notification from '../Notification';
-import {fetchEnrollmentByStudent} from '../../services/MonthlyFeeService.ts';
+import notification from '@components/Notification';
+import {fetchEnrollmentByStudent} from '@services/MonthlyFeeService';
 
 const StudentDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -15,6 +15,7 @@ const StudentDetails: React.FC = () => {
     const [classes, setClasses] = useState<IClass[]>([]);
     const [selectedClassId, setSelectedClassId] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
+    const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
     useEffect(() => {
         fetchStudentData();
@@ -30,9 +31,15 @@ const StudentDetails: React.FC = () => {
         try {
             // Fetch student and enrollment data
             const studentData = await fetchStudentById(id);
-            const enrollmentData = await fetchEnrollmentByStudent(id);
             setStudent(studentData);
-            setEnrollments(Array.isArray(enrollmentData) ? enrollmentData : []);
+            
+            try {
+                const enrollmentData = await fetchEnrollmentByStudent(id);
+                setEnrollments(Array.isArray(enrollmentData) ? enrollmentData : []);
+            } catch (enrollmentErr) {
+                // If there's an error fetching enrollment, it means the student doesn't have one
+                setEnrollments([]);
+            }
         } catch (err: unknown) {
             setError('Failed to fetch student data.');
             console.error(err);
@@ -61,6 +68,28 @@ const StudentDetails: React.FC = () => {
             fetchStudentData(); // Refresh data after enrollment
         } catch (err: unknown) {
             setError(err.message || 'Failed to enroll student.');
+        }
+    };
+
+    const handleCancelEnrollment = async (enrollmentId: string) => {
+        try {
+            await cancelEnrollment(enrollmentId);
+            setError(null);
+            notification('Enrollment successfully canceled!');
+            fetchStudentData(); // Refresh data after cancellation
+        } catch (err: unknown) {
+            setError(err.message || 'Failed to cancel enrollment.');
+        }
+    };
+
+    const handleRenewEnrollment = async (enrollmentId: string) => {
+        try {
+            await renewEnrollment(enrollmentId);
+            setError(null);
+            notification('Enrollment successfully renewed!');
+            fetchStudentData(); // Refresh data after renewal
+        } catch (err: unknown) {
+            setError(err.message || 'Failed to renew enrollment.');
         }
     };
 
@@ -107,15 +136,38 @@ const StudentDetails: React.FC = () => {
                 <>
                     <h4>Current Enrollment</h4>
                     {enrollments.map((enroll) => (
-                        <div key={enroll._id}>
+                        <div key={enroll._id} className="mb-4 p-3 border rounded">
                             <p>Current Class: {enroll.classId?.name}</p>
                             <p>Enrollment Date: {new Date(enroll.createdAt).toLocaleDateString()}</p>
+                            <p>End Date: {enroll.endDate ? new Date(enroll.endDate).toLocaleDateString() : 'No end date'}</p>
+                            <div className="d-flex gap-2">
+                                {enroll.endDate && new Date(enroll.endDate) <= currentDate && (
+                                    <>
+                                        <Button variant="danger" onClick={() => handleCancelEnrollment(enroll._id!! as string)}>
+                                            Cancel Enrollment
+                                        </Button>
+                                        <Button variant="success" onClick={() => handleRenewEnrollment(enroll._id!! as string)}>
+                                            Renew Enrollment
+                                        </Button>
+                                    </>
+                                )}
+                                {(!enroll.endDate || new Date(enroll.endDate) > currentDate) && (
+                                    <Button variant="danger" onClick={() => handleCancelEnrollment(enroll._id!! as string)}>
+                                        Cancel Enrollment
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     ))}
                     <EnrollmentForm buttonLabel="Change Class" />
                 </>
             ) : (
-                <EnrollmentForm buttonLabel="Enroll" />
+                <>
+                    <Alert variant="info" className="mb-4">
+                        This student is not currently enrolled in any class.
+                    </Alert>
+                    <EnrollmentForm buttonLabel="Enroll" />
+                </>
             )}
         </Container>
     );

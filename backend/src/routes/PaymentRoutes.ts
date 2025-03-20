@@ -13,10 +13,10 @@ router.get('/late', paymentsController.getLatePayments);
 router.get('/total-estimated', paymentsController.getTotalEstimatedForCurrentMonth);
 router.get('/on-time-payers', paymentsController.getOnTimePayers);
 router.get('/most-late-payers', paymentsController.getMostLatePayers);
+router.get('/open-month', paymentsController.getOpenPaymentCurrentMonth);
 
 
 
 router.get("/:id", paymentsController.findById);
 
-
-export default router;
+export const paymentRoutes= router;
