@@ -2,10 +2,11 @@ import {Enrollment, IEnrollment, IStudent, TuitionStatus} from "@hyteck/shared";
 import {BaseService} from "./generics/BaseService";
 
 import {PaymentService} from "./PaymentService";
+import {RootFilterQuery} from "mongoose";
 
 
 export class EnrollmentService extends BaseService<IEnrollment> {
-    private _paymentService = new PaymentService();
+    private _paymentService!: PaymentService;
     constructor() {
         super(Enrollment);
     }
@@ -18,6 +19,24 @@ export class EnrollmentService extends BaseService<IEnrollment> {
             this._paymentService = new PaymentService();
         }
         return this._paymentService;
+    }
+
+    override async deleteMany(params: RootFilterQuery<IEnrollment> | undefined): Promise<boolean> {
+
+        const enrollments = await Enrollment.find(params as  RootFilterQuery<IEnrollment>);
+
+        for (const enrollment of enrollments) {
+            this.paymentService.deleteMany({enrollment: enrollment._id});
+        }
+        return super.deleteMany(params);
+    }
+
+
+    
+    override async delete(id: string): Promise<boolean> {
+        this.paymentService.deleteMany({enrollment: id});
+        
+        return super.delete(id);
     }
 
 
