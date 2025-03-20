@@ -8,9 +8,9 @@ export class UserService extends BaseService<IUser>{
     }
 
     async getByUsername(username: string): Promise<IUser | null> {
-        return User.findOne({ username }).populate('role').exec();
+        return User.findOne({ username, isActive: true  }).populate('role').exec();
     }
     async getByEmail(email: string): Promise<IUser | null> {
-        return User.findOne({ email }).populate('role').exec();
+        return User.findOne({ email, isActive: true }).populate('role').exec();
     }
 }

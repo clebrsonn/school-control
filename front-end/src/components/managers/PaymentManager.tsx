@@ -116,7 +116,7 @@ const PaymentManager: React.FC = () => {
           <ListGroup>
             {group.payments.map((payment: ITuition) => (
               <ListGroup.Item key={payment._id}>
-                {payment.amount} - {new Date(payment.dueDate).toLocaleDateString()} - {payment.status}
+                {payment.amount} - {new Date(payment.dueDate).toLocaleDateString()} - {payment.status.toString()}
               </ListGroup.Item>
             ))}
           </ListGroup>

@@ -1,4 +1,4 @@
-import {Document, Model, Query} from "mongoose";
+import {Document, Model, Query, RootFilterQuery} from "mongoose";
 
 export class BaseService<T extends Document> {
     protected model: Model<T>;
@@ -30,6 +30,12 @@ export class BaseService<T extends Document> {
         const result = await this.model.findByIdAndDelete(id).exec();
         return result !== null;
     }
+
+    async deleteMany(params: RootFilterQuery<T> | undefined): Promise<boolean> {
+        const result = await this.model.deleteMany(params).exec();
+        return result !== null;
+    }
+
 
     private applyPopulates(query: Query<any, T>,): Query<any, T> {
         if (Array.isArray(this.populateFields)) {

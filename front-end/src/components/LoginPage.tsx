@@ -1,6 +1,5 @@
 import React, {useState} from 'react';
 import {Button, Col, Container, Form, Row} from "react-bootstrap";
-import {useNavigate} from 'react-router-dom';
 import {useAuth} from "../config/context/AuthProvider.tsx";
 
 
@@ -8,13 +7,11 @@ function LoginPage() {
     const [username, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const {login} = useAuth();
-    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         await login(username, password);
-        navigate('/parents');
     };
 
     return (
