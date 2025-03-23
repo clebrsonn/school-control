@@ -1,7 +1,7 @@
-import {NextFunction, Request, Response} from 'express';
-import {ExpenseService} from '../services/ExpenseService';
-import {IExpense} from '@hyteck/shared';
-import {BaseController} from './generics/BaseController';
+import { NextFunction, Request, Response } from 'express';
+import { ExpenseService } from '../services/ExpenseService';
+import { BaseController } from './generics/BaseController';
+import { IExpense } from '@hyteck/shared';
 
 const expenseService = new ExpenseService();
 

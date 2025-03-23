@@ -3,14 +3,15 @@
       "esModuleInterop": true,
       "baseUrl": "./",
       "paths": {
-        "@hyteck/shared/*": ["*"]
+        "@hyteck/shared/*": ["./schemas/*"]
       },
-      "outDir": "dist",
+      "outDir": "./dist",
+      "rootDir": "./schemas",
       "module": "commonjs",
       "target": "es6",
       "declaration": true
     },
-    "include": ["**/*.ts"],
-    "exclude": ["node_modules", "dist"]
+    "include": ["schemas/*.ts"],
+  "exclude": ["node_modules"]
   }
   
