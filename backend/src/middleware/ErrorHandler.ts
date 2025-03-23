@@ -33,7 +33,6 @@ export function errorHandler(
         url: req.url,
     });
 
-    // Send standardized error response
     res.status(status).json({
         message,
         stack,

@@ -19,7 +19,7 @@ export default function AppNavbar() {
             <Nav.Link href="/payments">Pagamentos</Nav.Link>
             <Nav.Link href="/classes">Turmas</Nav.Link>
             <Nav.Link href="/discounts">Descontos</Nav.Link>
-
+            <Nav.Link href="/expenses">Despesas</Nav.Link>
           </Nav>
           <Nav className="navbar">
               {user ? (

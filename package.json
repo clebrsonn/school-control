@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"pnpm --prefix backend run dev\" \"pnpm --prefix front-end run dev\"",
-    "build": "concurrently \"pnpm --prefix backend run dev\" \"pnpm --prefix front-end run build\"",
+    "build": "concurrently \"pnpm --prefix shared run build\" \"pnpm --prefix backend run build\" \"pnpm --prefix front-end run build\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,7 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@hyteck/shared": "link:shared",
-    "@types/react": "^18.3.18",
+    "@types/react": "^18.3.19",
     "@types/react-dom": "^18.3.5",
     "concurrently": "^9.1.2"
   },
@@ -21,5 +21,9 @@
     "overrides": {
       "@hyteck/shared": "link:shared"
     }
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.27.0"
   }
 }

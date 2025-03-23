@@ -13,6 +13,7 @@ import HomeReport from '../components/HomeReport';
 import LoginPage from "../components/LoginPage";
 import RegisterPage from "../components/RegisterPage";
 import ProtectedRoute from "./ProtectedRoutes";
+import {ExpenseList} from '../components/ExpenseList';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -25,6 +26,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/payments" element={<PaymentManager />} />
                 <Route path="/classes" element={<ClassManager />} />
                 <Route path="/discounts/" element={<DiscountManager />} />
+                <Route path="/expenses" element={<ExpenseList />} />
                 <Route path="/parents/:id" element={<ParentDetails />} />
                 <Route path="/students/:id" element={<StudentDetails />} />
                 <Route path="/payments/:id" element={<PaymentDetails />} />

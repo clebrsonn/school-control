@@ -1,7 +1,7 @@
-import {ITuition, Tuition, TuitionStatus} from '@hyteck/shared';
-import {BaseService} from "./generics/BaseService";
-import mongoose from "mongoose";
-import {EnrollmentService} from "./EnrollmentService";
+import { BaseService } from './generics/BaseService';
+import mongoose from 'mongoose';
+import { EnrollmentService } from './EnrollmentService';
+import { IEnrollment, ITuition, Tuition, TuitionStatus } from '@hyteck/shared/schemas';
 
 export class PaymentService extends BaseService<ITuition> {
 
@@ -29,7 +29,7 @@ export class PaymentService extends BaseService<ITuition> {
         const activeEnrollments = await this.enrollmentService.findAcitveAndEndDateLessThanToday();
         const currentDate = new Date();
 
-        const tuitions = activeEnrollments.map((enrollment) => ({
+        const tuitions = activeEnrollments.map((enrollment: IEnrollment) => ({
             enrollment: enrollment._id,
             dueDate: Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), 10, 0, 0, 0, 0),
             amount: enrollment.tuitionAmount,

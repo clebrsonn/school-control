@@ -5,6 +5,7 @@ import {
     classRoutes,
     discountRoutes,
     enrollmentRoutes,
+    expenseRoutes,
     parentRoutes,
     paymentRoutes,
     studentRoutes,
@@ -26,6 +27,8 @@ const protectedRoutes = (app: Express) => {
     app.use('/discounts', discountRoutes);
     app.use('/classes', classRoutes);
     app.use('/enrollments', enrollmentRoutes);
+    app.use('/expenses', expenseRoutes);
+
     app.use(errorHandler);
 };
 

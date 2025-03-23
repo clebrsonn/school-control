@@ -42,7 +42,7 @@ async function gracefulShutdown() {
         await Database.getInstance().closeConnection(); // [[6]]
 
         console.log('Shutdown concluído. Saindo...');
-        process.exit(0);
+        process.abort();
     } catch (error) {
         console.error('Erro durante shutdown:', error);
         process.exit(1); // Força saída após timeout [[3]]
