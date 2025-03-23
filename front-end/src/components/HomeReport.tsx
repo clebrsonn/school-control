@@ -1,15 +1,15 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     fetchLatePayments,
     fetchMostLatePayers,
     fetchOnTimePayers,
     fetchOpenPayments,
-    fetchTotalEstimatedForCurrentMonth,
+    fetchTotalEstimatedForCurrentMonth
 } from '@services/PaymentService';
-import {IResponsible, ITuition} from '@hyteck/shared';
-import {Card, Col, Container, ListGroup, Row} from 'react-bootstrap';
+import { IResponsible, ITuition } from '@hyteck/shared';
+import { Card, Col, Container, ListGroup, Row } from 'react-bootstrap';
 import ErrorMessage from './ErrorMessage';
-import {LoadingSpinner} from './LoadingSpinner';
+import { LoadingSpinner } from './LoadingSpinner';
 
 const HomeReport: React.FC = () => {
     const [openPayments, setOpenPayments] = useState<ITuition[]>([]);
@@ -83,7 +83,7 @@ const HomeReport: React.FC = () => {
                             <ListGroup className="mt-3">
                                 {openPayments.map((payment) => (
                                     <ListGroup.Item key={payment._id}>
-                                        {(payment.responsible as IResponsible).name} - R$ {payment.totalAmount} -{' '}
+                                        {(payment.responsible as IResponsible)?.name} - R$ {payment.totalAmount} -{' '}
                                         {new Date(payment.year, payment.month, 10).toLocaleDateString()}
                                     </ListGroup.Item>
                                 ))}
@@ -99,7 +99,7 @@ const HomeReport: React.FC = () => {
                             <ListGroup className="mt-3">
                                 {latePayments.map((payment) => (
                                     <ListGroup.Item key={payment._id}>
-                                        {(payment.responsible as IResponsible).name} - R$ {payment.amount} -{' '}
+                                        {(payment.responsible as IResponsible)?.name} - R$ {payment.amount} -{' '}
                                         {new Date(payment.dueDate).toLocaleDateString()}
                                     </ListGroup.Item>
                                 ))}
@@ -117,7 +117,7 @@ const HomeReport: React.FC = () => {
                             <ListGroup className="mt-3">
                                 {onTimePayers.map((payer) => (
                                     <ListGroup.Item key={payer._id}>
-                                        {payer.responsible.name} - {payer.count} pagamentos
+                                        {payer.responsible?.name} - {payer.count} pagamentos
                                     </ListGroup.Item>
                                 ))}
                             </ListGroup>
@@ -132,7 +132,7 @@ const HomeReport: React.FC = () => {
                             <ListGroup className="mt-3">
                                 {mostLatePayers.map((payer) => (
                                     <ListGroup.Item key={payer._id}>
-                                        {payer.responsible.name} - {payer.count} atrasos
+                                        {payer.responsible?.name} - {payer.count} atrasos
                                     </ListGroup.Item>
                                 ))}
                             </ListGroup>
