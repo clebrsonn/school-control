@@ -1,15 +1,16 @@
-import {authMiddleware, errorHandler} from "../middleware";
-import {Express} from "express";
+import { authMiddleware, errorHandler } from '../middleware';
+import { Express } from 'express';
 import {
     AuthRoutes,
     classRoutes,
     discountRoutes,
     enrollmentRoutes,
+    expenseRoutes,
     parentRoutes,
     paymentRoutes,
     studentRoutes,
     userRoutes
-} from "../routes";
+} from '../routes';
 
 const publicRoutes = (app: Express) => {
 
@@ -26,6 +27,8 @@ const protectedRoutes = (app: Express) => {
     app.use('/discounts', discountRoutes);
     app.use('/classes', classRoutes);
     app.use('/enrollments', enrollmentRoutes);
+    app.use('/expenses', expenseRoutes);
+
     app.use(errorHandler);
 };
 

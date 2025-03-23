@@ -5,4 +5,5 @@ export * from "./EnrollmentRoutes";
 export * from "./ParentRoutes";
 export * from "./PaymentRoutes";
 export * from "./StudentRoutes";
-export * from "./UserRoutes"
+export * from "./UserRoutes";
+export * from "./ExpenseRoutes";

@@ -1,7 +1,7 @@
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
-import {useAuth} from "../config/context/AuthProvider.tsx";
+import { useAuth } from '../config/context/AuthProvider.tsx';
 
 export default function AppNavbar() {
   const { user, logout } = useAuth();
@@ -19,7 +19,7 @@ export default function AppNavbar() {
             <Nav.Link href="/payments">Pagamentos</Nav.Link>
             <Nav.Link href="/classes">Turmas</Nav.Link>
             <Nav.Link href="/discounts">Descontos</Nav.Link>
-
+            <Nav.Link href="/expenses">Despesas</Nav.Link>
           </Nav>
           <Nav className="navbar">
               {user ? (

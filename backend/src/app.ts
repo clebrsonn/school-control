@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import './cron/cron';
-import {configureLogs, Database, routes} from "./config";
-import {logger} from "./utils/Logger";
+import { configureLogs, Database, routes } from './config';
+import { logger } from './utils/Logger';
 
 
 const app = express();
@@ -42,7 +42,7 @@ async function gracefulShutdown() {
         await Database.getInstance().closeConnection(); // [[6]]
 
         console.log('Shutdown concluído. Saindo...');
-        process.exit(0);
+        process.abort();
     } catch (error) {
         console.error('Erro durante shutdown:', error);
         process.exit(1); // Força saída após timeout [[3]]

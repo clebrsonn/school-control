@@ -1,5 +1,5 @@
 import React from 'react';
-import {Route, Routes} from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import ParentManager from '../components/managers/ParentManager';
 import StudentManager from '../components/managers/StudentManager';
 import PaymentManager from '../components/managers/PaymentManager';
@@ -8,11 +8,12 @@ import ParentDetails from '../components/details/ParentDetails';
 import StudentDetails from '../components/details/StudentDetails';
 import PaymentDetails from '../components/details/PaymentDetails';
 import ClassDetails from '../components/details/ClassDetails';
-import DiscountManager from "../components/managers/DiscountManager";
+import DiscountManager from '../components/managers/DiscountManager';
 import HomeReport from '../components/HomeReport';
-import LoginPage from "../components/LoginPage";
-import RegisterPage from "../components/RegisterPage";
-import ProtectedRoute from "./ProtectedRoutes";
+import LoginPage from '../components/LoginPage';
+import RegisterPage from '../components/RegisterPage';
+import ProtectedRoute from './ProtectedRoutes';
+import { ExpenseList } from '../components/ExpenseList';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -25,6 +26,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/payments" element={<PaymentManager />} />
                 <Route path="/classes" element={<ClassManager />} />
                 <Route path="/discounts/" element={<DiscountManager />} />
+                <Route path="/expenses" element={<ExpenseList />} />
                 <Route path="/parents/:id" element={<ParentDetails />} />
                 <Route path="/students/:id" element={<StudentDetails />} />
                 <Route path="/payments/:id" element={<PaymentDetails />} />

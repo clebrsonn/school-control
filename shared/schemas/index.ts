@@ -7,3 +7,4 @@ export * from './Token';
 export * from './Enrollment';
 export * from './Tuition';
 export * from './ClassModel';
+export * from './Expense';
