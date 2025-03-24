@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ESNext", // Verificar se é possível atualizar para uma versão mais recente, como ES2021 ou ES2022
     "module": "commonjs",
     "outDir": "./dist",
     "rootDir": "./src",
@@ -11,7 +11,10 @@
     "baseUrl": "./",
     "paths": {
       "@hyteck/shared": ["../shared/"]
-    }
+    },
+    "noImplicitAny": true, // Adicionar diretiva para evitar uso de 'any' implícito
+    "strictNullChecks": true, // Adicionar diretiva para checagem estrita de valores nulos
+    "noUnusedLocals": true // Adicionar diretiva para evitar variáveis locais não utilizadas
   },
   "include": ["src"],
   "exclude": ["node_modules"]
