@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
+
+import { IResponsible, ITuition } from '@hyteck/shared';
+import { Card, Col, Container, ListGroup, Row } from 'react-bootstrap';
+import ErrorMessage from './common/ErrorMessage.tsx';
+import { LoadingSpinner } from './common/LoadingSpinner.tsx';
 import {
     fetchLatePayments,
     fetchMostLatePayers,
     fetchOnTimePayers,
     fetchOpenPayments,
     fetchTotalEstimatedForCurrentMonth
-} from '@services/PaymentService';
-import { IResponsible, ITuition } from '@hyteck/shared';
-import { Card, Col, Container, ListGroup, Row } from 'react-bootstrap';
-import ErrorMessage from './ErrorMessage';
-import { LoadingSpinner } from './LoadingSpinner';
+} from '../features/payments/services/PaymentService.ts';
 
 const HomeReport: React.FC = () => {
     const [openPayments, setOpenPayments] = useState<ITuition[]>([]);
@@ -82,9 +83,9 @@ const HomeReport: React.FC = () => {
                             <Card.Title>Pagamentos em Aberto</Card.Title>
                             <ListGroup className="mt-3">
                                 {openPayments.map((payment) => (
-                                    <ListGroup.Item key={payment._id}>
-                                        {(payment.responsible as IResponsible)?.name} - R$ {payment.totalAmount} -{' '}
-                                        {new Date(payment.year, payment.month, 10).toLocaleDateString()}
+                                    <ListGroup.Item key={payment._id as string}>
+                                        {(payment.responsible as IResponsible)?.name} - R$ {payment.amount} -{' '}
+                                        {new Date(payment.paymentDate?.getUTCFullYear() || 0, payment.paymentDate?.getUTCMonth() || 1, 10).toLocaleDateString()}
                                     </ListGroup.Item>
                                 ))}
                             </ListGroup>
@@ -98,7 +99,7 @@ const HomeReport: React.FC = () => {
                             <Card.Title>Pagamentos em Atraso</Card.Title>
                             <ListGroup className="mt-3">
                                 {latePayments.map((payment) => (
-                                    <ListGroup.Item key={payment._id}>
+                                    <ListGroup.Item key={payment._id as string}>
                                         {(payment.responsible as IResponsible)?.name} - R$ {payment.amount} -{' '}
                                         {new Date(payment.dueDate).toLocaleDateString()}
                                     </ListGroup.Item>

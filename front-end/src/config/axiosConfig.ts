@@ -1,5 +1,5 @@
 import axios from 'axios';
-import notification from '../components/Notification';
+import notification from '../components/common/Notification.tsx';
 
 const API_URL = import.meta.env.VITE_SERVICE_URL ?? 'http://192.168.1.12:5000';
 
@@ -24,9 +24,21 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     notification(error.response?.data?.error ?? error.response?.data, 'error');
-    const errorMessage = error.response.data ? error.response.data.details?.message : error;
+    const errorMessage = error.response.data ? error.response.data.details?.message ||  error.response.data.message : error;
     return Promise.reject(new Error(errorMessage));
   }
 );
+
+axiosInstance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
+
 
 export default axiosInstance;

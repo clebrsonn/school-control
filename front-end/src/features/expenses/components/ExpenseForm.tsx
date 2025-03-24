@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ExpenseService } from '@services/ExpenseService';
-import notification from '@components/Notification';
+import { ExpenseService } from '../services/ExpenseService.ts';
+import notification from '../../../components/common/Notification.tsx';
 
 interface ExpenseFormProps {
   onSuccess?: () => void;

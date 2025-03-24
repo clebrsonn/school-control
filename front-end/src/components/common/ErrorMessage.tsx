@@ -1,4 +1,3 @@
-// filepath: /e:/IdeaProjects/school-control/front-end/src/components/ErrorMessage.tsx
 import React from 'react';
 
 interface ErrorMessageProps {

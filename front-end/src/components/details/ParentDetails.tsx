@@ -1,16 +1,19 @@
-import React, {useEffect, useState} from 'react';
-import {Link, useParams} from 'react-router-dom';
-import Modal from 'react-modal';
-import ErrorMessage from '@components/ErrorMessage';
-import {Button, Col, Container, ListGroup, Row, Table} from 'react-bootstrap';
-import {ITuition} from '@hyteck/shared';
-import {createPayment, fetchPaymentsByParentId, updatePayment} from "../../services/PaymentService.ts";
-import {ModalType, ModalTypes} from "../../types/modal.ts";
-import {LoadingSpinner} from "../LoadingSpinner.tsx";
-import {useParentDetails} from "../../hooks/useParentDetails.ts";
-import {MonthlyFeeFormModal, StudentFormModal} from "../modals/StudentFormModal.tsx";
-import {ErrorBoundary} from "../ErrorBoundary.tsx";
-import notification from "../Notification.tsx";
+import React, { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { Button, Col, Container, ListGroup, Modal, Row, Table } from 'react-bootstrap';
+import { ITuition } from '@hyteck/shared';
+import {
+  createPayment,
+  fetchPaymentsByParentId,
+  updatePayment
+} from '../../features/payments/services/PaymentService.ts';
+import { ModalType, ModalTypes } from '../../types/modal.ts';
+import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
+import { useParentDetails } from '../../features/parents/components/useParentDetails.ts';
+import { MonthlyFeeFormModal, StudentFormModal } from '../modals/StudentFormModal.tsx';
+import { ErrorBoundary } from '../common/ErrorBoundary.tsx';
+import notification from '../common/Notification.tsx';
+import ErrorMessage from '../common/ErrorMessage.tsx';
 
 const ParentDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();

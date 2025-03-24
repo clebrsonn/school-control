@@ -1,14 +1,14 @@
-import React, {useEffect, useState} from 'react';
-import {createParent, deleteParent, fetchParents} from '../../services/ParentService';
-import ErrorMessage from '../ErrorMessage';
-import notification from '../Notification';
-import {Button, Form} from 'react-bootstrap';
-import {IResponsible} from '@hyteck/shared';
-import ListRegistries from '../pieces/ListRegistries.tsx';
-import {LoadingSpinner} from '../LoadingSpinner.tsx';
+import React, { useEffect, useState } from 'react';
+import { createParent, deleteParent, fetchParents } from '../../features/parents/services/ParentService.ts';
+import ErrorMessage from '../common/ErrorMessage.tsx';
+import notification from '../common/Notification.tsx';
+import { Button, Form } from 'react-bootstrap';
+import { IResponsible } from '@hyteck/shared';
+import ListRegistries from '../common/ListRegistries.tsx';
+import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
 
 // Constants for reusable initial states
-const INITIAL_PARENT_STATE = { name: '', phone: '' };
+const INITIAL_PARENT_STATE: Partial<IResponsible> = { name: '', phone: '' };
 
 const ParentManager: React.FC = () => {
     const [parents, setParents] = useState<IResponsible[]>([]);

@@ -1,6 +1,6 @@
 import { AxiosError, AxiosRequestConfig } from 'axios';
-import axiosInstance from '@config/axiosConfig';
-import notification from '@components/Notification';
+import axiosInstance from '../axiosConfig';
+import notification from '../../components/common/Notification.tsx';
 
 /**
  * Sends a PUT request to the specified URL with the provided data and configuration.

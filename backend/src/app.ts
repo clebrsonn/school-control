@@ -32,8 +32,7 @@ process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection:', reason);
     gracefulShutdown();
 });
-
-
+process.on('SIGINT', gracefulShutdown);
 
 async function gracefulShutdown() {
     try {

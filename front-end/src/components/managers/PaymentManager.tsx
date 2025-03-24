@@ -1,8 +1,8 @@
-import React, {useEffect, useState} from 'react';
-import {Container, ListGroup} from 'react-bootstrap';
-import {groupPaymentsByMonthAndParent} from '@services/PaymentService';
-import ErrorMessage from '../ErrorMessage';
-import {ITuition} from '@hyteck/shared';
+import React, { useEffect, useState } from 'react';
+import { Container, ListGroup } from 'react-bootstrap';
+import ErrorMessage from '../common/ErrorMessage.tsx';
+import { ITuition } from '@hyteck/shared';
+import { groupPaymentsByMonthAndParent } from '../../features/payments/services/PaymentService.ts';
 
 const PaymentManager: React.FC = () => {
   // const [payments, setPayments] = useState<ITuition[]>([]);

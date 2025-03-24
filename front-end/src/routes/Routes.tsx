@@ -10,10 +10,10 @@ import PaymentDetails from '../components/details/PaymentDetails';
 import ClassDetails from '../components/details/ClassDetails';
 import DiscountManager from '../components/managers/DiscountManager';
 import HomeReport from '../components/HomeReport';
-import LoginPage from '../components/LoginPage';
-import RegisterPage from '../components/RegisterPage';
+import LoginPage from '../features/auth/components/LoginPage.tsx';
+import RegisterPage from '../features/auth/components/RegisterPage.tsx';
 import ProtectedRoute from './ProtectedRoutes';
-import { ExpenseList } from '../components/ExpenseList';
+import { ExpenseList } from '../features/expenses/components/ExpenseList.tsx';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -22,7 +22,7 @@ const AppRoutes: React.FC = () => {
             <Route path="/register" element={<RegisterPage />} />
             <Route element={<ProtectedRoute />}>
                 <Route path="/parents" element={<ParentManager />} />
-                <Route path="/students" element={<StudentManager />} />
+                <Route path="/students" element={<StudentManager responsible={undefined} />} />
                 <Route path="/payments" element={<PaymentManager />} />
                 <Route path="/classes" element={<ClassManager />} />
                 <Route path="/discounts/" element={<DiscountManager />} />

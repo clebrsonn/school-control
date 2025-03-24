@@ -1,6 +1,6 @@
-import {AxiosError, AxiosRequestConfig} from "axios";
-import axiosInstance from "../axiosConfig";
-import notification from "../../components/Notification";
+import { AxiosError, AxiosRequestConfig } from 'axios';
+import axiosInstance from '../axiosConfig';
+import notification from '../../components/common/Notification.tsx';
 
 /**
  * Sends a DELETE request to the specified URL using axiosInstance.
