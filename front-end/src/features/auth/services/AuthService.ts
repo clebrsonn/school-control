@@ -1,6 +1,6 @@
-import {post} from "../config/axios/post.ts";
-import {get} from "../config/axios/get.ts";
-import {IUser} from "@hyteck/shared";
+import { post } from '../../../config/axios/post.ts';
+import { get } from '../../../config/axios/get.ts';
+import { IUser } from '@hyteck/shared';
 
 const API_URL = "/auth";
 interface AuthResponse{

@@ -1,7 +1,7 @@
 // filepath: /e:/IdeaProjects/school-control/frontend/src/components/PaymentDetails.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchPaymentById } from '../../services/PaymentService';
+import { fetchPaymentById } from '../../features/payments/services/PaymentService.ts';
 import { ITuition } from '@hyteck/shared';
 
 const PaymentDetails: React.FC = () => {

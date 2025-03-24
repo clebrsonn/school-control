@@ -1,5 +1,5 @@
-import {useState} from 'react';
-import {useAuth} from "../config/context/AuthProvider.tsx";
+import { useState } from 'react';
+import { useAuth } from '../contexts/AuthProvider.tsx';
 
 function RegisterPage() {
     const [email, setEmail] = useState('');

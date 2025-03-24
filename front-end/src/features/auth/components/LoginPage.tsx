@@ -1,6 +1,6 @@
-import React, {useState} from 'react';
-import {Button, Col, Container, Form, Row} from "react-bootstrap";
-import {useAuth} from "../config/context/AuthProvider.tsx";
+import React, { useState } from 'react';
+import { Button, Col, Container, Form, Row } from 'react-bootstrap';
+import { useAuth } from '../contexts/AuthProvider.tsx';
 
 
 function LoginPage() {

@@ -1,6 +1,7 @@
 import { AxiosError, AxiosRequestConfig } from 'axios';
-import notification from '@components/Notification';
-import axiosInstance from '@config/axiosConfig';
+import axiosInstance from '../axiosConfig.ts';
+import notification from '../../components/common/Notification.tsx';
+
 /**
  * Makes a GET request to the specified URL and returns the response data.
  * @param url - The URL to make the GET request to.

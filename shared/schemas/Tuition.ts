@@ -1,5 +1,6 @@
-import mongoose, {Document, Schema} from "mongoose";
-import {IResponsible} from "./Responsible";
+import mongoose, { Document, Schema } from 'mongoose';
+import { IResponsible } from './Responsible';
+import { IEnrollment } from '@hyteck/shared/Enrollment';
 
 export enum TuitionStatus {
     PENDING = "pending",
@@ -14,6 +15,7 @@ export interface ITuition extends Document {
     dueDate: Date;
     paymentDate?: Date;
     responsible: mongoose.Types.ObjectId | IResponsible;
+    enrollment: mongoose.Types.ObjectId | IEnrollment;
     createdAt: Date;
     updatedAt: Date;
 }

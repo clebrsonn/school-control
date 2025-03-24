@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { Button, Form, Table, Alert } from "react-bootstrap";
-import { IDiscount } from "@hyteck/shared";
-import { fetchDiscounts, createDiscount, deleteDiscount } from "@services/DiscountService";
-import ListRegistries from "../pieces/ListRegistries.tsx";
+import React, { useEffect, useState } from 'react';
+import { Alert, Button, Form } from 'react-bootstrap';
+import { IDiscount } from '@hyteck/shared';
+
+import { createDiscount, deleteDiscount, fetchDiscounts } from '../../features/enrollments/services/DiscountService.ts';
+import ListRegistries from '../common/ListRegistries.tsx';
 
 const DiscountManager: React.FC = () => {
     const [discounts, setDiscounts] = useState<IDiscount[]>([]); // Lista de descontos

@@ -1,5 +1,5 @@
-import {IEnrollment, ITuition} from "@hyteck/shared";
-import { get } from "../config/axios/get";
+import { IEnrollment, ITuition } from '@hyteck/shared';
+import { get } from '../config/axios/get';
 
 export const fetchMonthlyFeesByParentId = async (parentId: string) :Promise<ITuition[]> => {
   const response = await get<ITuition[]>(`/payments/parent/${parentId}`);

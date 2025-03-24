@@ -1,7 +1,7 @@
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
-import {useAuth} from "../config/context/AuthProvider.tsx";
+import { useAuth } from '../../features/auth/contexts/AuthProvider.tsx';
 
 export default function AppNavbar() {
   const { user, logout } = useAuth();
