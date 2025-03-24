@@ -1,17 +1,23 @@
 {
-    "compilerOptions": {
-      "esModuleInterop": true,
-      "baseUrl": "./",
-      "paths": {
-        "@hyteck/shared/*": ["./schemas/*"]
-      },
-      "outDir": "./dist",
-      "rootDir": "./schemas",
-      "module": "commonjs",
-      "target": "es6",
-      "declaration": true
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "baseUrl": "./",
+    "paths": {
+      "@hyteck/shared/*": ["./schemas/*"]
     },
-    "include": ["schemas/*.ts"],
+    "outDir": "./dist",
+    "rootDir": "./schemas",
+    "module": "commonjs",
+    "target": "es6",
+    "declaration": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictPropertyInitialization": false,
+    "sourceMap": true
+  },
+  "include": ["schemas/**/*.ts"],
   "exclude": ["node_modules"]
-  }
-  
+}

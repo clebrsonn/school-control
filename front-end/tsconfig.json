@@ -5,11 +5,13 @@
     "paths": {
       "@routes/*": ["src/routes/*"],
       "@config/*": ["src/config/*"]
-    }
+    },
+    "noImplicitAny": true, // Adicionar diretiva para evitar uso de 'any' implícito
+    "strictNullChecks": true, // Adicionar diretiva para checagem estrita de valores nulos
+    "noUnusedLocals": true // Adicionar diretiva para evitar variáveis locais não utilizadas
   },
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
   ]
-
 }
