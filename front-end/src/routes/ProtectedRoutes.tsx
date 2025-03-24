@@ -1,6 +1,6 @@
 import React from 'react';
-import {Navigate, Outlet, useLocation} from 'react-router-dom';
-import {useAuth} from "../config/context/AuthProvider";
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../features/auth/contexts/AuthProvider.tsx';
 
 const ProtectedRoute: React.FC = () => {
     const { user } = useAuth();

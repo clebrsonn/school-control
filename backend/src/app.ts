@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import './cron/cron';
-import {configureLogs, Database, routes} from "./config";
-import {logger} from "./utils/Logger";
+import { configureLogs, Database, routes } from './config';
+import { logger } from './utils/Logger';
 
 
 const app = express();
@@ -32,8 +32,7 @@ process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection:', reason);
     gracefulShutdown();
 });
-
-
+process.on('SIGINT', gracefulShutdown);
 
 async function gracefulShutdown() {
     try {

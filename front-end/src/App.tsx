@@ -1,8 +1,8 @@
 import React from 'react';
-import {BrowserRouter as Router} from 'react-router-dom';
-import Layout from '@components/Layout';
-import AppRoutes from '@routes/Routes';
-import AuthProvider from "./config/context/AuthProvider";
+import { BrowserRouter as Router } from 'react-router-dom';
+import AuthProvider from './features/auth/contexts/AuthProvider';
+import Layout from './components/layout/Layout';
+import AppRoutes from './routes/Routes';
 
 const App: React.FC = () => {
     return (

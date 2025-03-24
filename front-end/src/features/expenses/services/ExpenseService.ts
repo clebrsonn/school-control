@@ -1,8 +1,8 @@
-import {IExpense} from '@hyteck/shared/';
-import {get} from '../config/axios/get';
-import {post} from '../config/axios/post';
-import {axiosPut} from '../config/axios/put';
-import {axiosDelete} from '../config/axios/delete';
+import { IExpense } from '@hyteck/shared/';
+import { get } from '../../../config/axios/get.ts';
+import { post } from '../../../config/axios/post.ts';
+import { axiosPut } from '../../../config/axios/put.ts';
+import { axiosDelete } from '../../../config/axios/delete.ts';
 
 export const ExpenseService = {
   getAll: async (): Promise<IExpense[]> => {
@@ -14,7 +14,7 @@ export const ExpenseService = {
   },
 
   create: async (data: FormData): Promise<IExpense> => {
-    return await post<IExpense, IExpense>('/expenses', data, {
+    return await post<FormData, IExpense>('/expenses', data, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

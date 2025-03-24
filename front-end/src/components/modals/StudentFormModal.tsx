@@ -1,6 +1,6 @@
-import StudentManager from "../managers/StudentManager.tsx";
-import {Button, Form} from "react-bootstrap";
-import {useState} from "react";
+import { Button, Form } from 'react-bootstrap';
+import { useState } from 'react';
+import StudentManager from '../managers/StudentManager.tsx';
 
 export const StudentFormModal: React.FC<{ parentId: string; onClose: () => void }> = ({
   parentId,

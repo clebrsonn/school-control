@@ -1,13 +1,13 @@
-import {createContext, ReactNode, useContext, useEffect, useState} from "react";
-import {useLocation, useNavigate} from "react-router-dom";
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
     login as loginService,
     logout as logoutService,
     me,
     register as registerService
-} from "../../services/AuthService";
-import {IUser} from "@hyteck/shared";
-import notification from "../../components/Notification.tsx";
+} from '../services/AuthService.ts';
+import { IUser } from '@hyteck/shared';
+import notification from '../../../components/common/Notification.tsx';
 
 interface AuthContextType {
     user: Partial<IUser> | null;

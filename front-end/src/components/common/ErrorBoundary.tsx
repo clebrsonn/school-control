@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export class ErrorBoundary extends React.Component<
     { children: React.ReactNode },

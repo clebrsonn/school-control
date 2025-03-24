@@ -1,10 +1,10 @@
 // filepath: /e:/IdeaProjects/school-control/frontend/src/services/PaymentService.ts
 
-import {ITuition} from "@hyteck/shared";
-import {get} from "../config/axios/get";
-import {post} from "../config/axios/post";
-import {axiosDelete} from "../config/axios/delete.ts";
-import {axiosPut} from "../config/axios/put.ts";
+import { ITuition } from '@hyteck/shared';
+import { get } from '../../../config/axios/get.ts';
+import { post } from '../../../config/axios/post.ts';
+import { axiosDelete } from '../../../config/axios/delete.ts';
+import { axiosPut } from '../../../config/axios/put.ts';
 
 export const fetchPayments = async () => {
   const response = await get('/payments');

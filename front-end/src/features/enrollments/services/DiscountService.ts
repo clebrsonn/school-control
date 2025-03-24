@@ -1,8 +1,8 @@
 import { IDiscount } from '@hyteck/shared';
-import { axiosDelete } from '../config/axios/delete';
-import { axiosPut } from '../config/axios/put';
-import { post } from '../config/axios/post';
-import { get } from '../config/axios/get';
+import { axiosDelete } from '../../../config/axios/delete.ts';
+import { axiosPut } from '../../../config/axios/put.ts';
+import { post } from '../../../config/axios/post.ts';
+import { get } from '../../../config/axios/get.ts';
 
 const API_URL= '/discounts';
 export const fetchDiscounts= async (): Promise<IDiscount[]> => {

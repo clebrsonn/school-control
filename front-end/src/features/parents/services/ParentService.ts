@@ -1,8 +1,8 @@
-import {IResponsible} from '@hyteck/shared';
-import {axiosDelete} from '../config/axios/delete';
-import {get} from '../config/axios/get';
-import {post} from '../config/axios/post';
-import {axiosPut} from '../config/axios/put';
+import { IResponsible } from '@hyteck/shared';
+import { axiosDelete } from '../../../config/axios/delete.ts';
+import { get } from '../../../config/axios/get.ts';
+import { post } from '../../../config/axios/post.ts';
+import { axiosPut } from '../../../config/axios/put.ts';
 
 export const fetchParents = async () => {
   const response = await get<IResponsible[]>('/parents');

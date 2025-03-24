@@ -1,12 +1,17 @@
-import React, {useEffect, useState} from 'react';
-import {Link, useParams} from 'react-router-dom';
-import {cancelEnrollment, enrollStudent, fetchStudentById, renewEnrollment} from '@services/StudentService';
-import {fetchClasses} from '@services/ClassService';
-import {IClass, IEnrollment, IResponsible, IStudent} from '@hyteck/shared';
-import {Alert, Button, Container, Form} from 'react-bootstrap';
-import ErrorMessage from '@components/ErrorMessage';
-import notification from '@components/Notification';
-import {fetchEnrollmentByStudent} from '@services/MonthlyFeeService';
+import React, { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { IClass, IEnrollment, IResponsible, IStudent } from '@hyteck/shared';
+import { Alert, Button, Container, Form } from 'react-bootstrap';
+import {
+    cancelEnrollment,
+    enrollStudent,
+    fetchStudentById,
+    renewEnrollment
+} from '../../features/students/services/StudentService.ts';
+import { fetchEnrollmentByStudent } from '../../services/MonthlyFeeService.ts';
+import { fetchClasses } from '../../features/classes/services/ClassService.ts';
+import notification from '../common/Notification.tsx';
+import ErrorMessage from '../common/ErrorMessage.tsx';
 
 const StudentDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -32,7 +37,7 @@ const StudentDetails: React.FC = () => {
             // Fetch student and enrollment data
             const studentData = await fetchStudentById(id);
             setStudent(studentData);
-            
+
             try {
                 const enrollmentData = await fetchEnrollmentByStudent(id);
                 setEnrollments(Array.isArray(enrollmentData) ? enrollmentData : []);
@@ -137,22 +142,26 @@ const StudentDetails: React.FC = () => {
                     <h4>Current Enrollment</h4>
                     {enrollments.map((enroll) => (
                         <div key={enroll._id} className="mb-4 p-3 border rounded">
-                            <p>Current Class: {enroll.classId?.name}</p>
+                            <p>Current Class: {(enroll.classId as IClass)?.name}</p>
                             <p>Enrollment Date: {new Date(enroll.createdAt).toLocaleDateString()}</p>
-                            <p>End Date: {enroll.endDate ? new Date(enroll.endDate).toLocaleDateString() : 'No end date'}</p>
+                            <p>End
+                                Date: {enroll.endDate ? new Date(enroll.endDate).toLocaleDateString() : 'No end date'}</p>
                             <div className="d-flex gap-2">
                                 {enroll.endDate && new Date(enroll.endDate) <= currentDate && (
                                     <>
-                                        <Button variant="danger" onClick={() => handleCancelEnrollment(enroll._id!! as string)}>
+                                        <Button variant="danger"
+                                                onClick={() => handleCancelEnrollment(enroll._id!! as string)}>
                                             Cancel Enrollment
                                         </Button>
-                                        <Button variant="success" onClick={() => handleRenewEnrollment(enroll._id!! as string)}>
+                                        <Button variant="success"
+                                                onClick={() => handleRenewEnrollment(enroll._id!! as string)}>
                                             Renew Enrollment
                                         </Button>
                                     </>
                                 )}
                                 {(!enroll.endDate || new Date(enroll.endDate) > currentDate) && (
-                                    <Button variant="danger" onClick={() => handleCancelEnrollment(enroll._id!! as string)}>
+                                    <Button variant="danger"
+                                            onClick={() => handleCancelEnrollment(enroll._id!! as string)}>
                                         Cancel Enrollment
                                     </Button>
                                 )}

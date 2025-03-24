@@ -1,7 +1,7 @@
-import {IStudent} from '@hyteck/shared';
-import {get} from '../config/axios/get';
-import {post} from '../config/axios/post';
-import {axiosDelete} from "../config/axios/delete.ts";
+import { IStudent } from '@hyteck/shared';
+import { get } from '../../../config/axios/get.ts';
+import { post } from '../../../config/axios/post.ts';
+import { axiosDelete } from '../../../config/axios/delete.ts';
 
 export const fetchStudents = async () => {
   const response = await get('/students');
@@ -14,7 +14,7 @@ export const createStudent = async (studentData: IStudent) => {
 };
 
 export const fetchStudentById = async (id: string) => {
-  const response = await get(`/students/${id}`);
+  const response = await get<IStudent>(`/students/${id}`);
   return response;
 };
 
