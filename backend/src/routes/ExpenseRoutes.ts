@@ -1,6 +1,6 @@
-import {Router} from 'express';
-import {ExpenseController} from '../controllers/ExpenseController';
-import uploadMiddleware from "../utils/fileUpload";
+import { Router } from 'express';
+import { ExpenseController } from '../controllers/ExpenseController';
+import uploadMiddleware from '../utils/fileUpload';
 
 const router = Router();
 const controller = new ExpenseController();

@@ -1,4 +1,4 @@
-import {Document, Model, model, models, Schema} from 'mongoose';
+import { Document, Model, model, models, Schema } from 'mongoose';
 
 export interface IExpense extends Document {
   _id: string;

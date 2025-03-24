@@ -1,6 +1,6 @@
-import {NextFunction, Request, Response} from 'express';
-import {Config} from "../utils/Config";
-import {logger} from "../utils/Logger";
+import { NextFunction, Request, Response } from 'express';
+import { Config } from '../utils/Config';
+import { logger } from '../utils/Logger';
 
 // Custom error type to handle status codes in errors
 interface ErrorWithStatus extends Error {

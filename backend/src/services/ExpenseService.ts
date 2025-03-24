@@ -1,5 +1,5 @@
-import {Expense, IExpense} from '@hyteck/shared/';
-import {BaseService} from './generics/BaseService';
+import { Expense, IExpense } from '@hyteck/shared/';
+import { BaseService } from './generics/BaseService';
 
 export class ExpenseService extends BaseService<IExpense> {
   constructor() {

@@ -1,5 +1,5 @@
-import {authMiddleware, errorHandler} from "../middleware";
-import {Express} from "express";
+import { authMiddleware, errorHandler } from '../middleware';
+import { Express } from 'express';
 import {
     AuthRoutes,
     classRoutes,
@@ -10,7 +10,7 @@ import {
     paymentRoutes,
     studentRoutes,
     userRoutes
-} from "../routes";
+} from '../routes';
 
 const publicRoutes = (app: Express) => {
 
