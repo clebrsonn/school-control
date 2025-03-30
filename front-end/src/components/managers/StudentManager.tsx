@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Container, Form } from 'react-bootstrap';
-import { IClass, IStudent } from '@hyteck/shared';
+import { IClass, IResponsible, IStudent } from '@hyteck/shared';
 import notification from '../common/Notification.tsx';
 import {
     createStudent,
@@ -10,6 +10,7 @@ import {
 } from '../../features/students/services/StudentService.ts';
 import ListRegistries from '../common/ListRegistries.tsx';
 import { fetchClasses } from '../../features/classes/services/ClassService.ts';
+import { fetchParents } from '../../features/parents/services/ParentService.ts';
 import ErrorMessage from '../common/ErrorMessage.tsx';
 
 interface StudentManagerProps {
@@ -19,14 +20,16 @@ interface StudentManagerProps {
 const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
     const [students, setStudents] = useState<IStudent[]>([]);
     const [classes, setClasses] = useState<IClass[]>([]);
+    const [parents, setParents] = useState<IResponsible[]>([]);
     const [name, setName] = useState('');
     const [classId, setClassId] = useState('');
+    const [selectedResponsible, setSelectedResponsible] = useState(responsible);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const getStudents = async () => {
             try {
-                let students;
+                let students: IStudent[] = [];
                 if (responsible) {
                     students = await fetchStudentsByParentId(responsible);
                 } else {
@@ -47,14 +50,26 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
             }
         };
 
+        const getParents = async () => {
+            try {
+                const parentData = await fetchParents();
+                setParents(parentData);
+            } catch (err: any) {
+                setError(err.message || 'Failed to fetch parents');
+            }
+        };
+
         getStudents();
         getClasses();
+        if (!responsible) {
+            getParents();
+        }
     }, [responsible]);
 
     const handleAddStudent = async () => {
         try {
-            const newStudent: Partial<IStudent> = { name, responsible, classId };
-            const addedStudent = await createStudent(newStudent);
+            const newStudent: IStudent = { name: name || '', responsible: responsible || selectedResponsible || '', classId: classId || '' };
+            const addedStudent: IStudent = await createStudent(newStudent);
             setStudents([...students, addedStudent]);
             setName('');
             setClassId('');
@@ -74,7 +89,6 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
             setError('Erro ao remover o estudante.');
         }
     };
-
 
     return (
         <Container>
@@ -99,19 +113,35 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                     >
                         <option value="">Selecione uma turma</option>
                         {classes.map((classItem) => (
-                            <option key={classItem._id} value={classItem._id}>
+                            <option key={classItem._id as string} value={classItem._id as string}>
                                 {classItem.name}
                             </option>
                         ))}
                     </Form.Control>
                 </Form.Group>
+                {!responsible && (
+                    <Form.Group controlId="formParent">
+                        <Form.Label>Responsável</Form.Label>
+                        <Form.Control
+                            as="select"
+                            value={responsible}
+                            onChange={(e) => setSelectedResponsible(e.target.value)}
+                        >
+                            <option value="">Selecione um responsável</option>
+                            {parents.map((parent) => (
+                                <option key={parent._id} value={parent._id}>
+                                    {parent.name}
+                                </option>
+                            ))}
+                        </Form.Control>
+                    </Form.Group>
+                )}
                 <Button variant="primary" onClick={handleAddStudent}>
                     Salvar
                 </Button>
             </Form>
             <h2>Alunos</h2>
             <ListRegistries data={students} entityName={'student'} onDelete={handleDelete}></ListRegistries>
-
         </Container>
     );
 };

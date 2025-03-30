@@ -51,7 +51,7 @@ const ParentDetails: React.FC = () => {
   const handleMarkMonthAsPaid = async (month: string) => {
     try {
       const paymentsToPay = groupedPayments[month];
-      const updatedPayments = await Promise.all(paymentsToPay.map(payment => updatePayment(payment._id, { status: 'paid' })));
+      const updatedPayments = await Promise.all(paymentsToPay.map(payment => updatePayment(payment._id, { status: 'paid', paymentDate: new Date() })));
 
       setPayments(prevPayments => {
         return prevPayments.map(p => {

@@ -11,7 +11,7 @@ export interface IEnrollment extends Document {
     fee: number;
     tuitionAmount?: number;
     active: boolean;
-    endDate: Date;
+    endDate?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -24,7 +24,7 @@ const EnrollmentSchema = new mongoose.Schema(
         fee: { type: Number, required: true },
         tuitionAmount: { type: Number },
         active: { type: Boolean, default: true },
-        endDate: { type: Date, default: Date.now },
+        endDate: { type: Date },
     },
     { timestamps: true }  // Automatically adds createdAt and updatedAt
 );
@@ -44,7 +44,7 @@ EnrollmentSchema.post('save', async function () {
     // Update student count
     const totalStudents = await Student.countDocuments({ responsible: responsible._id as unknown as string });
 
-    // Calculate discount
+    // Set discount
     if (totalStudents >= 2) {
         const discounts = await Discount.find({ type: ['tuition', 'enroll'] });
         responsible.discounts = [...discounts];

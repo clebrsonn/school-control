@@ -1,10 +1,10 @@
-import mongoose, { Document } from "mongoose";
-import { IResponsible } from "./Responsible";
+import mongoose, { Document } from 'mongoose';
+import { IResponsible } from './Responsible';
 
 // Interface definition
 export interface IStudent extends Document {
     name: string;
-    birthDate: Date;
+    birthDate?: Date;
     responsible: mongoose.Types.ObjectId | IResponsible;
     classId: string;
     createdAt: Date;
@@ -15,7 +15,7 @@ export interface IStudent extends Document {
 const StudentSchema = new mongoose.Schema(
     {
         name: { type: String, required: true },                    // Additional validation: required
-        birthDate: { type: Date, required: true },                // Additional validation: required
+        birthDate: { type: Date, required: false },                // Additional validation: required
         responsible: { type: mongoose.Schema.Types.ObjectId, ref: "Responsible", required: true },
         classId: { type: String, required: true },                // Additional validation: required
     },
