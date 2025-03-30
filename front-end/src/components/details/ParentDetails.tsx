@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Button, Col, Container, ListGroup, Modal, Row, Table } from 'react-bootstrap';
+import Modal from 'react-modal';
+import { Button, Col, Container, ListGroup, Row, Table } from 'react-bootstrap';
 import { ITuition } from '@hyteck/shared';
 import {
   createPayment,
