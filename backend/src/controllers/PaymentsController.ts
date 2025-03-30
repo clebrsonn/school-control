@@ -1,7 +1,7 @@
-import {NextFunction, Request, Response} from 'express';
-import {BaseController} from './generics/BaseController';
-import {ITuition} from '@hyteck/shared';
-import {PaymentService} from '../services/PaymentService';
+import { NextFunction, Request, Response } from 'express';
+import { BaseController } from './generics/BaseController';
+import { ITuition } from '@hyteck/shared';
+import { PaymentService } from '../services/PaymentService';
 
 const paymentService = new PaymentService();
 
@@ -10,10 +10,8 @@ export class PaymentsController extends BaseController<ITuition> {
     super(paymentService);
   }
 
-  // Get payments by parent ID
   fetchPaymentsByParentId = async (req: Request, res: Response, next: NextFunction) => {
     const { parentId } = req.params; // Extract parent ID from request
-
     try {
       const payments = await paymentService.getPaymentsByParentId(parentId);
       res.status(200).json(payments);
