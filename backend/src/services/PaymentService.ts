@@ -41,10 +41,6 @@ export class PaymentService extends BaseService<ITuition> {
     };
 
     async getMonthlyDebtByParentId(responsible: string) {
-        // Obtém a data inicial e final do mês atual
-        const now = new Date();
-
-        // Agregação para calcular o total do mês
         return await Tuition.aggregate([
             {
                 $match: {
@@ -111,7 +107,6 @@ export class PaymentService extends BaseService<ITuition> {
                 }
             }
         ]);
-        console.log('payments', payments)
 
         return payments;
     };
@@ -119,7 +114,8 @@ export class PaymentService extends BaseService<ITuition> {
     getLatePayments = async () => {
         return Tuition.find({
             status: TuitionStatus.PENDING,
-            dueDate: {$gt: new Date()}
+            dueDate: {$gt: new Date()},
+            paymentDate: {$exists: false}
         }).populate('responsible').populate('enrollment');
     };
 
