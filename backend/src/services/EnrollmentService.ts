@@ -1,4 +1,4 @@
-import {Enrollment, IEnrollment, IStudent, TuitionStatus} from "@hyteck/shared";
+import {Enrollment, IEnrollment, IStudent} from "@hyteck/shared";
 import {BaseService} from "./generics/BaseService";
 
 import {PaymentService} from "./PaymentService";
@@ -30,7 +30,6 @@ export class EnrollmentService extends BaseService<IEnrollment> {
         }
         return super.deleteMany(params);
     }
-
 
     
     override async delete(id: string): Promise<boolean> {
@@ -82,7 +81,7 @@ export class EnrollmentService extends BaseService<IEnrollment> {
         }
         await this.paymentService.deleteMany({
             enrollment: enrollment._id,
-            status: TuitionStatus.PENDING,
+            status: 'pending',
             dueDate: {$gte: new Date()},
         });
 

@@ -62,3 +62,7 @@ export const fetchMostLatePayers = async () => {
 export const fetchOpenPayments = async () => {
   return await get<any[]>('/payments/open-month');
 };
+
+export const updateTuitionValue = async (tuitionId: string, newAmount: number): Promise<void> => {
+  await axiosPut(`/payments/${tuitionId}/amount`, { amount: newAmount });
+};

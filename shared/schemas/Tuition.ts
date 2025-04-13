@@ -1,41 +1,29 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { IResponsible } from './Responsible';
-import { IEnrollment } from '@hyteck/shared/Enrollment';
-
-export enum TuitionStatus {
-    PENDING = "pending",
-    PAID = "paid",
-    LATE = "paid late",
-}
-
+import { IEnrollment } from './Enrollment';
 // Interface definition
 export interface ITuition extends Document {
     amount: number;
     status: "pending" | "paid" | "late";
     dueDate: Date;
-    paymentDate?: Date;
-    responsible: mongoose.Types.ObjectId | IResponsible;
+    paymentDate: Date;
     enrollment: mongoose.Types.ObjectId | IEnrollment;
+    responsible: mongoose.Types.ObjectId | IResponsible;
     createdAt: Date;
     updatedAt: Date;
 }
-
 const TuitionSchema = new mongoose.Schema({
-  amount: { type: Number, required: true },
-  status: { type: String, required: true, enum: [TuitionStatus.PAID, TuitionStatus.PENDING, TuitionStatus.LATE] },
-  dueDate: { type: Date, required: true },
-  paymentDate: { type: Date, required: false },
-  responsible: { type: mongoose.Schema.Types.ObjectId, ref: "Responsible", required: true },
-  enrollment: { type: Schema.Types.ObjectId, ref: "Enrollment" },
+    amount: { type: Number, required: true },
+    status: { type: String, required: true, enum: ["paid", "pending", "late"] },
+    dueDate: { type: Date, required: true },
+    paymentDate: { type: Date},
+    enrollment: { type: Schema.Types.ObjectId, ref: "Enrollment" },
+    responsible: { type: mongoose.Schema.Types.ObjectId, ref: "Responsible", required: true },
 }, { timestamps: true });
-
-TuitionSchema.pre("save", function(next){
-  if(this.dueDate < new Date()){
-    this.status = TuitionStatus.LATE;
-  }
-  next();
+TuitionSchema.pre("save", function (next) {
+    if (this.dueDate < new Date()) {
+        this.status = "late";
+    }
+    next();
 });
-
-
-
 export const Tuition = mongoose.model<ITuition>("Tuition", TuitionSchema);

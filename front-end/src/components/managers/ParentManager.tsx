@@ -4,60 +4,70 @@ import ErrorMessage from '../common/ErrorMessage.tsx';
 import notification from '../common/Notification.tsx';
 import { Button, Form } from 'react-bootstrap';
 import { IResponsible } from '@hyteck/shared';
-import ListRegistries from '../common/ListRegistries.tsx';
+import EntityTable from '../common/ListRegistries.tsx';
 import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
-
-// Constants for reusable initial states
-const INITIAL_PARENT_STATE: Partial<IResponsible> = { name: '', phone: '' };
+import useFormValidation from '../../hooks/useFormValidation';
 
 const ParentManager: React.FC = () => {
     const [parents, setParents] = useState<IResponsible[]>([]);
-    const [formState, setFormState] = useState(INITIAL_PARENT_STATE);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const {
+        validateField,
+        isValid,
+        setFieldValue,
+        validationErrors,
+        onSubmitted,
+        clearErrors
+    } = useFormValidation<Partial<IResponsible>>({
+        fieldNames: ['name', 'phone'],
+    });
 
+    useEffect(() => {
+        if(isSubmitted)
+            clearErrors();
+    }, [isSubmitted])
 
-    // Fetch parents when the component is mounted
     useEffect(() => {
         const getParents = async () => {
             try {
                 setLoading(true);
-
                 const fetchedParents = await fetchParents();
                 setParents(fetchedParents);
                 setLoading(false);
-
             } catch (err: unknown) {
                 handleApiError(err, 'Failed to fetch parents');
                 setLoading(false);
             }
         };
         getParents();
-    }, []);
+    }, [setParents, setLoading]);
 
     if (loading) {
         return <LoadingSpinner />;
     }
 
-
-    // Centralized error handler for API calls
     const handleApiError = (err: unknown, defaultMessage: string) => {
         setError((err as Error).message || defaultMessage);
         console.error(err);
     };
 
-    // Updates the form state dynamically
-    const updateFormState = (field: keyof typeof formState, value: string) => {
-        setFormState((prev) => ({ ...prev, [field]: value }));
-    };
-
-    // Handles adding a new parent
-    const handleAddParent = async () => {
+    const handleAddParent = async (e: React.FormEvent) => {
+        e.preventDefault();
         try {
-            const newParent = { ...formState, students: [] };
-            const addedParent = await createParent(newParent);
-            setParents((prev) => [...prev, addedParent]);
-            setFormState(INITIAL_PARENT_STATE);
+            setIsSubmitted(true);
+            onSubmitted();
+
+            if (!isValid()) return;
+
+            const newParent: Partial<IResponsible> = {
+                name: setFieldValue('name', ''),
+                phone: setFieldValue('phone', ''),
+                students: []
+            };
+            const createdParent = await createParent(newParent as IResponsible) as IResponsible;
+            setParents(prev => [...prev, createdParent]);
             setError(null);
             notification('Parent added successfully', 'success');
         } catch (err: unknown) {
@@ -65,22 +75,22 @@ const ParentManager: React.FC = () => {
         }
     };
 
-    // Handles deleting a parent
+    const resetForm = () => {
+        ['name', 'phone'].forEach(fieldName => setFieldValue(fieldName as keyof Partial<IResponsible>, ''));
+    }
     const handleDelete = async (id: string) => {
         try {
             await deleteParent(id);
-            setParents((prev) => prev.filter((parent) => parent._id !== id));
-            notification('Responsável removido com sucesso.', 'success');
+            setParents(prevParents => prevParents.filter(parent => parent._id !== id));
+            notification('Parent removed successfully', 'success');
         } catch (err: unknown) {
-            handleApiError(err, 'Erro ao remover o responsável.');
+            handleApiError(err, 'Failed to remove parent.');
         }
     };
-
     if (!parents) return <LoadingSpinner />;
-
-    return (
+    return (<>
         <div>
-            <h1>Gerenciar Responsáveis</h1>
+            <h1>Manage Parents</h1>
             {error && <ErrorMessage message={error} />}
             <Form>
                 <Form.Group controlId="formParentName">
@@ -88,27 +98,42 @@ const ParentManager: React.FC = () => {
                     <Form.Control
                         type="text"
                         placeholder="Name"
-                        value={formState.name}
-                        onChange={(e) => updateFormState('name', e.target.value)}
+                        value={setFieldValue('name', '')}
+                        onChange={e => setFieldValue('name', e.target.value)}
+                        onBlur={e => validateField('name', e.target.value, true)}
+                        isInvalid={!!validationErrors.name}
                     />
+                    <Form.Control.Feedback type="invalid">
+                        {validationErrors.name}
+                    </Form.Control.Feedback>
                 </Form.Group>
                 <Form.Group controlId="formParentPhone">
-                    <Form.Label>Telefone</Form.Label>
+                    <Form.Label>Phone</Form.Label>
                     <Form.Control
                         type="text"
                         placeholder="Phone"
-                        value={formState.phone}
-                        onChange={(e) => updateFormState('phone', e.target.value)}
+                        value={setFieldValue('phone', '')}
+                        onChange={e => setFieldValue('phone', e.target.value)}
+                        onBlur={e => validateField('phone', e.target.value, true)}
+                        isInvalid={!!validationErrors.phone}
                     />
+                    <Form.Control.Feedback type="invalid">
+                        {validationErrors.phone}
+                    </Form.Control.Feedback>
                 </Form.Group>
-                <Button variant="primary" onClick={handleAddParent} className="mt-3">
+                <Button
+                    variant="primary"
+                    onClick={handleAddParent}
+                    className="mt-3"
+                    disabled={!isValid()}
+                >
                     Save
                 </Button>
             </Form>
-            <h2>Responsáveis</h2>
-            <ListRegistries data={parents} entityName="parent" onDelete={handleDelete} />
         </div>
+        <h2>Parents</h2>
+            <EntityTable data={parents} entityName="parent" onDelete={handleDelete}/>
+            </>
     );
 };
-
 export default ParentManager;

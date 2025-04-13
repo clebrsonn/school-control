@@ -7,3 +7,4 @@ export * from "./PaymentRoutes";
 export * from "./StudentRoutes";
 export * from "./UserRoutes";
 export * from "./ExpenseRoutes";
+export * from "./DashboardRoutes";

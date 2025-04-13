@@ -9,7 +9,7 @@ import StudentDetails from '../components/details/StudentDetails';
 import PaymentDetails from '../components/details/PaymentDetails';
 import ClassDetails from '../components/details/ClassDetails';
 import DiscountManager from '../components/managers/DiscountManager';
-import HomeReport from '../components/HomeReport';
+import Home from '../components/Home';
 import LoginPage from '../features/auth/components/LoginPage.tsx';
 import RegisterPage from '../features/auth/components/RegisterPage.tsx';
 import ProtectedRoute from './ProtectedRoutes';
@@ -31,7 +31,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/students/:id" element={<StudentDetails />} />
                 <Route path="/payments/:id" element={<PaymentDetails />} />
                 <Route path="/classes/:id" element={<ClassDetails />} />
-                <Route path="/" element={<HomeReport />} />
+                <Route path="/" element={<Home />} />
             </Route>
         </Routes>
     );

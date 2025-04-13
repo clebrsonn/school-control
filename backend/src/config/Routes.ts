@@ -9,7 +9,8 @@ import {
     parentRoutes,
     paymentRoutes,
     studentRoutes,
-    userRoutes
+    userRoutes,
+    dashboardRoutes,
 } from '../routes';
 
 const publicRoutes = (app: Express) => {
@@ -28,6 +29,7 @@ const protectedRoutes = (app: Express) => {
     app.use('/classes', classRoutes);
     app.use('/enrollments', enrollmentRoutes);
     app.use('/expenses', expenseRoutes);
+    app.use('/dashboard', dashboardRoutes);
 
     app.use(errorHandler);
 };

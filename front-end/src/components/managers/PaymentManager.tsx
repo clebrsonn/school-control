@@ -1,127 +1,153 @@
 import React, { useEffect, useState } from 'react';
-import { Container, ListGroup } from 'react-bootstrap';
-import ErrorMessage from '../common/ErrorMessage.tsx';
+import { Button, Container, Form, ListGroup } from 'react-bootstrap';
+import ErrorMessage from '../common/ErrorMessage';
 import { ITuition } from '@hyteck/shared';
-import { groupPaymentsByMonthAndParent } from '../../features/payments/services/PaymentService.ts';
-
+import {
+  createPayment,
+  groupPaymentsByMonthAndParent,
+} from '../../features/payments/services/PaymentService';
+import useFormValidation from '../../hooks/useFormValidation.ts';
+import notification from '../common/Notification.tsx';
+import EntityTable from '../../components/common/ListRegistries';
 const PaymentManager: React.FC = () => {
-  // const [payments, setPayments] = useState<ITuition[]>([]);
   const [groupedPayments, setGroupedPayments] = useState<any[]>([]);
-  // const [amount, setAmount] = useState('');
-  // const [date, setDate] = useState('');
-  // const [discountId, setDiscountId] = useState('');
-  // const [parentId, setParentId] = useState('');
-  // const [classId, setClassId] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const {
+    validateField,
+    validateForm,
+    setFieldValue,
+    validationErrors,
+    isSubmitted,
+    onSubmitted,
+    clearErrors,
+  } = useFormValidation<Partial<ITuition>>({
+    fieldNames: ['amount', 'dueDate', 'parentId', 'classId', 'discountId'],
+    validationErrors: { amount: '', dueDate: '', parentId: '', classId: '', discountId: '' },
+  });
 
   useEffect(() => {
     const getPayments = async () => {
       try {
-        // const payments = await fetchPayments();
-        // setPayments(payments);
         const grouped = await groupPaymentsByMonthAndParent();
-        setGroupedPayments(grouped);
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch payments');
+        setGroupedPayments(grouped || []);
+      } catch (err) {
+        setError((err as Error).message || 'Failed to fetch payments');
       }
     };
-
     getPayments();
   }, []);
 
-  // const handleAddPayment = async () => {
-  //   try {
-  //     const newPayment = { amount: parseFloat(amount), date, discountId, parentId, classId };
-  //     const addedPayment = await createPayment(newPayment);
-  //     setPayments([...payments, addedPayment]);
-  //     setAmount('');
-  //     setDate('');
-  //     setDiscountId('');
-  //     setParentId('');
-  //     setClassId('');
-  //     setError(null);
-  //   } catch (err: any) {
-  //     setError(err.message || 'Failed to add payment');
-  //   }
-  // };
+  const handleAddPayment = async () => {
+    onSubmitted();
+    if (!validateForm() || !selectedGroup) {
+      return;
+    }
+    try {
+      const newPayment: Partial<ITuition> = {
+        amount: Number(setFieldValue('amount', '')),
+        dueDate: setFieldValue('dueDate', ''),
+        responsible: selectedGroup.responsible._id,
+        enrollment: selectedGroup.enrollment._id,
+      };
 
-  // const handleDelete = async (id: string) => {
-  //   try {
-  //     await deletePaymentById(id);
-  //     setPayments(payments.filter((student) => student._id !== id));
-  //     notification("Pagamento removido com sucesso.");
-  //   } catch {
-  //     setError("Erro ao remover o pagamento.");
-  //   }
-  // };
+      const createdPayment = await createPayment(newPayment);
+
+      setGroupedPayments((prev) =>
+        prev.map((group) =>
+          group.year === selectedGroup.year && group.month === selectedGroup.month
+            ? {
+              ...group,
+              payments: [...(group.payments || []), createdPayment],
+            }
+            : group,
+        ),
+      );
+      notification('Payment added successfully', 'success');
+      clearErrors();
+    } catch (err) {
+      setError((err as Error).message || 'Failed to add payment');
+    }
+  };
+
+  const handleGroupSelect = (group: any) => {
+    setSelectedGroup(group);
+  };
+
+  const renderGroupedPayments = () =>
+    groupedPayments.map((group) => (
+      <div key={`${group.year}-${group.month}-${group.responsible}`}>
+        <h3>{`${group.month}/${group.year} - ${group.responsible.name}`}</h3>
+        <p>Total Amount: {group.totalAmount}</p>
+        <Button
+          variant="primary"
+          onClick={() => {
+            handleGroupSelect(group);
+            handleAddPayment();
+          }}
+          className="mt-3"
+          disabled={!validateForm() || !group.responsible._id}
+        >
+          Add Payment
+        </Button>
+        <EntityTable
+          data={group.payments || []}
+          entityName="payment"
+          columns={[
+            {
+              header: 'Amount',
+              accessor: 'amount',
+            },
+            {
+              header: 'Due Date',
+              accessor: 'dueDate',
+            },
+          ]}
+        />
+      </div>
+
+    ));
 
   return (
     <Container className="bg-dark text-white p-4">
       <h1>Gerenciar Pagamentos</h1>
       {error && <ErrorMessage message={error} />}
-      {/* <Form>
+      <Form>
         <Form.Group controlId="formPaymentAmount">
           <Form.Label>Valor</Form.Label>
           <Form.Control
             type="number"
             placeholder="Valor"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            name="amount"
+            value={setFieldValue('amount', '')}
+            onChange={(e) => setFieldValue('amount', e.target.value)}
+            onBlur={() => validateField('amount', setFieldValue('amount', ''), true)}
+            isInvalid={!!validationErrors.amount && isSubmitted}
           />
+          {validationErrors.amount && isSubmitted && (
+            <Form.Control.Feedback type="invalid">
+              {validationErrors.amount}
+            </Form.Control.Feedback>
+          )}
         </Form.Group>
         <Form.Group controlId="formPaymentDate">
           <Form.Label>Data</Form.Label>
           <Form.Control
             type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
+            name="dueDate"
+            value={setFieldValue('dueDate', '')}
+            onChange={(e) => setFieldValue('dueDate', e.target.value)}
+            onBlur={() => validateField('dueDate', setFieldValue('dueDate', ''), true)}
+            isInvalid={!!validationErrors.dueDate && isSubmitted}
           />
+          {validationErrors.dueDate && isSubmitted && (
+            <Form.Control.Feedback type="invalid">
+              {validationErrors.dueDate}
+            </Form.Control.Feedback>
+          )}
         </Form.Group>
-        <Form.Group controlId="formPaymentDiscountId">
-          <Form.Label>ID do Desconto</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="ID do Desconto"
-            value={discountId}
-            onChange={(e) => setDiscountId(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group controlId="formPaymentParentId">
-          <Form.Label>ID do Responsável</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="ID do Responsável"
-            value={parentId}
-            onChange={(e) => setParentId(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group controlId="formPaymentClassId">
-          <Form.Label>ID da Classe</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="ID da Classe"
-            value={classId}
-            onChange={(e) => setClassId(e.target.value)}
-          />
-        </Form.Group>
-        <Button variant="primary" onClick={handleAddPayment} className="mt-3">
-          Salvar
-        </Button>
-      </Form> */}
-      {/* <h2 className="mt-4">Pagamentos Agrupados</h2> */}
-      {groupedPayments.map((group) => (
-        <div key={`${group.year}-${group.month}-${group.responsible}`}>
-          <h3>{`${group.month}/${group.year} - ${group.responsible.name}`}</h3>
-          <p>Total Amount: {group.totalAmount}</p>
-          <ListGroup>
-            {group.payments.map((payment: ITuition) => (
-              <ListGroup.Item key={payment._id}>
-                {payment.amount} - {new Date(payment.dueDate).toLocaleDateString()} - {payment.status.toString()}
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
-        </div>
-      ))}
+      </Form>
+      {renderGroupedPayments()}
     </Container>
   );
 };

@@ -1,7 +1,7 @@
 // filepath: /e:/IdeaProjects/school-control/backend/src/controllers/StudentsController.ts
 import {NextFunction, Request, Response} from 'express';
 import {StudentService} from '../services/StudentService';
-import {IStudent} from "@hyteck/shared";
+import {IEnrollment, IStudent} from "@hyteck/shared";
 import {BaseController} from "./generics/BaseController";
 
 const studentService = new StudentService();
@@ -20,12 +20,12 @@ export class StudentController extends BaseController<IStudent> {
         }
     };
 
-    enrollStudant = async (req: Request, res: Response) => {
-        try {
-            const classId = await studentService.enrollStudent(req.params.id, req.body);
-            res.status(201).send(classId);
-        } catch (error: any) {
-            res.status(400).send({message: error.message});
-        }
-    };
+    enrollStudant = async (req: Request, res: Response, next: NextFunction) => {
+      try {
+          const enrollment = await studentService.enrollStudent(req.params.id, req.body as Partial<IEnrollment> & {enrollmentFee: number, monthlyFee: number});
+          res.status(201).send(enrollment);
+      } catch (error: any) {
+          next(error);
+      }
+  };
 }

@@ -1,47 +1,68 @@
-import { Button, Form } from 'react-bootstrap';
-import { useState } from 'react';
-import StudentManager from '../managers/StudentManager.tsx';
+import {Button, Form} from 'react-bootstrap';
+import StudentManager from '../managers/StudentManager';
+import useFormValidation from '../../hooks/useFormValidation';
 
 export const StudentFormModal: React.FC<{ parentId: string; onClose: () => void }> = ({
-  parentId,
-  onClose
-}) => (
-  <>
-    <h2>Add Student</h2>
-    <StudentManager responsible={parentId} />
-    <Button onClick={onClose}>Close</Button>
+                                                                                       parentId,
+                                                                                       onClose
+                                                                                     }) => (
+    <>
+      <h2>Add Student</h2>
+      <StudentManager responsible={parentId}/>
+      <Button onClick={onClose}>Close</Button>
 
-  </>
+    </>
 );
 
 export const MonthlyFeeFormModal: React.FC<{
   onSubmit: (amount: string, dueDate: string) => void;
   onClose: () => void;
 }> = ({ onSubmit, onClose }) => {
-  const [amount, setAmount] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const {
+    validationErrors,
+    isValid,
+    setFieldValue,
+    handleSubmit,
+  } = useFormValidation({
+    fieldNames: ['amount', 'dueDate'],
+    initialValues: {
+      amount: '',
+      dueDate: '',
+    },
+    onSubmit: async (values) => {
+      onSubmit(values.amount, values.dueDate);
+    },
+  });
 
   return (
     <>
       <h2>Add Monthly Fee</h2>
-      <Form>
+      <Form onSubmit={handleSubmit}>
         <Form.Group controlId="formMonthlyFeeAmount">
           <Form.Label>Amount</Form.Label>
           <Form.Control
             type="text"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            name="amount"
+            onChange={setFieldValue}
+            isInvalid={!!validationErrors.amount}
           />
+          <Form.Control.Feedback type="invalid">
+            {validationErrors.amount}
+          </Form.Control.Feedback>
         </Form.Group>
         <Form.Group controlId="formMonthlyFeeDueDate">
           <Form.Label>Due Date</Form.Label>
           <Form.Control
             type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
+            name="dueDate"
+            onChange={setFieldValue}
+            isInvalid={!!validationErrors.dueDate}
           />
+          <Form.Control.Feedback type="invalid">
+            {validationErrors.dueDate}
+          </Form.Control.Feedback>
         </Form.Group>
-        <Button onClick={() => onSubmit(amount, dueDate)}>Save</Button>
+        <Button type="submit" disabled={!isValid()}>Save</Button>
         <Button onClick={onClose}>Close</Button>
       </Form>
     </>

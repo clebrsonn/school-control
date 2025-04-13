@@ -1,7 +1,7 @@
 import { BaseService } from './generics/BaseService';
 import mongoose from 'mongoose';
 import { EnrollmentService } from './EnrollmentService';
-import { IEnrollment, ITuition, Tuition, TuitionStatus } from '@hyteck/shared';
+import {IEnrollment, IStudent, ITuition, Tuition } from '@hyteck/shared';
 
 export class PaymentService extends BaseService<ITuition> {
 
@@ -32,8 +32,11 @@ export class PaymentService extends BaseService<ITuition> {
         const tuitions = activeEnrollments.map((enrollment: IEnrollment) => ({
             enrollment: enrollment._id,
             dueDate: Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), 10, 0, 0, 0, 0),
-            amount: enrollment.tuitionAmount,
-            status: TuitionStatus.PENDING,
+            status: "pending",
+            paymentDate: Date,
+            responsible: enrollment.tuitionAmount,
+            amount: (enrollment.student as IStudent).responsible,
+        
         }));
 
         await Tuition.insertMany(tuitions);
@@ -113,7 +116,7 @@ export class PaymentService extends BaseService<ITuition> {
 
     getLatePayments = async () => {
         return Tuition.find({
-            status: TuitionStatus.PENDING,
+            status: 'pending',
             dueDate: {$gt: new Date()},
             paymentDate: {$exists: false}
         }).populate('responsible').populate('enrollment');
@@ -121,7 +124,7 @@ export class PaymentService extends BaseService<ITuition> {
 
     getLatePaymentsByResponsible = async (responsibleId: string) => {
         return Tuition.find({
-            status: TuitionStatus.PENDING,
+            status: 'pending',
             responsible: responsibleId
         }).populate('responsible').populate('enrollment');
     };
@@ -155,7 +158,7 @@ export class PaymentService extends BaseService<ITuition> {
     getOnTimePayers = async () => {
         return Tuition.aggregate([
             {
-                $match: {status: TuitionStatus.PAID
+                $match: {status: 'paid'
                 }
             },
             {
@@ -184,7 +187,7 @@ export class PaymentService extends BaseService<ITuition> {
     getMostLatePayers = async () => {
         return Tuition.aggregate([
             {
-                $match: {status: TuitionStatus.LATE}
+                $match: {status: 'late'}
             },
             {
                 $group: {
@@ -217,7 +220,7 @@ export class PaymentService extends BaseService<ITuition> {
         return Tuition.aggregate([
             {
                 $match: {
-                    status: TuitionStatus.PENDING,
+                    status: 'pending',
                     dueDate: {
                         $gte: firstDayOfMonth,
                         $lte: lastDayOfMonth
