@@ -1,10 +1,9 @@
-import React from "react";
-import ErrorMessage from "./ErrorMessage";
+import React from 'react';
+import ErrorMessage from './ErrorMessage';
 
 export class ErrorBoundary extends React.Component<
     { children: React.ReactNode; onReset?: () => void },
-    { hasError: boolean; error: Error | null; errorInfo: React.ErrorInfo | null },
-> {
+    { hasError: boolean; error: Error | null; errorInfo: React.ErrorInfo | null }> {
     constructor(props:  { children: React.ReactNode; onReset?: () => void }) {
         super(props);
         this.state = { hasError: false, error: null, errorInfo: null };

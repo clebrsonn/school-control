@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { validateField } from "../utils/validation";
+import { useCallback, useState } from 'react';
+import { validateField } from '../utils/validation';
 
 interface FieldValidation<T> {
     name: keyof T;
@@ -33,7 +33,7 @@ const useFormValidation = <T extends Record<string, any>>({
     onSubmit,
 }: ValidationHookOptions<T>): ValidationHookResult<T> => {
     const [currentFields, setFields] = useState<FieldValidation<T>[]>(fields);
-    const initialErrors = fields.reduce((acc, field) => {
+    const initialErrors = fields?.reduce((acc, field) => {
         acc[field.name] = "";
         return acc;
     }, {} as Record<keyof T, string>);
@@ -63,7 +63,7 @@ const useFormValidation = <T extends Record<string, any>>({
         let isValid = true;
         const newValidationErrors = { ...validationErrors };
 
-        currentFields.forEach((field) => {
+        currentFields?.forEach((field) => {
             const fieldKey = field.name as keyof T;
 
             newValidationErrors[fieldKey] = validateField(
@@ -84,7 +84,7 @@ const useFormValidation = <T extends Record<string, any>>({
 
     const setFieldValue = useCallback((fieldName: keyof T, value: any): void => {
         setFields((prevFields) =>
-            prevFields.map((field) =>
+            prevFields?.map((field) =>
                 field.name === fieldName ? { ...field, value } : field
             )
         );
@@ -99,7 +99,7 @@ const useFormValidation = <T extends Record<string, any>>({
         onSubmit?.();
     }, [onSubmit]);
 
-    const getFieldByName = useCallback((fieldName: keyof T) => currentFields.find(field => field.name === fieldName), [currentFields]);
+    const getFieldByName = useCallback((fieldName: keyof T) => currentFields?.find(field => field.name === fieldName), [currentFields]);
     const getFieldValue = useCallback((fieldName: keyof T) => getFieldByName(fieldName)?.value, [getFieldByName])
 
     return {
