@@ -36,8 +36,7 @@ const ListRegistries = <T extends IEntity>({
         const entity = content[0];
         return Object.keys(entity).filter(key => 
             key !== 'id' &&
-            key !== '__v' && 
-            key !== 'createdAt' && 
+            key !== 'createdAt' &&
             key !== 'updatedAt' &&
             typeof entity[key] !== 'object'
         );

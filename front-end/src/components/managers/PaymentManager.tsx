@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Container, ListGroup, Pagination } from 'react-bootstrap';
+import { Container, Pagination } from 'react-bootstrap';
 import ErrorMessage from '../common/ErrorMessage.tsx';
-import { ITuition } from '@hyteck/shared';
 import { PageResponse } from '../../types/PageResponse';
 import { usePagination } from '../../hooks/usePagination';
+import { PaymentResponse } from '../../features/payments/types/PaymentTypes.ts';
 
 const PaymentManager: React.FC = () => {
   const { 
@@ -11,9 +11,9 @@ const PaymentManager: React.FC = () => {
     pageSize, 
     handlePageChange,
     createEmptyPageResponse
-  } = usePagination<any>();
+  } = usePagination<PaymentResponse>();
 
-  const [paymentPage, setPaymentPage] = useState<PageResponse<any>>(createEmptyPageResponse());
+  const [paymentPage, setPaymentPage] = useState<PageResponse<PaymentResponse>>(createEmptyPageResponse());
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -109,19 +109,20 @@ const PaymentManager: React.FC = () => {
         </Button>
       </Form> */}
       <h2 className="mt-4">Pagamentos Agrupados</h2>
-      {paymentPage.content.map((group) => (
-        <div key={`${group.year}-${group.month}-${group.responsible}`}>
-          <h3>{`${group.month}/${group.year} - ${group.responsible.name}`}</h3>
-          <p>Total Amount: {group.totalAmount}</p>
-          <ListGroup>
-            {group.payments.map((payment: ITuition) => (
-              <ListGroup.Item key={payment.id}>
-                {payment.amount} - {new Date(payment.dueDate).toLocaleDateString()} - {payment.status.toString()}
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
-        </div>
-      ))}
+      //TODO ajustar criando no backend o =s endpojnts
+      {/*{paymentPage.content.map((group) => (*/}
+      {/*  <div key={`${group.year}-${group.month}-${group.responsible}`}>*/}
+      {/*    <h3>{`${group.month}/${group.year} - ${group.responsible.name}`}</h3>*/}
+      {/*    <p>Total Amount: {group.totalAmount}</p>*/}
+      {/*    <ListGroup>*/}
+      {/*      {group.payments.map((payment: ITuition) => (*/}
+      {/*        <ListGroup.Item key={payment.id}>*/}
+      {/*          {payment.amount} - {new Date(payment.dueDate).toLocaleDateString()} - {payment.status.toString()}*/}
+      {/*        </ListGroup.Item>*/}
+      {/*      ))}*/}
+      {/*    </ListGroup>*/}
+      {/*  </div>*/}
+      {/*))}*/}
 
       {paymentPage.totalPages > 1 && (
         <Pagination className="justify-content-center mt-4">

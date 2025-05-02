@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { IResponsible, IStudent } from '@hyteck/shared';
 import { PaymentResponse } from '../../payments/types/PaymentTypes';
 import { fetchParentById, getStudentsByResponsibleId } from '../services/ParentService.ts';
 import { getPaymentsByResponsible } from '../../payments/services/PaymentService.ts';
+import { ResponsibleResponse } from '../types/ResponsibleTypes.ts';
+import { StudentResponse } from '../../students/types/StudentTypes.ts';
 
 export const useParentDetails = (id: string) => {
-    const [parent, setParent] = useState<IResponsible>();
-    const [students, setStudents] = useState<IStudent[]>([]);
+    const [parent, setParent] = useState<ResponsibleResponse>();
+    const [students, setStudents] = useState<StudentResponse[]>([]);
     const [monthlyFees, setMonthlyFees] = useState<PaymentResponse[]>([]);
     const [error, setError] = useState<string | null>(null);
 

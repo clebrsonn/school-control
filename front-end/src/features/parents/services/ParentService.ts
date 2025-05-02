@@ -5,6 +5,7 @@ import { post } from '../../../config/axios/post.ts';
 import { axiosPut } from '../../../config/axios/put.ts';
 import { PageResponse } from '../../../types/PageResponse';
 import { ResponsibleRequest, ResponsibleResponse } from '../types/ResponsibleTypes';
+import { StudentResponse } from '../../students/types/StudentTypes.ts';
 
 const API_URL = '/responsibles';
 
@@ -91,7 +92,6 @@ export const deleteParent = async (id: string) => {
  * @param pageable Pagination parameters
  * @returns Page of student responses
  */
-export const getStudentsByResponsibleId = async (responsibleId: string, pageable: { page: number, size: number, sort?: string[] }) => {
-  const response = await get(`${API_URL}/${responsibleId}/students`, { params: pageable });
-  return response;
+export const getStudentsByResponsibleId = async (responsibleId: string, pageable: { page: number, size: number, sort?: string[] }): Promise<PageResponse<StudentResponse>> => {
+  return await get<PageResponse<StudentResponse>>(`${API_URL}/${responsibleId}/students`, { params: pageable });
 };

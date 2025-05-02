@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getClassRoomById } from '../../features/classes/services/ClassService.ts';
 import { IClass } from '@hyteck/shared';
+import notification from '../common/Notification.tsx';
 
 const ClassDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -10,8 +11,13 @@ const ClassDetails: React.FC = () => {
 
   useEffect(() => {
     const getClass = async () => {
-      const classData = await getClassRoomById(id);
-      setClassItem(classData);
+        try{
+            const classData = await getClassRoomById(id);
+            setClassItem(classData);
+        }catch (e) {
+            notification(e.message || 'Failed to fetch class data.', 'error');
+        }
+
     };
     getClass();
   }, [id]);

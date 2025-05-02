@@ -23,7 +23,7 @@ describe('PaymentDetails Component', () => {
   const mockPayment = {
     id: 'payment123',
     amount: 150,
-    paymentDate: new Date('2023-05-15'),
+    paymentDate: new Date(['2023-05-15', "3:00"]),
     invoiceId: 'invoice456',
     paymentMethod: PaymentMethod.PIX,
   };
