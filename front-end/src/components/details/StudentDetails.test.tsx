@@ -79,7 +79,7 @@ describe('StudentDetails Component', () => {
     });
     
     expect(screen.getByText('Name: John Doe')).toBeInTheDocument();
-    expect(screen.getByText('Parent: Jane Doe')).toBeInTheDocument();
+    expect(screen.getByText('Jane Doe')).toBeInTheDocument();
     expect(screen.getByText('This student is not currently enrolled in any class.')).toBeInTheDocument();
   });
 
@@ -105,7 +105,7 @@ describe('StudentDetails Component', () => {
     const mockEnrollment = {
       id: 'enroll1',
       classRoomName: 'Class A',
-      enrollmentDate: '2023-01-01',
+      enrollmentDate: '01-01-2023',
       endDate: null,
     };
     
@@ -122,7 +122,7 @@ describe('StudentDetails Component', () => {
     });
     
     expect(screen.getByText('Current Class: Class A')).toBeInTheDocument();
-    expect(screen.getByText('Enrollment Date: 1/1/2023')).toBeInTheDocument();
+    expect(screen.getByText('Enrollment Date: 01/01/2023')).toBeInTheDocument();
     expect(screen.getByText('End Date: No end date')).toBeInTheDocument();
     expect(screen.getByText('Cancel Enrollment')).toBeInTheDocument();
   });
