@@ -1,44 +1,55 @@
-import { IStudent } from '@hyteck/shared';
-import { get } from '../../../config/axios/get.ts';
-import { post } from '../../../config/axios/post.ts';
-import { axiosDelete } from '../../../config/axios/delete.ts';
+import { axiosDelete, axiosPut, get, post } from '../../../config/axios';
+import { PageResponse } from '../../../types/PageResponse';
+import { StudentRequest, StudentResponse } from '../types/StudentTypes';
 
-export const fetchStudents = async () => {
-  const response = await get('/students');
+
+const API_URL = '/students';
+/**
+ * Get all students
+ * @param pageable Pagination parameters
+ * @returns Page of student responses
+ */
+export const getAllStudents = async (pageable: { page: number, size: number, sort?: string[] }) => {
+  const response = await get<PageResponse<StudentResponse>>(API_URL, { params: pageable });
   return response;
 };
 
-export const createStudent = async (studentData: IStudent) => {
-  const response = await post('/students', studentData);
+/**
+ * Create student
+ * @param studentData Student request data
+ * @returns Student response
+ */
+export const createStudent = async (studentData: StudentRequest): Promise<StudentResponse> => {
+  const response = await post<StudentRequest, StudentResponse>(API_URL, studentData);
   return response;
 };
 
-export const fetchStudentById = async (id: string) => {
-  const response = await get<IStudent>(`/students/${id}`);
+/**
+ * Update student
+ * @param id Student ID
+ * @param studentData Student request data
+ * @returns Student response
+ */
+export const updateStudent = async (id: string, studentData: Partial<StudentRequest>): Promise<StudentResponse> => {
+  const response = await axiosPut<Partial<StudentRequest>, StudentResponse>(`${API_URL}/${id}`, studentData);
   return response;
 };
 
-export const fetchStudentsByParentId = async (parentId: string) => {
-    const response = await get<IStudent[]>(`/students/parent/${parentId}`);
-    return response;
-  };
-
-  export const enrollStudent = async (studentId: string, classId: string) => {
-    const response = await post(`/students/${studentId}/enroll`, { classId });
-    return response;
-  }
-
-export const deleteStudent= async (id: string) => {
-  const response = await axiosDelete(`/students/${id}`);
+/**
+ * Get student by ID
+ * @param id Student ID
+ * @returns Student response
+ */
+export const getStudentById = async (id: string): Promise<StudentResponse> => {
+  const response = await get<StudentResponse>(`${API_URL}/${id}`);
   return response;
-}
+};
 
-export const cancelEnrollment = async (enrollmentId: string) => {
-  const response = await get(`/enrollments/${enrollmentId}/cancel`);
-  return response;
-}
-
-export const renewEnrollment = async (enrollmentId: string) => {
-  const response = await get<{ enrollmentId: string }>(`/enrollments/${enrollmentId}/renew`);
-  return response;
-}
+/**
+ * Delete student
+ * @param id Student ID
+ * @returns No content
+ */
+export const deleteStudent = async (id: string): Promise<void> => {
+  await axiosDelete(`${API_URL}/${id}`);
+};

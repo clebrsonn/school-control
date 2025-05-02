@@ -1,33 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { Container, ListGroup } from 'react-bootstrap';
+import { Container, ListGroup, Pagination } from 'react-bootstrap';
 import ErrorMessage from '../common/ErrorMessage.tsx';
 import { ITuition } from '@hyteck/shared';
-import { groupPaymentsByMonthAndParent } from '../../features/payments/services/PaymentService.ts';
+import { PageResponse } from '../../types/PageResponse';
+import { usePagination } from '../../hooks/usePagination';
 
 const PaymentManager: React.FC = () => {
-  // const [payments, setPayments] = useState<ITuition[]>([]);
-  const [groupedPayments, setGroupedPayments] = useState<any[]>([]);
-  // const [amount, setAmount] = useState('');
-  // const [date, setDate] = useState('');
-  // const [discountId, setDiscountId] = useState('');
-  // const [parentId, setParentId] = useState('');
-  // const [classId, setClassId] = useState('');
+  const { 
+    currentPage, 
+    pageSize, 
+    handlePageChange,
+    createEmptyPageResponse
+  } = usePagination<any>();
+
+  const [paymentPage, setPaymentPage] = useState<PageResponse<any>>(createEmptyPageResponse());
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const getPayments = async () => {
       try {
-        // const payments = await fetchPayments();
-        // setPayments(payments);
-        const grouped = await groupPaymentsByMonthAndParent();
-        setGroupedPayments(grouped);
+       // const paymentsData = await getPaymentsByResponsible(currentPage, pageSize);
+        //setPaymentPage(paymentsData);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch payments');
       }
     };
 
     getPayments();
-  }, []);
+  }, [currentPage, pageSize]);
 
   // const handleAddPayment = async () => {
   //   try {
@@ -48,7 +48,7 @@ const PaymentManager: React.FC = () => {
   // const handleDelete = async (id: string) => {
   //   try {
   //     await deletePaymentById(id);
-  //     setPayments(payments.filter((student) => student._id !== id));
+  //     setPayments(payments.filter((student) => student.id !== id));
   //     notification("Pagamento removido com sucesso.");
   //   } catch {
   //     setError("Erro ao remover o pagamento.");
@@ -108,20 +108,50 @@ const PaymentManager: React.FC = () => {
           Salvar
         </Button>
       </Form> */}
-      {/* <h2 className="mt-4">Pagamentos Agrupados</h2> */}
-      {groupedPayments.map((group) => (
+      <h2 className="mt-4">Pagamentos Agrupados</h2>
+      {paymentPage.content.map((group) => (
         <div key={`${group.year}-${group.month}-${group.responsible}`}>
           <h3>{`${group.month}/${group.year} - ${group.responsible.name}`}</h3>
           <p>Total Amount: {group.totalAmount}</p>
           <ListGroup>
             {group.payments.map((payment: ITuition) => (
-              <ListGroup.Item key={payment._id}>
+              <ListGroup.Item key={payment.id}>
                 {payment.amount} - {new Date(payment.dueDate).toLocaleDateString()} - {payment.status.toString()}
               </ListGroup.Item>
             ))}
           </ListGroup>
         </div>
       ))}
+
+      {paymentPage.totalPages > 1 && (
+        <Pagination className="justify-content-center mt-4">
+          <Pagination.First
+            onClick={() => handlePageChange(1)}
+            disabled={paymentPage.number === 0}
+          />
+          <Pagination.Prev
+            onClick={() => handlePageChange(paymentPage.number)}
+            disabled={paymentPage.number === 0}
+          />
+          {Array.from({ length: paymentPage.totalPages }, (_, i) => i + 1).map(pageNum => (
+            <Pagination.Item
+              key={pageNum}
+              active={pageNum === paymentPage.number + 1}
+              onClick={() => handlePageChange(pageNum)}
+            >
+              {pageNum}
+            </Pagination.Item>
+          ))}
+          <Pagination.Next
+            onClick={() => handlePageChange(paymentPage.number + 2)}
+            disabled={paymentPage.number === paymentPage.totalPages - 1}
+          />
+          <Pagination.Last
+            onClick={() => handlePageChange(paymentPage.totalPages)}
+            disabled={paymentPage.number === paymentPage.totalPages - 1}
+          />
+        </Pagination>
+      )}
     </Container>
   );
 };

@@ -6,25 +6,34 @@ import { Button, Form } from 'react-bootstrap';
 import { IResponsible } from '@hyteck/shared';
 import ListRegistries from '../common/ListRegistries.tsx';
 import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
+import { PageResponse } from '../../types/PageResponse';
+import { usePagination } from '../../hooks/usePagination';
 
 // Constants for reusable initial states
 const INITIAL_PARENT_STATE: Partial<IResponsible> = { name: '', phone: '' };
 
 const ParentManager: React.FC = () => {
-    const [parents, setParents] = useState<IResponsible[]>([]);
+    const { 
+        currentPage, 
+        pageSize, 
+        handlePageChange,
+        createEmptyPageResponse
+    } = usePagination<IResponsible>();
+
+    const [parentPage, setParentPage] = useState<PageResponse<IResponsible>>(createEmptyPageResponse());
     const [formState, setFormState] = useState(INITIAL_PARENT_STATE);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
 
-    // Fetch parents when the component is mounted
+    // Fetch parents when the component is mounted or pagination changes
     useEffect(() => {
         const getParents = async () => {
             try {
                 setLoading(true);
 
-                const fetchedParents = await fetchParents();
-                setParents(fetchedParents);
+                const fetchedParentPage = await fetchParents(currentPage, pageSize);
+                setParentPage(fetchedParentPage);
                 setLoading(false);
 
             } catch (err: unknown) {
@@ -33,7 +42,8 @@ const ParentManager: React.FC = () => {
             }
         };
         getParents();
-    }, []);
+    }, [currentPage, pageSize]);
+
 
     if (loading) {
         return <LoadingSpinner />;
@@ -55,8 +65,12 @@ const ParentManager: React.FC = () => {
     const handleAddParent = async () => {
         try {
             const newParent = { ...formState, students: [] };
-            const addedParent = await createParent(newParent);
-            setParents((prev) => [...prev, addedParent]);
+            await createParent(newParent);
+
+            // Refresh the parent list to get the updated data
+            const refreshedData = await fetchParents(currentPage, pageSize);
+            setParentPage(refreshedData);
+
             setFormState(INITIAL_PARENT_STATE);
             setError(null);
             notification('Parent added successfully', 'success');
@@ -69,14 +83,18 @@ const ParentManager: React.FC = () => {
     const handleDelete = async (id: string) => {
         try {
             await deleteParent(id);
-            setParents((prev) => prev.filter((parent) => parent._id !== id));
+
+            // Refresh the parent list to get the updated data
+            const refreshedData = await fetchParents(currentPage, pageSize);
+            setParentPage(refreshedData);
+
             notification('Responsável removido com sucesso.', 'success');
         } catch (err: unknown) {
             handleApiError(err, 'Erro ao remover o responsável.');
         }
     };
 
-    if (!parents) return <LoadingSpinner />;
+    if (!parentPage.content) return <LoadingSpinner />;
 
     return (
         <div>
@@ -106,7 +124,12 @@ const ParentManager: React.FC = () => {
                 </Button>
             </Form>
             <h2>Responsáveis</h2>
-            <ListRegistries data={parents} entityName="parent" onDelete={handleDelete} />
+            <ListRegistries 
+                page={parentPage} 
+                entityName="parents"
+                onDelete={handleDelete} 
+                onPageChange={handlePageChange} 
+            />
         </div>
     );
 };

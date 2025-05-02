@@ -1,81 +1,136 @@
 import React from 'react';
-import { Button, Table } from 'react-bootstrap';
+import { Button, Pagination, Table } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
 interface IEntity {
-    _id: string;
+    id: string;
     [key: string]: any;
 }
 
-interface EntityTableProps<T extends IEntity> {
-    data: T[];
-    entityName: string;
-    onDelete?: (id: string) => void;
+interface Page<T> {
+    content: T[];
+    number: number;
+    totalPages: number;
+    size: number;
+    totalElements?: number;
 }
 
-const EntityTable = <T extends IEntity>({ data, entityName, onDelete }: EntityTableProps<T>) => {
-    const columns = data.length > 0 ? Object.keys(data[0]).filter(key => key !== '_id' && key !== '__v') : [];
+interface EntityTableProps<T extends IEntity> {
+    page: Page<T>;
+    entityName: string;
+    onDelete?: (id: string) => void;
+    onEdit?: (entity: T) => void;
+    onPageChange?: (page: number) => void;
+}
 
-    const formatDate = (dateString: string) => {
-        const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        return new Date(dateString).toLocaleDateString('pt-BR', options);
+
+const ListRegistries = <T extends IEntity>({
+                                            page, entityName, onDelete, onEdit, onPageChange
+                                        }: EntityTableProps<T>) => {
+    const { content, number, totalPages } = page;
+    const currentPage = number ? number + 1 : 1; // tornado 1-based para exibição
+
+    // Get all keys from the first entity to use as table headers
+    const getHeaders = () => {
+        if (!content || content.length === 0) return [];
+        const entity = content[0];
+        return Object.keys(entity).filter(key => 
+            key !== 'id' &&
+            key !== '__v' && 
+            key !== 'createdAt' && 
+            key !== 'updatedAt' &&
+            typeof entity[key] !== 'object'
+        );
     };
 
-    const isDate = (value: any): boolean => {
-        // Verifica se é uma instância de Date
-        if (value instanceof Date) {
-            return true;
-        }
-        // Verifica se é uma string e se pode ser convertida em uma data válida
-        const date = new Date(value);
-        return !isNaN(date.getTime());
-    };
+    const headers = getHeaders();
 
     return (
-        <Table striped bordered hover responsive>
-            <thead>
-            <tr>
-                {columns.map((column, index) => <th key={index}>{column}</th>)}
-                {onDelete && <th>Ações</th>}
-            </tr>
-            </thead>
-            <tbody>
-            {data.map(item => (
-                <tr key={item._id}>
-                    {columns.map((column, index) => (
-                        <td key={`${item._id}-${index}`}>
-                            {column === 'name' ? (
-                                <Link to={`/${entityName}s/${item._id}`}>{item[column]}</Link>
-                            ) : isDate(item[column]) ? ( // Verifica se o item[column] é uma data
-                                formatDate(item[column])
-                            ) : (
-                                typeof item[column] === 'object'
-                                    ? (Array.isArray(item[column])
-                                        ? (item[column]?.map((o: any) => o.name).join(", ") || '-')
-                                        : (item[column]?.name || '-'))
-                                    : item[column]
-                            )}
-                        </td>
+        <>
+            <Table striped bordered hover responsive>
+                <thead>
+                    <tr>
+                        {headers.map(header => (
+                            <th key={header}>{header}</th>
+                        ))}
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {content && content.map(entity => (
+                        <tr key={entity.id}>
+                            {headers.map((header, index) => (
+                                <td key={`${entity.id}-${header}`}>
+                                    {index === 0 ? (
+                                        <Link to={`/${entityName}/${entity.id}`}>
+                                            {typeof entity[header] === 'boolean' 
+                                                ? entity[header] ? 'Sim' : 'Não'
+                                                : String(entity[header] || '')}
+                                        </Link>
+                                    ) : (
+                                        typeof entity[header] === 'boolean' 
+                                            ? entity[header] ? 'Sim' : 'Não'
+                                            : String(entity[header] || '')
+                                    )}
+                                </td>
+                            ))}
+                            <td>
+                                {onEdit && (
+                                    <Button 
+                                        variant="info" 
+                                        size="sm" 
+                                        onClick={() => onEdit(entity)}
+                                        className="me-2"
+                                    >
+                                        Editar
+                                    </Button>
+                                )}
+                                {onDelete && (
+                                    <Button 
+                                        variant="danger" 
+                                        size="sm" 
+                                        onClick={() => onDelete(entity.id)}
+                                    >
+                                        Excluir
+                                    </Button>
+                                )}
+                            </td>
+                        </tr>
                     ))}
-                    {onDelete && (
-                        <td>
-                            <Button variant="danger" size="sm" onClick={() => onDelete(item._id)}>
-                                Excluir
-                            </Button>
-                        </td>
-                    )}
-                </tr>
-            ))}
-            {data.length === 0 && (
-                <tr>
-                    <td colSpan={columns.length + (onDelete ? 1 : 0)} className="text-center">
-                        Nenhum {entityName} encontrado.
-                    </td>
-                </tr>
+                </tbody>
+            </Table>
+
+            {totalPages > 1 && onPageChange && (
+                <Pagination className="justify-content-center">
+                    <Pagination.First
+                        onClick={() => onPageChange(1)}
+                        disabled={currentPage === 1}
+                    />
+                    <Pagination.Prev
+                        onClick={() => onPageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                    />
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                        <Pagination.Item
+                            key={pageNum}
+                            active={pageNum === currentPage}
+                            onClick={() => onPageChange(pageNum)}
+                        >
+                            {pageNum}
+                        </Pagination.Item>
+                    ))}
+                    <Pagination.Next
+                        onClick={() => onPageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                    />
+                    <Pagination.Last
+                        onClick={() => onPageChange(totalPages)}
+                        disabled={currentPage === totalPages}
+                    />
+                </Pagination>
             )}
-            </tbody>
-        </Table>
+        </>
     );
 };
 
-export default EntityTable;
+export default ListRegistries;

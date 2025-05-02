@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { createClass, deleteClass, fetchClasses } from '../../features/classes/services/ClassService';
+import { createClassRoom, deleteClassRoom, getAllClassRooms } from '../../features/classes/services/ClassService';
+import { ClassRoomRequest, ClassRoomResponse } from '../../features/classes/types/ClassRoomTypes';
 import { Button, Container, Form } from 'react-bootstrap';
-import { IClass } from '@hyteck/shared';
 import notification from '../common/Notification.tsx';
 import ListRegistries from '../common/ListRegistries.tsx';
+import { PageResponse } from '../../types/PageResponse';
+import { usePagination } from '../../hooks/usePagination';
 
 const ClassManager: React.FC = () => {
-    const [classes, setClasses] = useState<IClass[]>([]);
+    const { 
+        currentPage, 
+        pageSize, 
+        handlePageChange,
+        createEmptyPageResponse
+    } = usePagination<ClassRoomResponse>();
+
+    const [classPage, setClassPage] = useState<PageResponse<ClassRoomResponse>>(createEmptyPageResponse());
     const [name, setName] = useState('');
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
@@ -17,27 +26,28 @@ const ClassManager: React.FC = () => {
     useEffect(() => {
         const getClasses = async () => {
             try {
-                const classData = await fetchClasses();
-                setClasses(classData);
-            } catch (err) {
+                const classData = await getAllClassRooms({ page: currentPage, size: pageSize });
+                setClassPage(classData);
+            } catch (err: any) {
                 setError(err.message || 'Failed to fetch classes');
             }
         };
 
         getClasses();
-    }, []);
+    }, [currentPage, pageSize]);
 
     const handleAddClass = async () => {
         try {
-            const newClass = {
+            const newClass: ClassRoomRequest = {
                 name,
-                startTime,
-                endTime,
-                enrollmentFee: parseFloat(enrollmentFee),
-                monthlyFee: parseFloat(monthlyFee)
+                schoolYear: new Date().getFullYear().toString() // Use current year as school year
             };
-            const addedClass = await createClass(newClass);
-            setClasses([...classes, addedClass]);
+            await createClassRoom(newClass);
+
+            // Refresh the class list to get the updated data
+            const refreshedData = await getAllClassRooms({ page: currentPage, size: pageSize });
+            setClassPage(refreshedData);
+
             setName('');
             setStartTime('');
             setEndTime('');
@@ -51,8 +61,12 @@ const ClassManager: React.FC = () => {
 
     const handleDelete = async (id: string) => {
         try {
-            await deleteClass(id);
-            setClasses(classes.filter((clazz) => clazz._id !== id));
+            await deleteClassRoom(id);
+
+            // Refresh the class list to get the updated data
+            const refreshedData = await getAllClassRooms({ page: currentPage, size: pageSize });
+            setClassPage(refreshedData);
+
             notification('Turma removida com sucesso.');
         } catch {
             setError('Erro ao remover a turma.');
@@ -112,7 +126,12 @@ const ClassManager: React.FC = () => {
                 <Button onClick={handleAddClass} className="mt-3">Add Class</Button>
             </Form>
             <h3 className="mt-4">Lista de Turmas</h3>
-            <ListRegistries data={classes} entityName={'classe'} onDelete={handleDelete}></ListRegistries>
+            <ListRegistries 
+                page={classPage} 
+                entityName={'classe'} 
+                onDelete={handleDelete}
+                onPageChange={handlePageChange}
+            />
         </Container>
     );
 };

@@ -1,21 +1,12 @@
-import mongoose from 'mongoose';
+import { IResponsible } from './Responsible';
 
-const FinancialBalanceSchema = new mongoose.Schema({
-    responsible: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Responsible',
-        required: true
-    },
-    month: { type: Date, required: true }, // Ex: 2025-03-01
-    totalDue: { type: Number }, // Valor total devido no mês
-    totalPaid: { type: Number, default: 0 },
-    balance: { type: Number }, // Saldo = totalDue - totalPaid
-});
-
-// Middleware para calcular saldo automaticamente
-FinancialBalanceSchema.pre('save', function(next: () => void) {
-    this.balance = this.totalDue! - this.totalPaid;
-    next();
-});
-
-export const FinancialBalance = mongoose.model('FinancialBalance', FinancialBalanceSchema);
+export interface IFinancialBalance {
+    id?: string;
+    responsible: string | IResponsible;
+    month: Date; // Ex: 2025-03-01
+    totalDue: number; // Valor total devido no mês
+    totalPaid: number;
+    balance: number; // Saldo = totalDue - totalPaid
+    createdAt?: Date;
+    updatedAt?: Date;
+}

@@ -4,9 +4,18 @@ import { IDiscount } from '@hyteck/shared';
 
 import { createDiscount, deleteDiscount, fetchDiscounts } from '../../features/enrollments/services/DiscountService.ts';
 import ListRegistries from '../common/ListRegistries.tsx';
+import { PageResponse } from '../../types/PageResponse';
+import { usePagination } from '../../hooks/usePagination';
 
 const DiscountManager: React.FC = () => {
-    const [discounts, setDiscounts] = useState<IDiscount[]>([]); // Lista de descontos
+    const { 
+        currentPage, 
+        pageSize, 
+        handlePageChange,
+        createEmptyPageResponse
+    } = usePagination<IDiscount>();
+
+    const [discountPage, setDiscountPage] = useState<PageResponse<IDiscount>>(createEmptyPageResponse());
     const [name, setName] = useState<string>(""); // Nome do desconto
     const [value, setValue] = useState<number>(0); // Valor fixo do desconto
     const [validUntil, setValidUntil] = useState<string>(""); // Data de validade do desconto
@@ -14,18 +23,18 @@ const DiscountManager: React.FC = () => {
     const [error, setError] = useState<string | null>(null); // Erros do formulário
     const [successMessage, setSuccessMessage] = useState<string | null>(null); // Mensagem de feedback
 
-    // Carrega os descontos ao montar o componente
+    // Carrega os descontos ao montar o componente ou quando a paginação muda
     useEffect(() => {
         const getDiscounts = async () => {
             try {
-                const fetchedDiscounts = await fetchDiscounts();
-                setDiscounts(fetchedDiscounts);
+                const fetchedDiscounts = await fetchDiscounts(currentPage, pageSize);
+                setDiscountPage(fetchedDiscounts);
             } catch (err: any) {
                 setError("Erro ao carregar os descontos.");
             }
         };
         getDiscounts();
-    }, []);
+    }, [currentPage, pageSize]);
 
     // Submissão do formulário para adicionar um novo desconto
     const handleSubmit = async (e: React.FormEvent) => {
@@ -37,8 +46,12 @@ const DiscountManager: React.FC = () => {
         }
 
         try {
-            const newDiscount = await createDiscount({ name, value, validUntil, type });
-            setDiscounts([...discounts, newDiscount]); // Adiciona o desconto à lista
+            await createDiscount({ name, value, validUntil, type });
+
+            // Refresh the discount list to get the updated data
+            const refreshedData = await fetchDiscounts(currentPage, pageSize);
+            setDiscountPage(refreshedData);
+
             setName("");
             setValue(0);
             setValidUntil("");
@@ -53,7 +66,10 @@ const DiscountManager: React.FC = () => {
     const handleDelete = async (id: string) => {
         try {
             await deleteDiscount(id);
-            setDiscounts(discounts.filter((discount) => discount._id !== id)); // Atualiza a lista
+
+            // Refresh the discount list to get the updated data
+            const refreshedData = await fetchDiscounts(currentPage, pageSize);
+            setDiscountPage(refreshedData);
         } catch (err: any) {
             setError("Erro ao excluir o desconto.");
         }
@@ -118,7 +134,12 @@ const DiscountManager: React.FC = () => {
             </Form>
 
             <h3 className="mt-4">Lista de Descontos</h3>
-            <ListRegistries data={discounts} entityName={'discount'}  onDelete={handleDelete}></ListRegistries>
+            <ListRegistries 
+                page={discountPage} 
+                entityName={'discounts'}
+                onDelete={handleDelete}
+                onPageChange={handlePageChange}
+            />
 
         </div>
     );

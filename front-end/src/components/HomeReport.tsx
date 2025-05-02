@@ -4,13 +4,6 @@ import { IResponsible, ITuition } from '@hyteck/shared';
 import { Card, Col, Container, ListGroup, Row } from 'react-bootstrap';
 import ErrorMessage from './common/ErrorMessage.tsx';
 import { LoadingSpinner } from './common/LoadingSpinner.tsx';
-import {
-    fetchLatePayments,
-    fetchMostLatePayers,
-    fetchOnTimePayers,
-    fetchOpenPayments,
-    fetchTotalEstimatedForCurrentMonth
-} from '../features/payments/services/PaymentService.ts';
 
 const HomeReport: React.FC = () => {
     const [openPayments, setOpenPayments] = useState<ITuition[]>([]);
@@ -25,24 +18,24 @@ const HomeReport: React.FC = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const [
-                    latePaymentsData,
-                    totalEstimatedData,
-                    onTimePayersData,
-                    mostLatePayersData,
-                    openPaymentsData,
-                ] = await Promise.all([
-                    fetchLatePayments(),
-                    fetchTotalEstimatedForCurrentMonth(),
-                    fetchOnTimePayers(),
-                    fetchMostLatePayers(),
-                    fetchOpenPayments(),
-                ]);
-                setLatePayments(latePaymentsData);
-                setTotalEstimated(totalEstimatedData);
-                setOnTimePayers(onTimePayersData);
-                setMostLatePayers(mostLatePayersData);
-                setOpenPayments(openPaymentsData);
+                // const [
+                //     latePaymentsData,
+                //     totalEstimatedData,
+                //     onTimePayersData,
+                //     mostLatePayersData,
+                //     openPaymentsData,
+                // ] = await Promise.all([
+                //     // fetchLatePayments(),
+                //     // fetchTotalEstimatedForCurrentMonth(),
+                //     // fetchOnTimePayers(),
+                //     // fetchMostLatePayers(),
+                //     // fetchOpenPayments(),
+                // ]);
+                // setLatePayments(latePaymentsData);
+                // setTotalEstimated(totalEstimatedData);
+                // setOnTimePayers(onTimePayersData);
+                // setMostLatePayers(mostLatePayersData);
+                // setOpenPayments(openPaymentsData);
 
                 setLoading(false);
             } catch (err: any) {
@@ -83,7 +76,7 @@ const HomeReport: React.FC = () => {
                             <Card.Title>Pagamentos em Aberto</Card.Title>
                             <ListGroup className="mt-3">
                                 {openPayments.map((payment) => (
-                                    <ListGroup.Item key={payment._id as string}>
+                                    <ListGroup.Item key={payment.id as string}>
                                         {(payment.responsible as IResponsible)?.name} - R$ {payment.amount} -{' '}
                                         {new Date(payment.paymentDate?.getUTCFullYear() || 0, payment.paymentDate?.getUTCMonth() || 1, 10).toLocaleDateString()}
                                     </ListGroup.Item>
@@ -99,7 +92,7 @@ const HomeReport: React.FC = () => {
                             <Card.Title>Pagamentos em Atraso</Card.Title>
                             <ListGroup className="mt-3">
                                 {latePayments.map((payment) => (
-                                    <ListGroup.Item key={payment._id as string}>
+                                    <ListGroup.Item key={payment.id as string}>
                                         {(payment.responsible as IResponsible)?.name} - R$ {payment.amount} -{' '}
                                         {new Date(payment.dueDate).toLocaleDateString()}
                                     </ListGroup.Item>
@@ -117,7 +110,7 @@ const HomeReport: React.FC = () => {
                             <Card.Title>Responsáveis que Pagam em Dia</Card.Title>
                             <ListGroup className="mt-3">
                                 {onTimePayers.map((payer) => (
-                                    <ListGroup.Item key={payer._id}>
+                                    <ListGroup.Item key={payer.id}>
                                         {payer.responsible?.name} - {payer.count} pagamentos
                                     </ListGroup.Item>
                                 ))}
@@ -132,7 +125,7 @@ const HomeReport: React.FC = () => {
                             <Card.Title>Responsáveis que Mais Atrasam</Card.Title>
                             <ListGroup className="mt-3">
                                 {mostLatePayers.map((payer) => (
-                                    <ListGroup.Item key={payer._id}>
+                                    <ListGroup.Item key={payer.id}>
                                         {payer.responsible?.name} - {payer.count} atrasos
                                     </ListGroup.Item>
                                 ))}

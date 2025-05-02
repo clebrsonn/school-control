@@ -9,6 +9,7 @@ interface ExpenseFormProps {
     value: number;
     description: string;
     receiptUrl?: string;
+    id?: string;
   };
 }
 
@@ -30,13 +31,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, initialData
       data.append('date', formData.date);
       data.append('value', formData.value.toString());
       data.append('description', formData.description);
-      
+
       if (receipt) {
         data.append('receipt', receipt);
       }
 
       if (initialData) {
-        await ExpenseService.update(initialData._id!, data);
+        await ExpenseService.update(initialData.id!, data);
         notification('Despesa atualizada com sucesso!');
       } else {
         await ExpenseService.create(data);

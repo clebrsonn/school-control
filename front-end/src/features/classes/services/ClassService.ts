@@ -1,23 +1,55 @@
-import { axiosDelete, get, post } from '../../../config/axios';
-import { IClass } from '@hyteck/shared';
+import { axiosDelete, axiosPut, get, post } from '../../../config/axios';
+import { PageResponse } from '../../../types/PageResponse';
+import { ClassRoomRequest, ClassRoomResponse } from '../types/ClassRoomTypes';
 
-const API_URL='/classes';
-export const fetchClasses = async (): Promise<IClass[]> => {
-  const response = await get<IClass[]>('/classes');
+const API_URL='/classrooms';
+
+/**
+ * Get all classrooms
+ * @param pageable Pagination parameters
+ * @returns Page of classroom responses
+ */
+export const getAllClassRooms = async (pageable: { page: number, size: number, sort?: string[] }): Promise<PageResponse<ClassRoomResponse>> => {
+  const response = await get<PageResponse<ClassRoomResponse>>(API_URL, { params: pageable });
   return response;
 };
 
-export const createClass = async (classData: Partial<IClass>): Promise<IClass> => {
-  const response = await post<Partial<IClass>, IClass>(API_URL, classData);
+/**
+ * Create classroom
+ * @param classRoomData Classroom request data
+ * @returns Classroom response
+ */
+export const createClassRoom = async (classRoomData: ClassRoomRequest): Promise<ClassRoomResponse> => {
+  const response = await post<ClassRoomRequest, ClassRoomResponse>(API_URL, classRoomData);
   return response;
 };
 
-export const fetchClassById = async (id: string): Promise<IClass> => {
-  const response = await get<IClass>(`${API_URL}/${id}`);
+/**
+ * Get classroom by ID
+ * @param id Classroom ID
+ * @returns Classroom response
+ */
+export const getClassRoomById = async (id: string): Promise<ClassRoomResponse> => {
+  const response = await get<ClassRoomResponse>(`${API_URL}/${id}`);
   return response;
 };
 
-export const deleteClass = async (id: string) => {
-  const response = await axiosDelete(`${API_URL}/${id}`);
+/**
+ * Update classroom
+ * @param id Classroom ID
+ * @param classRoomData Classroom request data
+ * @returns Classroom response
+ */
+export const updateClassRoom = async (id: string, classRoomData: ClassRoomRequest): Promise<ClassRoomResponse> => {
+  const response = await axiosPut<ClassRoomRequest, ClassRoomResponse>(`${API_URL}/${id}`, classRoomData);
   return response;
-}
+};
+
+/**
+ * Delete classroom
+ * @param id Classroom ID
+ * @returns No content
+ */
+export const deleteClassRoom = async (id: string): Promise<void> => {
+  await axiosDelete(`${API_URL}/${id}`);
+};

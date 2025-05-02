@@ -1,16 +1,16 @@
 // filepath: /e:/IdeaProjects/school-control/frontend/src/components/PaymentDetails.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchPaymentById } from '../../features/payments/services/PaymentService.ts';
-import { ITuition } from '@hyteck/shared';
+import { getPaymentById } from '../../features/payments/services/PaymentService.ts';
+import { PaymentResponse } from '../../features/payments/types/PaymentTypes.ts';
 
 const PaymentDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [payment, setPayment] = useState<ITuition>();
+  const [payment, setPayment] = useState<PaymentResponse>();
 
   useEffect(() => {
     const getPayment = async () => {
-      const paymentData = await fetchPaymentById(id);
+      const paymentData = await getPaymentById(id);
       setPayment(paymentData);
     };
     getPayment();
@@ -24,9 +24,9 @@ const PaymentDetails: React.FC = () => {
     <div>
       <h2>Payment Details</h2>
       <p>Amount: {payment.amount}</p>
-      <p>Date: {payment.dueDate.getDate()}</p>
-      <p>Matrícula: {payment.enrollment}</p>
-      <p>Status: {payment.status}</p>
+      <p>Date: {payment.paymentDate.getDate()}</p>
+      <p>Matrícula: {payment.invoiceId}</p>
+      <p>Status: {payment.paymentMethod}</p>
       {/* Adicione mais detalhes conforme necessário */}
     </div>
   );

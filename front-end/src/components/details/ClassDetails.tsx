@@ -1,7 +1,7 @@
 // filepath: /e:/IdeaProjects/school-control/frontend/src/components/ClassDetails.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchClassById } from '../../features/classes/services/ClassService.ts';
+import { getClassRoomById } from '../../features/classes/services/ClassService.ts';
 import { IClass } from '@hyteck/shared';
 
 const ClassDetails: React.FC = () => {
@@ -10,7 +10,7 @@ const ClassDetails: React.FC = () => {
 
   useEffect(() => {
     const getClass = async () => {
-      const classData = await fetchClassById(id);
+      const classData = await getClassRoomById(id);
       setClassItem(classData);
     };
     getClass();

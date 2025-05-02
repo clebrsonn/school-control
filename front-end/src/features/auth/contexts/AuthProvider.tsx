@@ -33,7 +33,7 @@ const AuthProvider = ({children}: { children: ReactNode }) => {
                     setUser(user);
                 } catch (error: unknown) {
                     notification(error as string, 'error')
-                    logout();
+                    //logout();
                 } finally {
                     setLoading(false);
                 }
@@ -48,7 +48,7 @@ const AuthProvider = ({children}: { children: ReactNode }) => {
     const login = async (email: string, password: string) => {
         const data = await loginService(email, password);
         setUser(data.user);
-        const from = (location.state as { from: { pathname: string } })?.from?.pathname || "/";
+        const from = (location.state)?.from?.pathname || "/";
         navigate(from, {replace: true});
     };
 

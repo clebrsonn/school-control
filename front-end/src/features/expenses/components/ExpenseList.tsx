@@ -106,7 +106,7 @@ export const ExpenseList: React.FC = () => {
                     </thead>
                     <tbody>
                     {expenses.map((expense) => (
-                        <tr key={expense._id}>
+                        <tr key={expense.id}>
                             <td>{formatDate(expense.date)}</td>
                             <td>{formatCurrency(expense.value)}</td>
                             <td>{expense.description}</td>
@@ -136,7 +136,7 @@ export const ExpenseList: React.FC = () => {
                                 </button>
                                 <button
                                     className="btn btn-sm btn-outline-danger"
-                                    onClick={() => handleDelete(expense._id!)}
+                                    onClick={() => handleDelete(expense.id!)}
                                 >
                                     Excluir
                                 </button>

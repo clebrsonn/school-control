@@ -1,64 +1,27 @@
 // filepath: /e:/IdeaProjects/school-control/frontend/src/services/PaymentService.ts
 
-import { ITuition } from '@hyteck/shared';
-import { get } from '../../../config/axios/get.ts';
-import { post } from '../../../config/axios/post.ts';
-import { axiosDelete } from '../../../config/axios/delete.ts';
-import { axiosPut } from '../../../config/axios/put.ts';
+import { get, post } from '../../../config/axios';
+import { PaymentRequest, PaymentResponse } from '../types/PaymentTypes';
 
-export const fetchPayments = async () => {
-  const response = await get('/payments');
+/**
+ * Process a payment
+ * @param paymentData Payment data
+ * @returns Payment response
+ */
+export const processPayment = async (paymentData: PaymentRequest): Promise<PaymentResponse> => {
+  const response = await post<PaymentRequest, PaymentResponse>('/payments', paymentData);
   return response;
 };
 
-export const createPayment = async (paymentData: ITuition): Promise<ITuition> => {
-
-  const response = await post<ITuition, ITuition>('/payments', paymentData);
-  return response;
+/**
+ * Get payments by responsible ID
+ * @param responsibleId Responsible ID
+ * @returns Array of payment responses
+ */
+export const getPaymentsByResponsible = async (responsibleId: string): Promise<PaymentResponse[]> => {
+  return await get<PaymentResponse[]>(`/responsibles/${responsibleId}/payments`);
 };
 
-export const fetchPaymentById = async (id: string): Promise<ITuition> => {
-  const response = await get<ITuition>(`/payments/${id}`);
-  return response;
-};
-
-export const fetchPaymentsByParentId = async (parentId: string): Promise<ITuition[]>=> {
-  return await get<ITuition[]>(`/payments/parent/${parentId}`);
-};
-
-export const deletePaymentById = async (id: string) => {
-  return await axiosDelete<ITuition>(`/payments/${id}`);
-};
-
-export const groupPaymentsByParentId = async (parentId: string): Promise<ITuition[]>=> {
-  return await get<ITuition[]>(`/payments/parent/debt/${parentId}`);
-};
-
-export const updatePayment = async (id: string, paymentData: Partial<ITuition>): Promise<ITuition> => {
-  const response = await axiosPut<Partial<ITuition>, ITuition>(`/payments/${id}`, paymentData);
-  return response;
-}
-
-export const groupPaymentsByMonthAndParent = async (): Promise<any[]> => {
-  return await get<any[]>('/payments/grouped/all');
-};
-
-export const fetchLatePayments = async () => {
-  return await get<ITuition[]>('/payments/late');
-};
-
-export const fetchTotalEstimatedForCurrentMonth = async () => {
-  return await get<number>('/payments/total-estimated');
-};
-
-export const fetchOnTimePayers = async () => {
-  return await get<any[]>('/payments/on-time-payers');
-};
-
-export const fetchMostLatePayers = async () => {
-  return await get<any[]>('/payments/most-late-payers');
-};
-
-export const fetchOpenPayments = async () => {
-  return await get<any[]>('/payments/open-month');
+export const getPaymentById = async (id: string): Promise<PaymentResponse> => {
+  return await get<PaymentResponse>(`/payments/${id}`);
 };

@@ -3,11 +3,12 @@ import { axiosDelete } from '../../../config/axios/delete.ts';
 import { axiosPut } from '../../../config/axios/put.ts';
 import { post } from '../../../config/axios/post.ts';
 import { get } from '../../../config/axios/get.ts';
+import { PageResponse } from '../../../types/PageResponse';
 
 const API_URL= '/discounts';
-export const fetchDiscounts= async (): Promise<IDiscount[]> => {
+export const fetchDiscounts= async (page = 0, size = 10): Promise<PageResponse<IDiscount>> => {
     try {
-        const response = await get<IDiscount[]>(API_URL);
+        const response = await get<PageResponse<IDiscount>>(`${API_URL}?page=${page}&size=${size}`);
         return response;
     } catch (error) {
         console.error('Error fetching discounts', error);

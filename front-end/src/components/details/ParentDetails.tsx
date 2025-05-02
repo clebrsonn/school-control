@@ -2,12 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Modal from 'react-modal';
 import { Button, Col, Container, ListGroup, Row, Table } from 'react-bootstrap';
-import { ITuition } from '@hyteck/shared';
-import {
-  createPayment,
-  fetchPaymentsByParentId,
-  updatePayment
-} from '../../features/payments/services/PaymentService.ts';
+import { PaymentMethod, PaymentResponse } from '../../features/payments/types/PaymentTypes';
+import { getPaymentsByResponsible, processPayment } from '../../features/payments/services/PaymentService.ts';
 import { ModalType, ModalTypes } from '../../types/modal.ts';
 import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
 import { useParentDetails } from '../../features/parents/components/useParentDetails.ts';
@@ -21,22 +17,22 @@ const ParentDetails: React.FC = () => {
   const { parent, students, monthlyFees, error } = useParentDetails(id);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
-  const [payments, setPayments] = useState<ITuition[]>([]);
+  const [payments, setPayments] = useState<PaymentResponse[]>([]);
 
   useEffect(() => {
     const loadPayments = async () => {
       const parentId = id as string;
-      const fetchedPayments = await fetchPaymentsByParentId(parentId);
+      const fetchedPayments = await getPaymentsByResponsible(parentId);
       setPayments(fetchedPayments);
     };
 
     loadPayments();
   }, [id]);
 
-  const groupPaymentsByMonth = (payments: ITuition[]): { [month: string]: ITuition[] } => {
-    const groupedPayments: { [month: string]: ITuition[] } = {};
+  const groupPaymentsByMonth = (payments: PaymentResponse[]): { [month: string]: PaymentResponse[] } => {
+    const groupedPayments: { [month: string]: PaymentResponse[] } = {};
     payments.forEach(payment => {
-      const month = new Date(payment.dueDate).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+      const month = new Date(payment.paymentDate).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
       if (!groupedPayments[month]) {
         groupedPayments[month] = [];
       }
@@ -51,14 +47,18 @@ const ParentDetails: React.FC = () => {
   const handleMarkMonthAsPaid = async (month: string) => {
     try {
       const paymentsToPay = groupedPayments[month];
-      const updatedPayments = await Promise.all(paymentsToPay.map(payment => updatePayment(payment._id, { status: 'paid', paymentDate: new Date() })));
+      const updatedPayments = await Promise.all(paymentsToPay.map(payment => 
+        processPayment({
+          invoiceId: payment.invoiceId,
+          amount: payment.amount,
+          paymentMethod: PaymentMethod.PIX // Default payment method
+        })
+      ));
 
-      setPayments(prevPayments => {
-        return prevPayments.map(p => {
-          const updatedPayment = updatedPayments.find(up => up._id === p._id);
-          return updatedPayment || p;
-        });
-      });
+      // Refresh payments after processing
+      const parentId = id as string;
+      const fetchedPayments = await getPaymentsByResponsible(parentId);
+      setPayments(fetchedPayments);
 
       notification("Pagamentos do mês atualizados com sucesso!", "success");
 
@@ -109,8 +109,8 @@ const ParentDetails: React.FC = () => {
 
         <ListGroup className="mt-3">
           {students.map((student) => (
-            <ListGroup.Item key={student._id} className="bg-dark text-white">
-              <Link to={`/students/${student._id}`}>{student.name}</Link>
+            <ListGroup.Item key={student.id} className="bg-dark text-white">
+              <Link to={`/students/${student.id}`}>{student.name}</Link>
             </ListGroup.Item>
           ))}
         </ListGroup>
@@ -118,8 +118,8 @@ const ParentDetails: React.FC = () => {
         {/*<h2>Monthly Fees</h2>*/}
         {/*<ListGroup className="mt-3">*/}
         {/*  {monthlyFees?.map((monthlyFee) => (*/}
-        {/*    <ListGroup.Item key={monthlyFee._id as string}>*/}
-        {/*      {monthlyFee.totalDebt} - {new Date(monthlyFee?._id?.year, monthlyFee?._id?.month -1, 10).toLocaleDateString()}*/}
+        {/*    <ListGroup.Item key={monthlyFee.id as string}>*/}
+        {/*      {monthlyFee.totalDebt} - {new Date(monthlyFee?.id?.year, monthlyFee?.id?.month -1, 10).toLocaleDateString()}*/}
         {/*    </ListGroup.Item>*/}
         {/*  ))}*/}
         {/*</ListGroup>*/}
@@ -131,31 +131,28 @@ const ParentDetails: React.FC = () => {
               <Table striped bordered hover>
                 <thead>
                 <tr>
-                  <th>Vencimento</th>
+                  <th>Data de Pagamento</th>
                   <th>Valor</th>
-                  <th>Status</th>
+                  <th>Método</th>
+                  <th>ID da Fatura</th>
                 </tr>
                 </thead>
                 <tbody>
                 {monthPayments.map(payment => (
-                    <tr key={payment._id}>
-                      <td>{formatDate(payment.dueDate)}</td>
+                    <tr key={payment.id}>
+                      <td>{formatDate(payment.paymentDate)}</td>
                       <td>R$ {payment.amount}</td>
-                      <td>{payment.status}</td>
+                      <td>{payment.paymentMethod}</td>
+                      <td>{payment.invoiceId}</td>
                     </tr>
                 ))}
                 </tbody>
               </Table>
               <Button
                   onClick={() => handleMarkMonthAsPaid(month)}
-                  disabled={monthPayments.every(p => p.status === 'paid')}
               >
-                Pagar {monthPayments.reduce((sum, p) => {
-                if(p.status != 'paid') {
-                  return sum + p.amount;
-                }
-                return sum;
-              }, 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                Pagar {monthPayments.reduce((sum, p) => sum + p.amount, 0)
+                  .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </Button>
             </div>
         ))}
@@ -166,7 +163,14 @@ const ParentDetails: React.FC = () => {
           )}
           {modalType === ModalTypes.MONTHLY_FEE && (
             <MonthlyFeeFormModal
-              onSubmit={createPayment}
+              onSubmit={(amount, dueDate) => {
+                // Convert to PaymentRequest
+                return processPayment({
+                  invoiceId: `invoice-${Date.now()}`, // Generate a temporary invoice ID
+                  amount: parseFloat(amount),
+                  paymentMethod: PaymentMethod.PIX
+                });
+              }}
               onClose={() => setModalIsOpen(false)}
             />
           )}
