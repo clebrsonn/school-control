@@ -1,6 +1,5 @@
 import { AxiosError, AxiosRequestConfig } from 'axios';
 import axiosInstance from '../axiosConfig.ts';
-import notification from '../../components/common/Notification.tsx';
 
 /**
  * Makes a GET request to the specified URL and returns the response data.
@@ -19,10 +18,9 @@ export const get = async <TResponse>(
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError<TResponse>;
-    const message = axiosError.message;
 
-    notification(`Error while fetching ${url}. ${message ?? ''}`, 'error');
-
-    throw error;
+    // The global interceptor will handle the notification
+    // Just re-throw the original error to preserve all error data
+    throw axiosError;
   }
 };

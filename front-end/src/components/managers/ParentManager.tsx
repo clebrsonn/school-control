@@ -9,9 +9,11 @@ import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
 import { PageResponse } from '../../types/PageResponse';
 import { usePagination } from '../../hooks/usePagination';
 import { FaList, FaSave, FaUsers } from 'react-icons/fa';
+import FormField from '../common/FormField';
+import { extractFieldErrors } from '../../utils/errorUtils';
 
 // Constants for reusable initial states
-const INITIAL_PARENT_STATE: Partial<IResponsible> = { name: '', phone: '' };
+const INITIAL_PARENT_STATE: Partial<IResponsible> = { name: '', phone: '', email: '' };
 
 const ParentManager: React.FC = () => {
     const { 
@@ -24,7 +26,9 @@ const ParentManager: React.FC = () => {
     const [parentPage, setParentPage] = useState<PageResponse<IResponsible>>(createEmptyPageResponse());
     const [formState, setFormState] = useState(INITIAL_PARENT_STATE);
     const [error, setError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState<boolean>(true);
+    const [submitting, setSubmitting] = useState<boolean>(false);
 
 
     // Fetch parents when the component is mounted or pagination changes
@@ -53,7 +57,14 @@ const ParentManager: React.FC = () => {
 
     // Centralized error handler for API calls
     const handleApiError = (err: unknown, defaultMessage: string) => {
-        setError((err as Error).message || defaultMessage);
+        // Extract field-specific errors
+        const errors = extractFieldErrors(err);
+        setFieldErrors(errors);
+
+        // If there are no field-specific errors, set a general error message
+        if (Object.keys(errors).length === 0) {
+            setError((err as Error).message || defaultMessage);
+        }
         console.error(err);
     };
 
@@ -64,6 +75,28 @@ const ParentManager: React.FC = () => {
 
     // Handles adding a new parent
     const handleAddParent = async () => {
+        // Reset errors and set submitting state
+        setError(null);
+        setFieldErrors({});
+        setSubmitting(true);
+
+        // Client-side validation
+        const clientErrors: Record<string, string> = {};
+        if (!formState.name) clientErrors.name = "Nome do responsável é obrigatório";
+        if (!formState.phone) clientErrors.phone = "Telefone do responsável é obrigatório";
+
+        // Validate email format if provided
+        if (formState.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.email)) {
+            clientErrors.email = "Formato de email inválido";
+        }
+
+        if (Object.keys(clientErrors).length > 0) {
+            setFieldErrors(clientErrors);
+            setError("Por favor, corrija os erros no formulário.");
+            setSubmitting(false);
+            return;
+        }
+
         try {
             const newParent = { ...formState, students: [] };
             await createParent(newParent);
@@ -74,9 +107,11 @@ const ParentManager: React.FC = () => {
 
             setFormState(INITIAL_PARENT_STATE);
             setError(null);
-            notification('Parent added successfully', 'success');
+            notification('Responsável adicionado com sucesso', 'success');
         } catch (err: unknown) {
-            handleApiError(err, 'Failed to add parent');
+            handleApiError(err, 'Erro ao adicionar responsável');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -116,26 +151,41 @@ const ParentManager: React.FC = () => {
                     <Form>
                         <Row>
                             <Col md={6}>
-                                <Form.Group className="mb-3" controlId="formParentName">
-                                    <Form.Label>Nome</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Nome do Responsável"
-                                        value={formState.name}
-                                        onChange={(e) => updateFormState('name', e.target.value)}
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="formParentName"
+                                    label="Nome"
+                                    type="text"
+                                    placeholder="Nome do Responsável"
+                                    value={formState.name || ''}
+                                    onChange={(e) => updateFormState('name', e.target.value)}
+                                    error={fieldErrors.name || null}
+                                    required
+                                />
                             </Col>
                             <Col md={6}>
-                                <Form.Group className="mb-3" controlId="formParentPhone">
-                                    <Form.Label>Telefone</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Telefone do Responsável"
-                                        value={formState.phone}
-                                        onChange={(e) => updateFormState('phone', e.target.value)}
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="formParentPhone"
+                                    label="Telefone"
+                                    type="text"
+                                    placeholder="Telefone do Responsável"
+                                    value={formState.phone || ''}
+                                    onChange={(e) => updateFormState('phone', e.target.value)}
+                                    error={fieldErrors.phone || null}
+                                    required
+                                />
+                            </Col>
+                        </Row>
+                        <Row>
+                            <Col md={12}>
+                                <FormField
+                                    id="formParentEmail"
+                                    label="Email"
+                                    type="email"
+                                    placeholder="Email do Responsável"
+                                    value={formState.email || ''}
+                                    onChange={(e) => updateFormState('email', e.target.value)}
+                                    error={fieldErrors.email || null}
+                                />
                             </Col>
                         </Row>
                         <div className="d-flex mt-3">
@@ -143,9 +193,10 @@ const ParentManager: React.FC = () => {
                                 variant="primary" 
                                 onClick={handleAddParent} 
                                 className="d-flex align-items-center"
+                                disabled={submitting}
                             >
                                 <FaSave className="me-2" />
-                                Salvar
+                                {submitting ? 'Salvando...' : 'Salvar'}
                             </Button>
                         </div>
                     </Form>

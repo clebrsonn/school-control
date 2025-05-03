@@ -7,6 +7,8 @@ import { PageResponse } from '../../types/PageResponse';
 import { usePagination } from '../../hooks/usePagination';
 import { FaList, FaPercentage, FaSave } from 'react-icons/fa';
 import ErrorMessage from '../common/ErrorMessage.tsx';
+import FormField from '../common/FormField';
+import { extractFieldErrors } from '../../utils/errorUtils';
 
 const DiscountManager: React.FC = () => {
     const { 
@@ -22,7 +24,9 @@ const DiscountManager: React.FC = () => {
     const [validUntil, setValidUntil] = useState<string>(""); // Data de validade do desconto
     const [type, setType] = useState<string>("enroll"); // Tipo de desconto
     const [error, setError] = useState<string | null>(null); // Erros do formulário
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({}); // Erros específicos de campo
     const [successMessage, setSuccessMessage] = useState<string | null>(null); // Mensagem de feedback
+    const [loading, setLoading] = useState<boolean>(false); // Estado de carregamento
 
     // Carrega os descontos ao montar o componente ou quando a paginação muda
     useEffect(() => {
@@ -41,8 +45,23 @@ const DiscountManager: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!name || value <= 0 || !validUntil || !type) {
-            setError("Por favor, preencha todos os campos corretamente.");
+        // Reset errors and set loading state
+        setError(null);
+        setFieldErrors({});
+        setSuccessMessage(null);
+        setLoading(true);
+
+        // Client-side validation
+        const clientErrors: Record<string, string> = {};
+        if (!name) clientErrors.name = "Nome do desconto é obrigatório";
+        if (value <= 0) clientErrors.value = "Valor deve ser maior que zero";
+        if (!validUntil) clientErrors.validUntil = "Data de validade é obrigatória";
+        if (!type) clientErrors.type = "Tipo de desconto é obrigatório";
+
+        if (Object.keys(clientErrors).length > 0) {
+            setFieldErrors(clientErrors);
+            setError("Por favor, corrija os erros no formulário.");
+            setLoading(false);
             return;
         }
 
@@ -53,13 +72,23 @@ const DiscountManager: React.FC = () => {
             const refreshedData = await fetchDiscounts(currentPage, pageSize);
             setDiscountPage(refreshedData);
 
+            // Reset form
             setName("");
             setValue(0);
             setValidUntil("");
             setType("enroll");
             setSuccessMessage("Desconto criado com sucesso!");
         } catch (err: any) {
-            setError("Erro ao criar o desconto.");
+            // Extract field-specific errors
+            const errors = extractFieldErrors(err);
+            setFieldErrors(errors);
+
+            // If there are no field-specific errors, set a general error message
+            if (Object.keys(errors).length === 0) {
+                setError(err.message || "Erro ao criar o desconto.");
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -96,42 +125,42 @@ const DiscountManager: React.FC = () => {
                     <Form onSubmit={handleSubmit}>
                         <Row>
                             <Col md={6}>
-                                <Form.Group className="mb-3" controlId="discountName">
-                                    <Form.Label>Nome do Desconto</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Exemplo: Desconto para alunos novos"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        required
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="discountName"
+                                    label="Nome do Desconto"
+                                    type="text"
+                                    placeholder="Exemplo: Desconto para alunos novos"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    error={fieldErrors.name || null}
+                                    required
+                                />
                             </Col>
                             <Col md={6}>
-                                <Form.Group className="mb-3" controlId="discountValue">
-                                    <Form.Label>Valor do Desconto</Form.Label>
-                                    <Form.Control
-                                        type="number"
-                                        placeholder="Exemplo: 50"
-                                        value={value}
-                                        onChange={(e) => setValue(Number(e.target.value))}
-                                        required
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="discountValue"
+                                    label="Valor do Desconto"
+                                    type="number"
+                                    placeholder="Exemplo: 50"
+                                    value={value.toString()}
+                                    onChange={(e) => setValue(Number(e.target.value))}
+                                    error={fieldErrors.value || null}
+                                    required
+                                />
                             </Col>
                         </Row>
 
                         <Row>
                             <Col md={6}>
-                                <Form.Group className="mb-3" controlId="discountValidUntil">
-                                    <Form.Label>Validade do Desconto</Form.Label>
-                                    <Form.Control
-                                        type="date"
-                                        value={validUntil}
-                                        onChange={(e) => setValidUntil(e.target.value)}
-                                        required
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="discountValidUntil"
+                                    label="Validade do Desconto"
+                                    type="date"
+                                    value={validUntil}
+                                    onChange={(e) => setValidUntil(e.target.value)}
+                                    error={fieldErrors.validUntil || null}
+                                    required
+                                />
                             </Col>
                             <Col md={6}>
                                 <Form.Group className="mb-3" controlId="discountType">
@@ -141,10 +170,16 @@ const DiscountManager: React.FC = () => {
                                         value={type}
                                         onChange={(e) => setType(e.target.value)}
                                         required
+                                        isInvalid={!!fieldErrors.type}
                                     >
                                         <option value="enroll">Matrícula</option>
                                         <option value="tuition">Mensalidade</option>
                                     </Form.Control>
+                                    {fieldErrors.type && (
+                                        <Form.Control.Feedback type="invalid">
+                                            {fieldErrors.type}
+                                        </Form.Control.Feedback>
+                                    )}
                                 </Form.Group>
                             </Col>
                         </Row>
@@ -154,9 +189,10 @@ const DiscountManager: React.FC = () => {
                                 type="submit" 
                                 variant="primary" 
                                 className="d-flex align-items-center"
+                                disabled={loading}
                             >
                                 <FaSave className="me-2" />
-                                Salvar Desconto
+                                {loading ? 'Salvando...' : 'Salvar Desconto'}
                             </Button>
                         </div>
                     </Form>

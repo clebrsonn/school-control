@@ -1,6 +1,5 @@
 import { AxiosError, AxiosRequestConfig } from 'axios';
 import axiosInstance from '../axiosConfig';
-import notification from '../../components/common/Notification.tsx';
 
 /**
  * Sends a POST request to the specified URL with the given data and configuration.
@@ -23,10 +22,9 @@ export const post = async <TRequest, TResponse>(
     return response.data;
   } catch (error: unknown) {
     const axiosError = error as AxiosError<TResponse>;
-    const message = axiosError.message;
 
-    notification(`Error while posting ${url}. ${message ?? ''}`, 'error');
-
+    // The global interceptor will handle the notification
+    // Just re-throw the original error to preserve all error data
     throw axiosError;
   }
 };

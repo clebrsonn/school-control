@@ -1,6 +1,5 @@
 import { AxiosError, AxiosRequestConfig } from 'axios';
 import axiosInstance from '../axiosConfig';
-import notification from '../../components/common/Notification.tsx';
 
 /**
  * Sends a PUT request to the specified URL with the provided data and configuration.
@@ -23,9 +22,9 @@ export const axiosPut = async <TRequest, TResponse>(
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError<TResponse>;
-    const message = axiosError.message;
 
-    notification(`Error while updating ${url}. ${message ?? ''}`, 'error');
-    throw error;
+    // The global interceptor will handle the notification
+    // Just re-throw the original error to preserve all error data
+    throw axiosError;
   }
 };

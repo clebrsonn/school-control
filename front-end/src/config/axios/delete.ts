@@ -1,6 +1,5 @@
 import { AxiosError, AxiosRequestConfig } from 'axios';
 import axiosInstance from '../axiosConfig';
-import notification from '../../components/common/Notification.tsx';
 
 /**
  * Sends a DELETE request to the specified URL using axiosInstance.
@@ -19,11 +18,10 @@ export const axiosDelete = async <TResponse>(
 
     return response.data;
   } catch (error) {
-    const message = (error as AxiosError<{ message: string }>).response?.data
-      ?.message;
+    const axiosError = error as AxiosError<{ message: string }>;
 
-    notification(`Error while deleting ${url}. ${message ?? ''}`, 'error');
-
-    throw error;
+    // The global interceptor will handle the notification
+    // Just re-throw the original error to preserve all error data
+    throw axiosError;
   }
 };

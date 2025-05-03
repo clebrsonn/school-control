@@ -23,9 +23,31 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    notification(error ?? error.response?.data, 'error');
-    const errorMessage = error ? error ||  error.response.data.message : error;
-    return Promise.reject(new Error(errorMessage));
+    // Extract error message for notification
+    let errorMessage = 'An error occurred';
+
+    if (error.response?.data) {
+      // If there's a specific message field, use it
+      if (error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } 
+      // If there's a general error field, use it
+      else if (error.response.data.error) {
+        errorMessage = error.response.data.error;
+      }
+      // Otherwise use the status text
+      else if (error.response.statusText) {
+        errorMessage = `${error.response.status}: ${error.response.statusText}`;
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    // Show notification with the error message
+    notification(errorMessage, 'error');
+
+    // Return the original error to preserve all error data for field-specific error handling
+    return Promise.reject(error);
   }
 );
 

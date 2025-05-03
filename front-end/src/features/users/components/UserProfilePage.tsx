@@ -5,6 +5,8 @@ import { useAuth } from '../../auth/contexts/AuthProvider';
 import { updateUserProfile } from '../services/UserService';
 import { LoadingSpinner } from '../../../components/common/LoadingSpinner';
 import notification from '../../../components/common/Notification';
+import FormField from '../../../components/common/FormField';
+import { extractFieldErrors } from '../../../utils/errorUtils';
 
 const UserProfilePage: React.FC = () => {
   const { user } = useAuth();
@@ -12,7 +14,8 @@ const UserProfilePage: React.FC = () => {
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
-  
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   // Form state
   const [formData, setFormData] = useState({
     username: '',
@@ -44,19 +47,25 @@ const UserProfilePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setSaving(true);
       setError(null);
       setSuccess(false);
-      
+      setFieldErrors({});
+
       await updateUserProfile(formData);
-      
+
       setSuccess(true);
       notification('Perfil atualizado com sucesso!', 'success');
     } catch (err: any) {
-      setError(err.message || 'Erro ao atualizar perfil');
-      notification('Erro ao atualizar perfil', 'error');
+      const errors = extractFieldErrors(err);
+      setFieldErrors(errors);
+
+      // If there are no field-specific errors, set a general error message
+      if (Object.keys(errors).length === 0) {
+        setError(err.message || 'Erro ao atualizar perfil');
+      }
     } finally {
       setSaving(false);
     }
@@ -81,70 +90,68 @@ const UserProfilePage: React.FC = () => {
             <Card.Body>
               {error && <Alert variant="danger">{error}</Alert>}
               {success && <Alert variant="success">Perfil atualizado com sucesso!</Alert>}
-              
+
               <Form onSubmit={handleSubmit}>
                 <Row>
                   <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Nome de Usuário</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="username"
-                        value={formData.username}
-                        onChange={handleChange}
-                        disabled
-                      />
-                      <Form.Text className="text-muted">
-                        O nome de usuário não pode ser alterado.
-                      </Form.Text>
-                    </Form.Group>
+                    <FormField
+                      id="username"
+                      label="Nome de Usuário"
+                      type="text"
+                      value={formData.username}
+                      onChange={(e) => handleChange(e)}
+                      error={fieldErrors.username || null}
+                      disabled
+                      className="mb-0"
+                    />
+                    <Form.Text className="text-muted mb-3 d-block">
+                      O nome de usuário não pode ser alterado.
+                    </Form.Text>
                   </Col>
-                  
+
                   <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Email</Form.Label>
-                      <Form.Control
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        disabled
-                      />
-                      <Form.Text className="text-muted">
-                        O email não pode ser alterado.
-                      </Form.Text>
-                    </Form.Group>
+                    <FormField
+                      id="email"
+                      label="Email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleChange(e)}
+                      error={fieldErrors.email || null}
+                      disabled
+                      className="mb-0"
+                    />
+                    <Form.Text className="text-muted mb-3 d-block">
+                      O email não pode ser alterado.
+                    </Form.Text>
                   </Col>
                 </Row>
-                
+
                 <Row>
                   <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Nome Completo</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="Seu nome completo"
-                      />
-                    </Form.Group>
+                    <FormField
+                      id="name"
+                      label="Nome Completo"
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => handleChange(e)}
+                      error={fieldErrors.name || null}
+                      placeholder="Seu nome completo"
+                    />
                   </Col>
-                  
+
                   <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Telefone</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        placeholder="Seu telefone"
-                      />
-                    </Form.Group>
+                    <FormField
+                      id="phone"
+                      label="Telefone"
+                      type="text"
+                      value={formData.phone}
+                      onChange={(e) => handleChange(e)}
+                      error={fieldErrors.phone || null}
+                      placeholder="Seu telefone"
+                    />
                   </Col>
                 </Row>
-                
+
                 <Form.Group className="mb-3">
                   <Form.Label>Sobre Mim</Form.Label>
                   <Form.Control
@@ -154,9 +161,15 @@ const UserProfilePage: React.FC = () => {
                     onChange={handleChange}
                     placeholder="Uma breve descrição sobre você"
                     rows={3}
+                    isInvalid={!!fieldErrors.bio}
                   />
+                  {fieldErrors.bio && (
+                    <Form.Control.Feedback type="invalid">
+                      {fieldErrors.bio}
+                    </Form.Control.Feedback>
+                  )}
                 </Form.Group>
-                
+
                 <div className="d-flex justify-content-end">
                   <Button 
                     variant="primary" 
@@ -181,7 +194,7 @@ const UserProfilePage: React.FC = () => {
             </Card.Body>
           </Card>
         </Col>
-        
+
         <Col lg={4}>
           <Card>
             <Card.Body>
@@ -195,9 +208,9 @@ const UserProfilePage: React.FC = () => {
                 <h5>{formData.name || formData.username || formData.email}</h5>
                 <p className="text-muted">{formData.email}</p>
               </div>
-              
+
               <hr />
-              
+
               <div>
                 <h6>Informações da Conta</h6>
                 <p className="mb-1">

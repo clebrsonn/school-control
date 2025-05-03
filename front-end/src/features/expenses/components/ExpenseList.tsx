@@ -3,17 +3,26 @@ import { IExpense } from '@hyteck/shared/';
 import { ExpenseForm } from './ExpenseForm';
 import { ExpenseService } from '../services/ExpenseService.ts';
 import notification from '../../../components/common/Notification.tsx';
+import { usePagination } from '../../../hooks/usePagination';
+import { PageResponse } from '../../../types/PageResponse';
 
 export const ExpenseList: React.FC = () => {
-    const [expenses, setExpenses] = useState<IExpense[]>([]);
+    const { 
+        currentPage, 
+        pageSize, 
+        handlePageChange,
+        createEmptyPageResponse
+    } = usePagination<IExpense>();
+
+    const [expensesPage, setExpensesPage] = useState<PageResponse<IExpense>>(createEmptyPageResponse());
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingExpense, setEditingExpense] = useState<IExpense | null>(null);
 
     const fetchExpenses = async () => {
         try {
-            const data = await ExpenseService.getAll();
-            setExpenses(data);
+            const data = await ExpenseService.getAll(currentPage, pageSize);
+            setExpensesPage(data);
         } catch (error) {
             console.error('Error fetching expenses:', error);
             notification('Erro ao carregar despesas', 'error');
@@ -24,7 +33,7 @@ export const ExpenseList: React.FC = () => {
 
     useEffect(() => {
         fetchExpenses();
-    }, []);
+    }, [currentPage, pageSize]);
 
     const handleDelete = async (id: string) => {
         if (!window.confirm('Tem certeza que deseja excluir esta despesa?')) {
@@ -94,7 +103,7 @@ export const ExpenseList: React.FC = () => {
             )}
 
             <div className="table-responsive">
-                {expenses && (<table className="table table-striped">
+                <table className="table table-striped">
                     <thead>
                     <tr>
                         <th>Data</th>
@@ -105,7 +114,7 @@ export const ExpenseList: React.FC = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {expenses.map((expense) => (
+                    {expensesPage.content && expensesPage.content.map((expense) => (
                         <tr key={expense.id}>
                             <td>{formatDate(expense.date)}</td>
                             <td>{formatCurrency(expense.value)}</td>
@@ -144,7 +153,67 @@ export const ExpenseList: React.FC = () => {
                         </tr>
                     ))}
                     </tbody>
-                </table>)}
+                </table>
+
+                {expensesPage.totalPages > 1 && (
+                    <div className="d-flex justify-content-center mt-4">
+                        <nav>
+                            <ul className="pagination">
+                                <li className={`page-item ${expensesPage.number === 0 ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => handlePageChange(1)}
+                                        disabled={expensesPage.number === 0}
+                                    >
+                                        Primeira
+                                    </button>
+                                </li>
+                                <li className={`page-item ${expensesPage.number === 0 ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => handlePageChange(expensesPage.number)}
+                                        disabled={expensesPage.number === 0}
+                                    >
+                                        Anterior
+                                    </button>
+                                </li>
+
+                                {Array.from({ length: expensesPage.totalPages }, (_, i) => i + 1).map(pageNum => (
+                                    <li 
+                                        key={pageNum} 
+                                        className={`page-item ${pageNum === expensesPage.number + 1 ? 'active' : ''}`}
+                                    >
+                                        <button 
+                                            className="page-link" 
+                                            onClick={() => handlePageChange(pageNum)}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    </li>
+                                ))}
+
+                                <li className={`page-item ${expensesPage.number === expensesPage.totalPages - 1 ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => handlePageChange(expensesPage.number + 2)}
+                                        disabled={expensesPage.number === expensesPage.totalPages - 1}
+                                    >
+                                        Próxima
+                                    </button>
+                                </li>
+                                <li className={`page-item ${expensesPage.number === expensesPage.totalPages - 1 ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => handlePageChange(expensesPage.totalPages)}
+                                        disabled={expensesPage.number === expensesPage.totalPages - 1}
+                                    >
+                                        Última
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                )}
             </div>
         </div>
     );

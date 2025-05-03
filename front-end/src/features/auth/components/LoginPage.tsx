@@ -3,17 +3,25 @@ import { Button, Form } from 'react-bootstrap';
 import { FaUserCircle } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthProvider.tsx';
-
+import FormField from '../../../components/common/FormField';
+import { extractFieldErrors } from '../../../utils/errorUtils';
 
 function LoginPage() {
     const [username, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const {login} = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setFieldErrors({});
 
-        await login(username, password);
+        try {
+            await login(username, password);
+        } catch (error) {
+            const errors = extractFieldErrors(error);
+            setFieldErrors(errors);
+        }
     };
 
     return (
@@ -25,25 +33,27 @@ function LoginPage() {
             </div>
 
             <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3" controlId="formBasicEmail">
-                    <Form.Label>Username</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Enter username"
-                        value={username}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </Form.Group>
+                <FormField
+                    id="formBasicEmail"
+                    label="Username"
+                    type="text"
+                    placeholder="Enter username"
+                    value={username}
+                    onChange={(e) => setEmail(e.target.value)}
+                    error={fieldErrors.username || null}
+                    required
+                />
 
-                <Form.Group className="mb-3" controlId="formBasicPassword">
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </Form.Group>
+                <FormField
+                    id="formBasicPassword"
+                    label="Password"
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    error={fieldErrors.password || null}
+                    required
+                />
 
                 <Button variant="primary" type="submit" className="w-100">
                     Login

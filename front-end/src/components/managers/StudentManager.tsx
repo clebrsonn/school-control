@@ -16,6 +16,8 @@ import { ResponsibleResponse } from '../../features/parents/types/ResponsibleTyp
 import { StudentResponse } from '../../features/students/types/StudentTypes.ts';
 import { UserResponse } from '../../features/users/types/UserTypes.ts';
 import { FaList, FaSave, FaUndo, FaUserGraduate } from 'react-icons/fa';
+import FormField from '../common/FormField';
+import { extractFieldErrors } from '../../utils/errorUtils';
 
 interface StudentManagerProps {
     responsible: string | undefined;
@@ -54,8 +56,10 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
     const [selectedResponsibleName, setSelectedResponsibleName] = useState('');
     const [editingStudent, setEditingStudent] = useState<StudentResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const getStudents = async () => {
@@ -121,11 +125,29 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
     };
 
     const handleAddOrUpdateStudent = async () => {
+        // Reset errors and set loading state
+        setError(null);
+        setFieldErrors({});
+        setLoading(true);
+
+        // Client-side validation
+        const clientErrors: Record<string, string> = {};
+        if (!name) clientErrors.name = "Nome do aluno é obrigatório";
+        if (!email) clientErrors.email = "Email do aluno é obrigatório";
+        if (!responsible && !selectedResponsible) clientErrors.responsibleId = "Responsável é obrigatório";
+
+        if (Object.keys(clientErrors).length > 0) {
+            setFieldErrors(clientErrors);
+            setError("Por favor, corrija os erros no formulário.");
+            setLoading(false);
+            return;
+        }
+
         try {
             let studentData: Partial<UserResponse> = {
                 name: name,
                 email: email,
-                cpf: cpf ,
+                cpf: cpf,
                 responsibleId: responsible || selectedResponsible
             };
 
@@ -136,7 +158,7 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
 
             if (editingStudent) {
                 // Update existing student
-                 await updateStudent(editingStudent.id, studentData);
+                await updateStudent(editingStudent.id, studentData);
 
                 // Refresh the student list to get the updated data
                 const refreshedData = await getAllStudents({ page: currentPage, size: pageSize });
@@ -157,7 +179,16 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
             resetForm();
             setError(null);
         } catch (err: any) {
-            setError(err.message || 'Failed to save student');
+            // Extract field-specific errors
+            const errors = extractFieldErrors(err);
+            setFieldErrors(errors);
+
+            // If there are no field-specific errors, set a general error message
+            if (Object.keys(errors).length === 0) {
+                setError(err.message || 'Erro ao salvar aluno');
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -206,40 +237,42 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                     <Form>
                         <Row>
                             <Col md={6}>
-                                <Form.Group className="mb-3" controlId="formStudentName">
-                                    <Form.Label>Nome do Aluno</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Nome do Aluno"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="formStudentName"
+                                    label="Nome do Aluno"
+                                    type="text"
+                                    placeholder="Nome do Aluno"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    error={fieldErrors.name || null}
+                                    required
+                                />
                             </Col>
                             <Col md={6}>
-                                <Form.Group className="mb-3" controlId="formStudentEmail">
-                                    <Form.Label>Email</Form.Label>
-                                    <Form.Control
-                                        type="email"
-                                        placeholder="Email do Aluno"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="formStudentEmail"
+                                    label="Email"
+                                    type="email"
+                                    placeholder="Email do Aluno"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    error={fieldErrors.email || null}
+                                    required
+                                />
                             </Col>
                         </Row>
 
                         <Row>
                             <Col md={6}>
-                                <Form.Group className="mb-3" controlId="formStudentCpf">
-                                    <Form.Label>CPF</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="CPF do Aluno"
-                                        value={cpf}
-                                        onChange={(e) => setCpf(e.target.value)}
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="formStudentCpf"
+                                    label="CPF"
+                                    type="text"
+                                    placeholder="CPF do Aluno"
+                                    value={cpf}
+                                    onChange={(e) => setCpf(e.target.value)}
+                                    error={fieldErrors.cpf || null}
+                                />
                             </Col>
                             <Col md={6}>
                                 <Form.Group className="mb-3" controlId="formStudentClass">
@@ -248,6 +281,7 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                                         as="select"
                                         value={classId}
                                         onChange={(e) => setClassId(e.target.value)}
+                                        isInvalid={!!fieldErrors.classId}
                                     >
                                         <option value="">Selecione uma turma</option>
                                         {classes?.map((classItem) => (
@@ -256,6 +290,11 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                                             </option>
                                         ))}
                                     </Form.Control>
+                                    {fieldErrors.classId && (
+                                        <Form.Control.Feedback type="invalid">
+                                            {fieldErrors.classId}
+                                        </Form.Control.Feedback>
+                                    )}
                                 </Form.Group>
                             </Col>
                         </Row>
@@ -269,6 +308,7 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                                             as="select"
                                             value={selectedResponsible}
                                             onChange={(e) => setSelectedResponsible(e.target.value)}
+                                            isInvalid={!!fieldErrors.responsibleId}
                                         >
                                             <option value="">Selecione um responsável</option>
                                             {parents.map((parent) => (
@@ -277,6 +317,11 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                                                 </option>
                                             ))}
                                         </Form.Control>
+                                        {fieldErrors.responsibleId && (
+                                            <Form.Control.Feedback type="invalid">
+                                                {fieldErrors.responsibleId}
+                                            </Form.Control.Feedback>
+                                        )}
                                     </Form.Group>
                                 </Col>
                             </Row>
@@ -287,9 +332,13 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                                 variant="primary" 
                                 onClick={handleAddOrUpdateStudent} 
                                 className="me-2 d-flex align-items-center"
+                                disabled={loading}
                             >
                                 <FaSave className="me-2" />
-                                {editingStudent ? 'Atualizar' : 'Salvar'}
+                                {loading 
+                                    ? (editingStudent ? 'Atualizando...' : 'Salvando...') 
+                                    : (editingStudent ? 'Atualizar' : 'Salvar')
+                                }
                             </Button>
                             {editingStudent && (
                                 <Button 

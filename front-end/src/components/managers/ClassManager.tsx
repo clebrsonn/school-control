@@ -8,6 +8,8 @@ import { PageResponse } from '../../types/PageResponse';
 import { usePagination } from '../../hooks/usePagination';
 import { FaChalkboardTeacher, FaList, FaSave } from 'react-icons/fa';
 import ErrorMessage from '../common/ErrorMessage.tsx';
+import FormField from '../common/FormField';
+import { extractFieldErrors } from '../../utils/errorUtils';
 
 const ClassManager: React.FC = () => {
     const { 
@@ -24,6 +26,8 @@ const ClassManager: React.FC = () => {
     const [enrollmentFee, setEnrollmentFee] = useState('');
     const [monthlyFee, setMonthlyFee] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
         const getClasses = async () => {
@@ -39,6 +43,22 @@ const ClassManager: React.FC = () => {
     }, [currentPage, pageSize]);
 
     const handleAddClass = async () => {
+        // Reset errors and set loading state
+        setError(null);
+        setFieldErrors({});
+        setLoading(true);
+
+        // Client-side validation
+        const clientErrors: Record<string, string> = {};
+        if (!name) clientErrors.name = "Nome da turma é obrigatório";
+
+        if (Object.keys(clientErrors).length > 0) {
+            setFieldErrors(clientErrors);
+            setError("Por favor, corrija os erros no formulário.");
+            setLoading(false);
+            return;
+        }
+
         try {
             const newClass: ClassRoomRequest = {
                 name,
@@ -50,14 +70,26 @@ const ClassManager: React.FC = () => {
             const refreshedData = await getAllClassRooms({ page: currentPage, size: pageSize });
             setClassPage(refreshedData);
 
+            // Reset form
             setName('');
             setStartTime('');
             setEndTime('');
             setEnrollmentFee('');
             setMonthlyFee('');
             setError(null);
+
+            notification('Turma adicionada com sucesso.', 'success');
         } catch (err) {
-            setError(err.message || 'Failed to add class');
+            // Extract field-specific errors
+            const errors = extractFieldErrors(err);
+            setFieldErrors(errors);
+
+            // If there are no field-specific errors, set a general error message
+            if (Object.keys(errors).length === 0) {
+                setError(err.message || 'Erro ao adicionar turma');
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -94,73 +126,74 @@ const ClassManager: React.FC = () => {
                     <Form>
                         <Row>
                             <Col md={6}>
-                                <Form.Group className="mb-3" controlId="formClassName">
-                                    <Form.Label>Nome</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Nome da Turma"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="formClassName"
+                                    label="Nome"
+                                    type="text"
+                                    placeholder="Nome da Turma"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    error={fieldErrors.name || null}
+                                    required
+                                />
                             </Col>
                             <Col md={6}>
-                                <Form.Group className="mb-3" controlId="formClassStartTime">
-                                    <Form.Label>Horário de início</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Horário de início"
-                                        value={startTime}
-                                        onChange={(e) => setStartTime(e.target.value)}
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="formClassStartTime"
+                                    label="Horário de início"
+                                    type="text"
+                                    placeholder="Horário de início"
+                                    value={startTime}
+                                    onChange={(e) => setStartTime(e.target.value)}
+                                    error={fieldErrors.startTime || null}
+                                />
                             </Col>
                         </Row>
 
                         <Row>
                             <Col md={4}>
-                                <Form.Group className="mb-3" controlId="formClassEndTime">
-                                    <Form.Label>Horário de término</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Horário de término"
-                                        value={endTime}
-                                        onChange={(e) => setEndTime(e.target.value)}
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="formClassEndTime"
+                                    label="Horário de término"
+                                    type="text"
+                                    placeholder="Horário de término"
+                                    value={endTime}
+                                    onChange={(e) => setEndTime(e.target.value)}
+                                    error={fieldErrors.endTime || null}
+                                />
                             </Col>
                             <Col md={4}>
-                                <Form.Group className="mb-3" controlId="formClassEnrollmentFee">
-                                    <Form.Label>Matrícula</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Valor da matrícula"
-                                        value={enrollmentFee}
-                                        onChange={(e) => setEnrollmentFee(e.target.value)}
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="formClassEnrollmentFee"
+                                    label="Matrícula"
+                                    type="text"
+                                    placeholder="Valor da matrícula"
+                                    value={enrollmentFee}
+                                    onChange={(e) => setEnrollmentFee(e.target.value)}
+                                    error={fieldErrors.enrollmentFee || null}
+                                />
                             </Col>
                             <Col md={4}>
-                                <Form.Group className="mb-3" controlId="formClassMonthlyFee">
-                                    <Form.Label>Mensalidade</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Valor da mensalidade"
-                                        value={monthlyFee}
-                                        onChange={(e) => setMonthlyFee(e.target.value)}
-                                    />
-                                </Form.Group>
+                                <FormField
+                                    id="formClassMonthlyFee"
+                                    label="Mensalidade"
+                                    type="text"
+                                    placeholder="Valor da mensalidade"
+                                    value={monthlyFee}
+                                    onChange={(e) => setMonthlyFee(e.target.value)}
+                                    error={fieldErrors.monthlyFee || null}
+                                />
                             </Col>
                         </Row>
-
                         <div className="d-flex mt-3">
                             <Button 
                                 variant="primary" 
                                 onClick={handleAddClass} 
                                 className="d-flex align-items-center"
+                                disabled={loading}
                             >
                                 <FaSave className="me-2" />
-                                Salvar
+                                {loading ? 'Salvando...' : 'Cadastrar'}
                             </Button>
                         </div>
                     </Form>

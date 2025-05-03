@@ -46,15 +46,28 @@ const AuthProvider = ({children}: { children: ReactNode }) => {
     }, []);
 
     const login = async (email: string, password: string) => {
-        const data = await loginService(email, password);
-        setUser(data.user);
-        const from = (location.state)?.from?.pathname || "/";
-        navigate(from, {replace: true});
+        try {
+            const data = await loginService(email, password);
+            setUser(data.user);
+            const from = (location.state)?.from?.pathname || "/";
+            navigate(from, {replace: true});
+            notification('Login successful', 'success');
+        } catch (error) {
+            notification('Login failed', 'error');
+            throw error; // Re-throw the error so it can be caught by the component
+        }
     };
 
     const register = async (email: string, password: string) => {
-        const data = await registerService({email, passwordHash: password} as Partial<IUser>);
-        setUser(data.user);
+        try {
+            const data = await registerService({email, passwordHash: password} as Partial<IUser>);
+            setUser(data.user);
+            notification('Registration successful', 'success');
+            navigate('/');
+        } catch (error) {
+            notification('Registration failed', 'error');
+            throw error; // Re-throw the error so it can be caught by the component
+        }
     };
 
     const logout = () => {

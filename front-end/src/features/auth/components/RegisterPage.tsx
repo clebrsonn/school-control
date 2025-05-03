@@ -3,15 +3,25 @@ import { Button, Form } from 'react-bootstrap';
 import { FaUserPlus } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthProvider.tsx';
+import FormField from '../../../components/common/FormField';
+import { extractFieldErrors } from '../../../utils/errorUtils';
 
 function RegisterPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const {register} = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await register(email, password);
+        setFieldErrors({});
+
+        try {
+            await register(email, password);
+        } catch (error) {
+            const errors = extractFieldErrors(error);
+            setFieldErrors(errors);
+        }
     };
 
     return (
@@ -23,25 +33,27 @@ function RegisterPage() {
             </div>
 
             <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3" controlId="formBasicEmail">
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control
-                        type="email"
-                        placeholder="Digite seu email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </Form.Group>
+                <FormField
+                    id="formBasicEmail"
+                    label="Email"
+                    type="email"
+                    placeholder="Digite seu email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    error={fieldErrors.email || null}
+                    required
+                />
 
-                <Form.Group className="mb-3" controlId="formBasicPassword">
-                    <Form.Label>Senha</Form.Label>
-                    <Form.Control
-                        type="password"
-                        placeholder="Digite sua senha"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </Form.Group>
+                <FormField
+                    id="formBasicPassword"
+                    label="Senha"
+                    type="password"
+                    placeholder="Digite sua senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    error={fieldErrors.password || null}
+                    required
+                />
 
                 <Button variant="primary" type="submit" className="w-100">
                     Registrar
