@@ -126,21 +126,67 @@
   font-weight: 600;
 }
 
+/* Auth Pages Styles */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 2rem;
+}
+
+.auth-content {
+  width: 100%;
+  max-width: 450px;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  padding: 2rem;
+}
+
+.auth-content h1, 
+.auth-content h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.auth-content .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.auth-content .btn-primary {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+
+.auth-content .form-text {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 767.98px) {
   .sidebar {
     margin-left: -70px;
   }
-  
+
   .sidebar.expanded {
     margin-left: 0;
   }
-  
+
   .main-content {
     margin-left: 0 !important;
   }
-  
+
   .content-area {
     padding: 1rem;
+  }
+
+  .auth-content {
+    padding: 1.5rem;
   }
 }

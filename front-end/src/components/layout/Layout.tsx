@@ -1,5 +1,6 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
+import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer.tsx';
@@ -11,6 +12,10 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
     const [sidebarExpanded, setSidebarExpanded] = useState(true);
+    const location = useLocation();
+
+    // Check if current route is login or register
+    const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
     // Check screen size on initial load and resize
     useEffect(() => {
@@ -36,6 +41,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         setSidebarExpanded(!sidebarExpanded);
     };
 
+    // For login/register pages, use a simplified layout without sidebar and header
+    if (isAuthPage) {
+        return (
+            <div className="auth-container">
+                <div className="auth-content">
+                    {children}
+                </div>
+                <ToastContainer />
+            </div>
+        );
+    }
+
+    // For all other pages, use the full dashboard layout
     return (
         <div className="dashboard-container">
             <Sidebar expanded={sidebarExpanded} toggleSidebar={toggleSidebar} />

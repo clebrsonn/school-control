@@ -1,70 +1,44 @@
-import { axiosDelete, axiosPut, get, post } from '../../../config/axios';
-import { UserRequest, UserResponse } from '../types/UserTypes';
-import { PageResponse } from '../../../types/PageResponse';
+import { axiosPut, get } from '../../../config/axios';
 import { IUser } from '@hyteck/shared';
 
-const API_URL = '/users';
+interface UserProfileUpdateData {
+  username?: string;
+  email?: string;
+  name?: string;
+  phone?: string;
+  bio?: string;
+}
 
 /**
- * Get all users
- * @param pageable Pagination parameters
- * @returns Page of user responses
+ * Update user profile
+ * @param userData User profile data to update
+ * @returns Updated user data
  */
-export const getAllUsers = async (pageable: { page: number, size: number, sort?: string[] }): Promise<PageResponse<UserResponse>> => {
-  const response = await get<PageResponse<UserResponse>>(API_URL, { params: pageable });
-  return response;
+export const updateUserProfile = async (userData: UserProfileUpdateData): Promise<Partial<IUser>> => {
+  return await axiosPut<UserProfileUpdateData, Partial<IUser>>('/users/profile', userData);
 };
 
 /**
- * Create user
- * @param userData User request data
- * @returns User response
+ * Get user profile
+ * @returns User profile data
  */
-export const createUser = async (userData: UserRequest): Promise<UserResponse> => {
-  const response = await post<UserRequest, UserResponse>(API_URL, userData);
-  return response;
+export const getUserProfile = async (): Promise<Partial<IUser>> => {
+  return await get<Partial<IUser>>('/users/profile');
 };
 
 /**
- * Get user by ID
- * @param id User ID
- * @returns User response
+ * Update user settings
+ * @param settings User settings to update
+ * @returns Updated settings
  */
-export const getUserById = async (id: string): Promise<UserResponse> => {
-  const response = await get<UserResponse>(`${API_URL}/${id}`);
-  return response;
+export const updateUserSettings = async (settings: Record<string, any>): Promise<Record<string, any>> => {
+  return await axiosPut<Record<string, any>, Record<string, any>>('/users/settings', settings);
 };
 
 /**
- * Update user
- * @param id User ID
- * @param userData User request data
- * @returns User response
+ * Get user settings
+ * @returns User settings
  */
-export const updateUser = async (id: string, userData: UserRequest): Promise<UserResponse> => {
-  const response = await axiosPut<UserRequest, UserResponse>(`${API_URL}/${id}`, userData);
-  return response;
-};
-
-/**
- * Delete user
- * @param id User ID
- * @returns No content
- */
-export const deleteUser = async (id: string): Promise<void> => {
-  await axiosDelete(`${API_URL}/${id}`);
-};
-
-/**
- * Get current user
- * @returns User response
- */
-export const getCurrentUser = async (): Promise<UserResponse> => {
-  const response = await get<UserResponse>(`${API_URL}/me`);
-  return response;
-};
-
-// Legacy method - kept for backward compatibility
-export const me = async (): Promise<Partial<IUser>> => {
-  return await get<Partial<IUser>>(`${API_URL}/me`);
+export const getUserSettings = async (): Promise<Record<string, any>> => {
+  return await get<Record<string, any>>('/users/settings');
 };

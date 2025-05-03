@@ -14,6 +14,9 @@ import LoginPage from '../features/auth/components/LoginPage.tsx';
 import RegisterPage from '../features/auth/components/RegisterPage.tsx';
 import ProtectedRoute from './ProtectedRoutes';
 import { ExpenseList } from '../features/expenses/components/ExpenseList.tsx';
+import NotificationsPage from '../features/notifications/components/NotificationsPage';
+import UserProfilePage from '../features/users/components/UserProfilePage';
+import SettingsPage from '../features/users/components/SettingsPage';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -27,6 +30,9 @@ const AppRoutes: React.FC = () => {
                 <Route path="/classes" element={<ClassManager />} />
                 <Route path="/discounts/" element={<DiscountManager />} />
                 <Route path="/expenses" element={<ExpenseList />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/profile" element={<UserProfilePage />} />
+                <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/parents/:id" element={<ParentDetails />} />
                 <Route path="/students/:id" element={<StudentDetails />} />
                 <Route path="/payments/:id" element={<PaymentDetails />} />
