@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { createClassRoom, deleteClassRoom, getAllClassRooms } from '../../features/classes/services/ClassService';
 import { ClassRoomRequest, ClassRoomResponse } from '../../features/classes/types/ClassRoomTypes';
-import { Button, Container, Form } from 'react-bootstrap';
+import { Button, Card, Col, Form, Row } from 'react-bootstrap';
 import notification from '../common/Notification.tsx';
 import ListRegistries from '../common/ListRegistries.tsx';
 import { PageResponse } from '../../types/PageResponse';
 import { usePagination } from '../../hooks/usePagination';
+import { FaChalkboardTeacher, FaList, FaSave } from 'react-icons/fa';
+import ErrorMessage from '../common/ErrorMessage.tsx';
 
 const ClassManager: React.FC = () => {
     const { 
@@ -74,65 +76,114 @@ const ClassManager: React.FC = () => {
     };
 
     return (
-        <Container>
-            <h1>Classes</h1>
-            {error && <div className="alert alert-danger">{error}</div>}
-            <Form>
-                <Form.Group controlId="formClassName">
-                    <Form.Label>Nome</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Class Name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+        <div>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h1 className="mb-0">
+                    <FaChalkboardTeacher className="me-2" />
+                    Gerenciar Turmas
+                </h1>
+            </div>
+
+            {error && <ErrorMessage message={error} />}
+
+            <Card className="form-card mb-4">
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">Adicionar Turma</h5>
+                </Card.Header>
+                <Card.Body>
+                    <Form>
+                        <Row>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="formClassName">
+                                    <Form.Label>Nome</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Nome da Turma"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="formClassStartTime">
+                                    <Form.Label>Horário de início</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Horário de início"
+                                        value={startTime}
+                                        onChange={(e) => setStartTime(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Row>
+                            <Col md={4}>
+                                <Form.Group className="mb-3" controlId="formClassEndTime">
+                                    <Form.Label>Horário de término</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Horário de término"
+                                        value={endTime}
+                                        onChange={(e) => setEndTime(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={4}>
+                                <Form.Group className="mb-3" controlId="formClassEnrollmentFee">
+                                    <Form.Label>Matrícula</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Valor da matrícula"
+                                        value={enrollmentFee}
+                                        onChange={(e) => setEnrollmentFee(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={4}>
+                                <Form.Group className="mb-3" controlId="formClassMonthlyFee">
+                                    <Form.Label>Mensalidade</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Valor da mensalidade"
+                                        value={monthlyFee}
+                                        onChange={(e) => setMonthlyFee(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <div className="d-flex mt-3">
+                            <Button 
+                                variant="primary" 
+                                onClick={handleAddClass} 
+                                className="d-flex align-items-center"
+                            >
+                                <FaSave className="me-2" />
+                                Salvar
+                            </Button>
+                        </div>
+                    </Form>
+                </Card.Body>
+            </Card>
+
+            <Card className="table-card">
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">
+                        <FaList className="me-2" />
+                        Lista de Turmas
+                    </h5>
+                </Card.Header>
+                <Card.Body>
+                    <ListRegistries 
+                        page={classPage} 
+                        entityName={'classe'} 
+                        onDelete={handleDelete}
+                        onPageChange={handlePageChange}
                     />
-                </Form.Group>
-                <Form.Group controlId="formClassStartTime">
-                    <Form.Label>Horário de início</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Start Time"
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                    />
-                </Form.Group>
-                <Form.Group controlId="formClassEndTime">
-                    <Form.Label>Horário de término</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="End Time"
-                        value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
-                    />
-                </Form.Group>
-                <Form.Group controlId="formClassEnrollmentFee">
-                    <Form.Label>Matrícula</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Enrollment Fee"
-                        value={enrollmentFee}
-                        onChange={(e) => setEnrollmentFee(e.target.value)}
-                    />
-                </Form.Group>
-                <Form.Group controlId="formClassMonthlyFee">
-                    <Form.Label>Mensalidade</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Monthly Fee"
-                        value={monthlyFee}
-                        onChange={(e) => setMonthlyFee(e.target.value)}
-                    />
-                </Form.Group>
-                <Button onClick={handleAddClass} className="mt-3">Add Class</Button>
-            </Form>
-            <h3 className="mt-4">Lista de Turmas</h3>
-            <ListRegistries 
-                page={classPage} 
-                entityName={'classe'} 
-                onDelete={handleDelete}
-                onPageChange={handlePageChange}
-            />
-        </Container>
+                </Card.Body>
+            </Card>
+        </div>
     );
 };
 

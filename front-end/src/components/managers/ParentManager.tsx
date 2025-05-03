@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { createParent, deleteParent, fetchParents } from '../../features/parents/services/ParentService.ts';
 import ErrorMessage from '../common/ErrorMessage.tsx';
 import notification from '../common/Notification.tsx';
-import { Button, Form } from 'react-bootstrap';
+import { Button, Card, Col, Form, Row } from 'react-bootstrap';
 import { IResponsible } from '@hyteck/shared';
 import ListRegistries from '../common/ListRegistries.tsx';
 import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
 import { PageResponse } from '../../types/PageResponse';
 import { usePagination } from '../../hooks/usePagination';
+import { FaList, FaSave, FaUsers } from 'react-icons/fa';
 
 // Constants for reusable initial states
 const INITIAL_PARENT_STATE: Partial<IResponsible> = { name: '', phone: '' };
@@ -98,38 +99,75 @@ const ParentManager: React.FC = () => {
 
     return (
         <div>
-            <h1>Gerenciar Responsáveis</h1>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h1 className="mb-0">
+                    <FaUsers className="me-2" />
+                    Gerenciar Responsáveis
+                </h1>
+            </div>
+
             {error && <ErrorMessage message={error} />}
-            <Form>
-                <Form.Group controlId="formParentName">
-                    <Form.Label>Nome</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Name"
-                        value={formState.name}
-                        onChange={(e) => updateFormState('name', e.target.value)}
+
+            <Card className="form-card mb-4">
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">Adicionar Responsável</h5>
+                </Card.Header>
+                <Card.Body>
+                    <Form>
+                        <Row>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="formParentName">
+                                    <Form.Label>Nome</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Nome do Responsável"
+                                        value={formState.name}
+                                        onChange={(e) => updateFormState('name', e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="formParentPhone">
+                                    <Form.Label>Telefone</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Telefone do Responsável"
+                                        value={formState.phone}
+                                        onChange={(e) => updateFormState('phone', e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                        <div className="d-flex mt-3">
+                            <Button 
+                                variant="primary" 
+                                onClick={handleAddParent} 
+                                className="d-flex align-items-center"
+                            >
+                                <FaSave className="me-2" />
+                                Salvar
+                            </Button>
+                        </div>
+                    </Form>
+                </Card.Body>
+            </Card>
+
+            <Card className="table-card">
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">
+                        <FaList className="me-2" />
+                        Lista de Responsáveis
+                    </h5>
+                </Card.Header>
+                <Card.Body>
+                    <ListRegistries 
+                        page={parentPage} 
+                        entityName="parents"
+                        onDelete={handleDelete} 
+                        onPageChange={handlePageChange} 
                     />
-                </Form.Group>
-                <Form.Group controlId="formParentPhone">
-                    <Form.Label>Telefone</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Phone"
-                        value={formState.phone}
-                        onChange={(e) => updateFormState('phone', e.target.value)}
-                    />
-                </Form.Group>
-                <Button variant="primary" onClick={handleAddParent} className="mt-3">
-                    Save
-                </Button>
-            </Form>
-            <h2>Responsáveis</h2>
-            <ListRegistries 
-                page={parentPage} 
-                entityName="parents"
-                onDelete={handleDelete} 
-                onPageChange={handlePageChange} 
-            />
+                </Card.Body>
+            </Card>
         </div>
     );
 };

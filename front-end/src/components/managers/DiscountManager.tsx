@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Form } from 'react-bootstrap';
+import { Button, Card, Col, Form, Row } from 'react-bootstrap';
 import { IDiscount } from '@hyteck/shared';
-
 import { createDiscount, deleteDiscount, fetchDiscounts } from '../../features/enrollments/services/DiscountService.ts';
 import ListRegistries from '../common/ListRegistries.tsx';
 import { PageResponse } from '../../types/PageResponse';
 import { usePagination } from '../../hooks/usePagination';
+import { FaList, FaPercentage, FaSave } from 'react-icons/fa';
+import ErrorMessage from '../common/ErrorMessage.tsx';
 
 const DiscountManager: React.FC = () => {
     const { 
@@ -77,69 +78,107 @@ const DiscountManager: React.FC = () => {
 
     return (
         <div>
-            <h2>Gerenciamento de Descontos</h2>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h1 className="mb-0">
+                    <FaPercentage className="me-2" />
+                    Gerenciar Descontos
+                </h1>
+            </div>
 
-            {error && <Alert variant="danger">{error}</Alert>}
-            {successMessage && <Alert variant="success">{successMessage}</Alert>}
+            {error && <ErrorMessage message={error} />}
+            {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
-            <Form onSubmit={handleSubmit}>
-                <Form.Group controlId="discountName">
-                    <Form.Label>Nome do Desconto</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Exemplo: Desconto para alunos novos"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
+            <Card className="form-card mb-4">
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">Adicionar Desconto</h5>
+                </Card.Header>
+                <Card.Body>
+                    <Form onSubmit={handleSubmit}>
+                        <Row>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="discountName">
+                                    <Form.Label>Nome do Desconto</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Exemplo: Desconto para alunos novos"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        required
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="discountValue">
+                                    <Form.Label>Valor do Desconto</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        placeholder="Exemplo: 50"
+                                        value={value}
+                                        onChange={(e) => setValue(Number(e.target.value))}
+                                        required
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Row>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="discountValidUntil">
+                                    <Form.Label>Validade do Desconto</Form.Label>
+                                    <Form.Control
+                                        type="date"
+                                        value={validUntil}
+                                        onChange={(e) => setValidUntil(e.target.value)}
+                                        required
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="discountType">
+                                    <Form.Label>Tipo de Desconto</Form.Label>
+                                    <Form.Control
+                                        as="select"
+                                        value={type}
+                                        onChange={(e) => setType(e.target.value)}
+                                        required
+                                    >
+                                        <option value="enroll">Matrícula</option>
+                                        <option value="tuition">Mensalidade</option>
+                                    </Form.Control>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <div className="d-flex mt-3">
+                            <Button 
+                                type="submit" 
+                                variant="primary" 
+                                className="d-flex align-items-center"
+                            >
+                                <FaSave className="me-2" />
+                                Salvar Desconto
+                            </Button>
+                        </div>
+                    </Form>
+                </Card.Body>
+            </Card>
+
+            <Card className="table-card">
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">
+                        <FaList className="me-2" />
+                        Lista de Descontos
+                    </h5>
+                </Card.Header>
+                <Card.Body>
+                    <ListRegistries 
+                        page={discountPage} 
+                        entityName={'discounts'}
+                        onDelete={handleDelete}
+                        onPageChange={handlePageChange}
                     />
-                </Form.Group>
-
-                <Form.Group controlId="discountValue">
-                    <Form.Label>Valor do Desconto</Form.Label>
-                    <Form.Control
-                        type="number"
-                        placeholder="Exemplo: 50"
-                        value={value}
-                        onChange={(e) => setValue(Number(e.target.value))}
-                        required
-                    />
-                </Form.Group>
-
-                <Form.Group controlId="discountValidUntil">
-                    <Form.Label>Validade do Desconto</Form.Label>
-                    <Form.Control
-                        type="date"
-                        value={validUntil}
-                        onChange={(e) => setValidUntil(e.target.value)}
-                        required
-                    />
-                </Form.Group>
-
-                <Form.Group controlId="discountType">
-                    <Form.Label>Tipo de Desconto</Form.Label>
-                    <Form.Control
-                        as="select"
-                        value={type}
-                        onChange={(e) => setType(e.target.value)}
-                        required
-                    >
-                        <option value="enroll">Matrícula</option>
-                        <option value="tuition">Mensalidade</option>
-                    </Form.Control>
-                </Form.Group>
-
-                <Button type="submit" className="mt-3">
-                    Adicionar Desconto
-                </Button>
-            </Form>
-
-            <h3 className="mt-4">Lista de Descontos</h3>
-            <ListRegistries 
-                page={discountPage} 
-                entityName={'discounts'}
-                onDelete={handleDelete}
-                onPageChange={handlePageChange}
-            />
+                </Card.Body>
+            </Card>
 
         </div>
     );

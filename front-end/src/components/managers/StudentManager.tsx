@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Container, Form } from 'react-bootstrap';
+import { Button, Card, Col, Form, Row } from 'react-bootstrap';
 import notification from '../common/Notification.tsx';
 import {
     createStudent,
@@ -15,6 +15,7 @@ import { ClassRoomResponse } from '../../features/classes/types/ClassRoomTypes.t
 import { ResponsibleResponse } from '../../features/parents/types/ResponsibleTypes.ts';
 import { StudentResponse } from '../../features/students/types/StudentTypes.ts';
 import { UserResponse } from '../../features/users/types/UserTypes.ts';
+import { FaList, FaSave, FaUndo, FaUserGraduate } from 'react-icons/fa';
 
 interface StudentManagerProps {
     responsible: string | undefined;
@@ -185,90 +186,144 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
     };
 
     return (
-        <Container>
-            <h1>Gerenciar Alunos</h1>
+        <div>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h1 className="mb-0">
+                    <FaUserGraduate className="me-2" />
+                    Gerenciar Alunos
+                </h1>
+            </div>
+
             {error && <ErrorMessage message={error} />}
-            <Form>
-                <h3>{editingStudent ? 'Editar Aluno' : 'Adicionar Aluno'}</h3>
-                <Form.Group controlId="formStudentName">
-                    <Form.Label>Nome do Aluno</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Nome do Aluno"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+
+            <Card className="form-card mb-4">
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">
+                        {editingStudent ? 'Editar Aluno' : 'Adicionar Aluno'}
+                    </h5>
+                </Card.Header>
+                <Card.Body>
+                    <Form>
+                        <Row>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="formStudentName">
+                                    <Form.Label>Nome do Aluno</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Nome do Aluno"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="formStudentEmail">
+                                    <Form.Label>Email</Form.Label>
+                                    <Form.Control
+                                        type="email"
+                                        placeholder="Email do Aluno"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Row>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="formStudentCpf">
+                                    <Form.Label>CPF</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="CPF do Aluno"
+                                        value={cpf}
+                                        onChange={(e) => setCpf(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="formStudentClass">
+                                    <Form.Label>Turma</Form.Label>
+                                    <Form.Control
+                                        as="select"
+                                        value={classId}
+                                        onChange={(e) => setClassId(e.target.value)}
+                                    >
+                                        <option value="">Selecione uma turma</option>
+                                        {classes?.map((classItem) => (
+                                            <option key={classItem.id as string} value={classItem.id as string}>
+                                                {classItem.name}
+                                            </option>
+                                        ))}
+                                    </Form.Control>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        {!responsible && (
+                            <Row>
+                                <Col md={12}>
+                                    <Form.Group className="mb-3" controlId="formParent">
+                                        <Form.Label>Responsável</Form.Label>
+                                        <Form.Control
+                                            as="select"
+                                            value={selectedResponsible}
+                                            onChange={(e) => setSelectedResponsible(e.target.value)}
+                                        >
+                                            <option value="">Selecione um responsável</option>
+                                            {parents.map((parent) => (
+                                                <option key={parent.id} value={parent.id}>
+                                                    {parent.name}
+                                                </option>
+                                            ))}
+                                        </Form.Control>
+                                    </Form.Group>
+                                </Col>
+                            </Row>
+                        )}
+
+                        <div className="d-flex mt-3">
+                            <Button 
+                                variant="primary" 
+                                onClick={handleAddOrUpdateStudent} 
+                                className="me-2 d-flex align-items-center"
+                            >
+                                <FaSave className="me-2" />
+                                {editingStudent ? 'Atualizar' : 'Salvar'}
+                            </Button>
+                            {editingStudent && (
+                                <Button 
+                                    variant="secondary" 
+                                    onClick={resetForm}
+                                    className="d-flex align-items-center"
+                                >
+                                    <FaUndo className="me-2" />
+                                    Cancelar
+                                </Button>
+                            )}
+                        </div>
+                    </Form>
+                </Card.Body>
+            </Card>
+
+            <Card className="table-card">
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">
+                        <FaList className="me-2" />
+                        Lista de Alunos
+                    </h5>
+                </Card.Header>
+                <Card.Body>
+                    <ListRegistries 
+                        page={studentPage}
+                        entityName={'students'} 
+                        onDelete={handleDelete}
+                        onEdit={handleEdit}
+                        onPageChange={handlePageChange}
                     />
-                </Form.Group>
-                <Form.Group controlId="formStudentEmail">
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control
-                        type="email"
-                        placeholder="Email do Aluno"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </Form.Group>
-                <Form.Group controlId="formStudentCpf">
-                    <Form.Label>CPF</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="CPF do Aluno"
-                        value={cpf}
-                        onChange={(e) => setCpf(e.target.value)}
-                    />
-                </Form.Group>
-                <Form.Group controlId="formStudentClass">
-                    <Form.Label>Turma</Form.Label>
-                    <Form.Control
-                        as="select"
-                        value={classId}
-                        onChange={(e) => setClassId(e.target.value)}
-                    >
-                        <option value="">Selecione uma turma</option>
-                        {classes?.map((classItem) => (
-                            <option key={classItem.id as string} value={classItem.id as string}>
-                                {classItem.name}
-                            </option>
-                        ))}
-                    </Form.Control>
-                </Form.Group>
-                {!responsible && (
-                    <Form.Group controlId="formParent">
-                        <Form.Label>Responsável</Form.Label>
-                        <Form.Control
-                            as="select"
-                            value={selectedResponsible}
-                            onChange={(e) => setSelectedResponsible(e.target.value)}
-                        >
-                            <option value="">Selecione um responsável</option>
-                            {parents.map((parent) => (
-                                <option key={parent.id} value={parent.id}>
-                                    {parent.name}
-                                </option>
-                            ))}
-                        </Form.Control>
-                    </Form.Group>
-                )}
-                <div className="mt-3 mb-3">
-                    <Button variant="primary" onClick={handleAddOrUpdateStudent} className="me-2">
-                        {editingStudent ? 'Atualizar' : 'Salvar'}
-                    </Button>
-                    {editingStudent && (
-                        <Button variant="secondary" onClick={resetForm}>
-                            Cancelar
-                        </Button>
-                    )}
-                </div>
-            </Form>
-            <h2>Alunos</h2>
-            <ListRegistries 
-                page={studentPage}
-                entityName={'students'} 
-                onDelete={handleDelete}
-                onEdit={handleEdit}
-                onPageChange={handlePageChange}
-            />
-        </Container>
+                </Card.Body>
+            </Card>
+        </div>
     );
 };
 
