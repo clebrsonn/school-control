@@ -4,16 +4,11 @@ import { ExpenseService } from '../services/ExpenseService.ts';
 import notification from '../../../components/common/Notification.tsx';
 import FormField from '../../../components/common/FormField';
 import { extractFieldErrors } from '../../../utils/errorUtils';
+import { Expense } from '../types/ExpenseTypes.ts';
 
 interface ExpenseFormProps {
   onSuccess?: () => void;
-  initialData?: {
-    date: string;
-    value: number;
-    description: string;
-    receiptUrl?: string;
-    id?: string;
-  };
+  initialData?: Expense;
 }
 
 export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, initialData }) => {
@@ -46,7 +41,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, initialData
 
     try {
       const data = new FormData();
-      data.append('date', formData.date);
+      data.append('date', formData.date.toString());
       data.append('value', formData.value.toString());
       data.append('description', formData.description);
 
@@ -91,7 +86,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, initialData
         id="date"
         label="Data"
         type="date"
-        value={formData.date}
+        value={formData.date.toString()}
         onChange={(e) => setFormData({ ...formData, date: e.target.value })}
         error={fieldErrors.date || null}
         required

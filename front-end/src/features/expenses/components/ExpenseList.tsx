@@ -1,23 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { IExpense } from '@hyteck/shared/';
 import { ExpenseForm } from './ExpenseForm';
 import { ExpenseService } from '../services/ExpenseService.ts';
 import notification from '../../../components/common/Notification.tsx';
 import { usePagination } from '../../../hooks/usePagination';
 import { PageResponse } from '../../../types/PageResponse';
+import { Expense } from '../types/ExpenseTypes.ts';
 
 export const ExpenseList: React.FC = () => {
-    const { 
-        currentPage, 
-        pageSize, 
+    const {
+        currentPage,
+        pageSize,
         handlePageChange,
         createEmptyPageResponse
-    } = usePagination<IExpense>();
+    } = usePagination<Expense>();
 
-    const [expensesPage, setExpensesPage] = useState<PageResponse<IExpense>>(createEmptyPageResponse());
+    const [expensesPage, setExpensesPage] = useState<PageResponse<Expense>>(createEmptyPageResponse());
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
-    const [editingExpense, setEditingExpense] = useState<IExpense | null>(null);
+    const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
     const fetchExpenses = async () => {
         try {
@@ -91,7 +91,8 @@ export const ExpenseList: React.FC = () => {
                                 date: new Date(editingExpense.date).toISOString().split('T')[0],
                                 value: editingExpense.value,
                                 description: editingExpense.description,
-                                receiptUrl: editingExpense.receiptUrl
+                                receiptUrl: editingExpense.receiptUrl,
+                                id: editingExpense.id
                             } : undefined}
                             onSuccess={() => {
                                 setShowForm(false);
@@ -159,32 +160,32 @@ export const ExpenseList: React.FC = () => {
                     <div className="d-flex justify-content-center mt-4">
                         <nav>
                             <ul className="pagination">
-                                <li className={`page-item ${expensesPage.number === 0 ? 'disabled' : ''}`}>
-                                    <button 
-                                        className="page-link" 
+                                <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}>
+                                    <button
+                                        className="page-link"
                                         onClick={() => handlePageChange(1)}
-                                        disabled={expensesPage.number === 0}
+                                        disabled={currentPage === 0}
                                     >
                                         Primeira
                                     </button>
                                 </li>
-                                <li className={`page-item ${expensesPage.number === 0 ? 'disabled' : ''}`}>
-                                    <button 
-                                        className="page-link" 
-                                        onClick={() => handlePageChange(expensesPage.number)}
-                                        disabled={expensesPage.number === 0}
+                                <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}>
+                                    <button
+                                        className="page-link"
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 0}
                                     >
                                         Anterior
                                     </button>
                                 </li>
 
                                 {Array.from({ length: expensesPage.totalPages }, (_, i) => i + 1).map(pageNum => (
-                                    <li 
-                                        key={pageNum} 
-                                        className={`page-item ${pageNum === expensesPage.number + 1 ? 'active' : ''}`}
+                                    <li
+                                        key={pageNum}
+                                        className={`page-item ${pageNum === currentPage + 1 ? 'active' : ''}`}
                                     >
-                                        <button 
-                                            className="page-link" 
+                                        <button
+                                            className="page-link"
                                             onClick={() => handlePageChange(pageNum)}
                                         >
                                             {pageNum}
@@ -192,20 +193,20 @@ export const ExpenseList: React.FC = () => {
                                     </li>
                                 ))}
 
-                                <li className={`page-item ${expensesPage.number === expensesPage.totalPages - 1 ? 'disabled' : ''}`}>
-                                    <button 
-                                        className="page-link" 
-                                        onClick={() => handlePageChange(expensesPage.number + 2)}
-                                        disabled={expensesPage.number === expensesPage.totalPages - 1}
+                                <li className={`page-item ${currentPage === expensesPage.totalPages - 1 ? 'disabled' : ''}`}>
+                                    <button
+                                        className="page-link"
+                                        onClick={() => handlePageChange(currentPage + 2)}
+                                        disabled={currentPage === expensesPage.totalPages - 1}
                                     >
                                         Próxima
                                     </button>
                                 </li>
-                                <li className={`page-item ${expensesPage.number === expensesPage.totalPages - 1 ? 'disabled' : ''}`}>
-                                    <button 
-                                        className="page-link" 
+                                <li className={`page-item ${currentPage === expensesPage.totalPages - 1 ? 'disabled' : ''}`}>
+                                    <button
+                                        className="page-link"
                                         onClick={() => handlePageChange(expensesPage.totalPages)}
-                                        disabled={expensesPage.number === expensesPage.totalPages - 1}
+                                        disabled={currentPage === expensesPage.totalPages - 1}
                                     >
                                         Última
                                     </button>
@@ -217,4 +218,4 @@ export const ExpenseList: React.FC = () => {
             </div>
         </div>
     );
-}; 
+};
