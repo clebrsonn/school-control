@@ -1,13 +1,13 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { INotification } from '@hyteck/shared';
 import {
-    getNotifications,
-    getUnreadNotificationsCount,
-    markAllNotificationsAsRead,
-    markNotificationAsRead
+  getNotifications,
+  getUnreadNotificationsCount,
+  markAllNotificationsAsRead,
+  markNotificationAsRead
 } from '../services/NotificationService';
 import { useAuth } from '../../auth/contexts/AuthProvider';
 import notification from '../../../components/common/Notification';
+import { INotification } from '../types/Notification.ts';
 
 interface NotificationContextType {
   notifications: INotification[];

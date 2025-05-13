@@ -11,3 +11,11 @@ export const getConsolidatedStatement = async (responsibleId: string, yearMonth:
   const response = await get<ConsolidatedStatement>(`/billing/responsibles/${responsibleId}/statements/${yearMonth}`);
   return response;
 };
+/**
+ * Generate monthly billing
+ * @param yearMonth Year and month (YYYY-MM)
+ * @returns Consolidated statement
+ */
+export const generateMonthlyBiling = async ( yearMonth: string): Promise<void> => {
+  await get<ConsolidatedStatement>(`/billing/generate-monthly-invoices/${yearMonth}`);
+};
