@@ -14,7 +14,9 @@ interface NotificationContextType {
   unreadCount: number;
   loading: boolean;
   error: string | null;
-  fetchNotifications: () => Promise<void>;
+  currentPage: number;
+  totalPages: number;
+  fetchNotifications: (page?: number, size?: number) => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
 }
@@ -26,20 +28,24 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const { user } = useAuth();
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (page: number = 0, size: number = 10) => {
     if (!user) return;
-    
+
     try {
       setLoading(true);
       const [notificationsData, unreadCountData] = await Promise.all([
-        getNotifications(),
+        getNotifications(page, size),
         getUnreadNotificationsCount()
       ]);
-      
-      setNotifications(notificationsData);
-      setUnreadCount(unreadCountData);
+
+      setNotifications(notificationsData.content);
+      setUnreadCount(unreadCountData.count);
+      setCurrentPage(notificationsData.number);
+      setTotalPages(notificationsData.totalPages);
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch notifications');
@@ -105,6 +111,8 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         unreadCount, 
         loading, 
         error, 
+        currentPage, 
+        totalPages, 
         fetchNotifications, 
         markAsRead, 
         markAllAsRead 

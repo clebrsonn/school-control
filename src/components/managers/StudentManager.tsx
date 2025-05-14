@@ -13,8 +13,7 @@ import { getAllClassRooms } from '../../features/classes/services/ClassService.t
 import ErrorMessage from '../common/ErrorMessage.tsx';
 import { ClassRoomResponse } from '../../features/classes/types/ClassRoomTypes.ts';
 import { ResponsibleResponse } from '../../features/parents/types/ResponsibleTypes.ts';
-import { StudentResponse } from '../../features/students/types/StudentTypes.ts';
-import { UserResponse } from '../../features/users/types/UserTypes.ts';
+import { StudentRequest, StudentResponse } from '../../features/students/types/StudentTypes.ts';
 import { FaList, FaSave, FaUndo, FaUserGraduate } from 'react-icons/fa';
 import FormField from '../common/FormField';
 import { extractFieldErrors } from '../../utils/errorUtils';
@@ -50,7 +49,7 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
     const [parents, setParents] = useState<ResponsibleResponse[]>([]);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [cpf, setCpf] = useState<String>();
+    const [cpf, setCpf] = useState<string>();
     const [classId, setClassId] = useState('');
     const [selectedResponsible, setSelectedResponsible] = useState(responsible);
     const [selectedResponsibleName, setSelectedResponsibleName] = useState('');
@@ -135,7 +134,7 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
         if (!name) clientErrors.name = "Nome do aluno é obrigatório";
         if (!email) clientErrors.email = "Email do aluno é obrigatório";
         if (!responsible && !selectedResponsible) clientErrors.responsibleId = "Responsável é obrigatório";
-
+        if(!classId) clientErrors.classId = "Turma é obrigatório";
         if (Object.keys(clientErrors).length > 0) {
             setFieldErrors(clientErrors);
             setError("Por favor, corrija os erros no formulário.");
@@ -144,17 +143,12 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
         }
 
         try {
-            let studentData: Partial<UserResponse> = {
+            let studentData: StudentRequest = {
                 name: name,
                 email: email,
-                cpf: cpf,
-                responsibleId: responsible || selectedResponsible
+                responsibleId: (responsible || selectedResponsible) as string,
+                classroom: classId
             };
-
-            // Filtra os campos que não são nulos
-            studentData = Object.fromEntries(
-                Object.entries(studentData).filter(([_, value]) => value !== null)
-            );
 
             if (editingStudent) {
                 // Update existing student
@@ -196,8 +190,7 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
         setEditingStudent(student);
         setName(student.name);
         setEmail(student.email || '');
-        setCpf(student.cpf);
-        // setClassId(student.classId || '');
+        setClassId(student.classroom || '');
         setSelectedResponsible(student.responsibleId  || '');
         setSelectedResponsibleName(student.responsibleName || '');
     };
@@ -264,15 +257,27 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
 
                         <Row>
                             <Col md={6}>
-                                <FormField
-                                    id="formStudentCpf"
-                                    label="CPF"
-                                    type="text"
-                                    placeholder="CPF do Aluno"
-                                    value={cpf}
-                                    onChange={(e) => setCpf(e.target.value)}
-                                    error={fieldErrors.cpf || null}
-                                />
+                                <Form.Group className="mb-3" controlId="formParent">
+                                    <Form.Label>Responsável</Form.Label>
+                                    <Form.Control
+                                        as="select"
+                                        value={selectedResponsible}
+                                        onChange={(e) => setSelectedResponsible(e.target.value)}
+                                        isInvalid={!!fieldErrors.responsibleId}
+                                    >
+                                        <option value="">Selecione um responsável</option>
+                                        {parents.map((parent) => (
+                                            <option key={parent.id} value={parent.id}>
+                                                {parent.name}
+                                            </option>
+                                        ))}
+                                    </Form.Control>
+                                    {fieldErrors.responsibleId && (
+                                        <Form.Control.Feedback type="invalid">
+                                            {fieldErrors.responsibleId}
+                                        </Form.Control.Feedback>
+                                    )}
+                                </Form.Group>
                             </Col>
                             <Col md={6}>
                                 <Form.Group className="mb-3" controlId="formStudentClass">
@@ -297,35 +302,8 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                                     )}
                                 </Form.Group>
                             </Col>
-                        </Row>
 
-                        {!responsible && (
-                            <Row>
-                                <Col md={12}>
-                                    <Form.Group className="mb-3" controlId="formParent">
-                                        <Form.Label>Responsável</Form.Label>
-                                        <Form.Control
-                                            as="select"
-                                            value={selectedResponsible}
-                                            onChange={(e) => setSelectedResponsible(e.target.value)}
-                                            isInvalid={!!fieldErrors.responsibleId}
-                                        >
-                                            <option value="">Selecione um responsável</option>
-                                            {parents.map((parent) => (
-                                                <option key={parent.id} value={parent.id}>
-                                                    {parent.name}
-                                                </option>
-                                            ))}
-                                        </Form.Control>
-                                        {fieldErrors.responsibleId && (
-                                            <Form.Control.Feedback type="invalid">
-                                                {fieldErrors.responsibleId}
-                                            </Form.Control.Feedback>
-                                        )}
-                                    </Form.Group>
-                                </Col>
-                            </Row>
-                        )}
+                        </Row>
 
                         <div className="d-flex mt-3">
                             <Button 

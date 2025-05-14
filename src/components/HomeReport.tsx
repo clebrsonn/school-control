@@ -13,47 +13,50 @@ import {
 } from 'react-icons/fa';
 import ErrorMessage from './common/ErrorMessage.tsx';
 import { LoadingSpinner } from './common/LoadingSpinner.tsx';
+import { countInvoicesByStatus, generateMonthlyBiling } from '../features/billing/services/BillingService';
+import notification from './common/Notification.tsx';
 
 const HomeReport: React.FC = () => {
     const [openPayments, setOpenPayments] = useState<any[]>([]);
     const [latePayments, setLatePayments] = useState<any[]>([]);
+
+    const [openInvoicesCount, setOpenInvoicesCount] = useState<number>(0);
+    const [lateInvoicesCount, setLateInvoicesCount] = useState<number>(0);
     const [totalEstimated, setTotalEstimated] = useState<number>(0);
     const [onTimePayers, setOnTimePayers] = useState<any[]>([]);
     const [mostLatePayers, setMostLatePayers] = useState<any[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
+    const handleGenerateBilling = async () => {
+        const currentDate = new Date();
+        const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+        try {
+            await generateMonthlyBiling(yearMonth);
+            notification('Cobrança mensal gerada com sucesso!', 'info');
+        } catch (error) {
+            notification('Erro ao gerar cobrança mensal.', 'error');
+        }
+    };
+
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchInvoiceCounts = async () => {
             try {
                 setLoading(true);
-                // const [
-                //     latePaymentsData,
-                //     totalEstimatedData,
-                //     onTimePayersData,
-                //     mostLatePayersData,
-                //     openPaymentsData,
-                // ] = await Promise.all([
-                //     // fetchLatePayments(),
-                //     // fetchTotalEstimatedForCurrentMonth(),
-                //     // fetchOnTimePayers(),
-                //     // fetchMostLatePayers(),
-                //     // fetchOpenPayments(),
-                // ]);
-                // setLatePayments(latePaymentsData);
-                // setTotalEstimated(totalEstimatedData);
-                // setOnTimePayers(onTimePayersData);
-                // setMostLatePayers(mostLatePayersData);
-                // setOpenPayments(openPaymentsData);
-
+                const [openCount, lateCount] = await Promise.all([
+                    countInvoicesByStatus('PENDING'),
+                    countInvoicesByStatus('OVERDUE'),
+                ]);
+                setOpenInvoicesCount(openCount);
+                setLateInvoicesCount(lateCount);
                 setLoading(false);
             } catch (err: any) {
-                setError(err.message || 'Failed to fetch data');
+                setError(err.message || 'Erro ao carregar contagem de invoices.');
                 setLoading(false);
             }
         };
 
-        fetchData();
+        fetchInvoiceCounts();
     }, []);
 
     if (loading) {
@@ -71,6 +74,9 @@ const HomeReport: React.FC = () => {
                     <FaChartLine className="me-2" />
                     Dashboard
                 </h1>
+                <button className="btn btn-primary" onClick={handleGenerateBilling}>
+                    Gerar Cobrança Mensal
+                </button>
             </div>
 
             {/* Quick Stats Row */}
@@ -100,14 +106,14 @@ const HomeReport: React.FC = () => {
                             <div className="d-flex justify-content-between mb-3">
                                 <div>
                                     <h6 className="text-muted mb-1">Pagamentos em Aberto</h6>
-                                    <h3 className="mb-0">{openPayments.length}</h3>
+                                    <h3 className="mb-0">{openInvoicesCount}</h3>
                                 </div>
                                 <div className="rounded-circle bg-warning bg-opacity-10 p-3">
                                     <FaCalendarCheck className="text-warning" size={24} />
                                 </div>
                             </div>
                             <div className="mt-auto">
-                                <Badge bg="warning" className="me-2">{openPayments.length} pendentes</Badge>
+                                <Badge bg="warning" className="me-2">{openInvoicesCount} pendentes</Badge>
                             </div>
                         </Card.Body>
                     </Card>
@@ -119,14 +125,14 @@ const HomeReport: React.FC = () => {
                             <div className="d-flex justify-content-between mb-3">
                                 <div>
                                     <h6 className="text-muted mb-1">Pagamentos em Atraso</h6>
-                                    <h3 className="mb-0">{latePayments.length}</h3>
+                                    <h3 className="mb-0">{lateInvoicesCount}</h3>
                                 </div>
                                 <div className="rounded-circle bg-danger bg-opacity-10 p-3">
                                     <FaCalendarTimes className="text-danger" size={24} />
                                 </div>
                             </div>
                             <div className="mt-auto">
-                                <Badge bg="danger" className="me-2">{latePayments.length} atrasados</Badge>
+                                <Badge bg="danger" className="me-2">{lateInvoicesCount} atrasados</Badge>
                             </div>
                         </Card.Body>
                     </Card>
@@ -225,7 +231,7 @@ const HomeReport: React.FC = () => {
                             <Link to="/payments" className="btn btn-sm btn-outline-primary">Ver Todos</Link>
                         </Card.Header>
                         <Card.Body>
-                            {openPayments.length > 0 ? (
+                            {openInvoicesCount > 0 ? (
                                 <ListGroup variant="flush">
                                     {openPayments.slice(0, 5).map((payment) => (
                                         <ListGroup.Item key={payment.id as string} className="d-flex justify-content-between align-items-center px-0">
@@ -256,7 +262,7 @@ const HomeReport: React.FC = () => {
                             <Link to="/payments" className="btn btn-sm btn-outline-primary">Ver Todos</Link>
                         </Card.Header>
                         <Card.Body>
-                            {latePayments.length > 0 ? (
+                            {lateInvoicesCount > 0 ? (
                                 <ListGroup variant="flush">
                                     {latePayments.slice(0, 5).map((payment) => (
                                         <ListGroup.Item key={payment.id as string} className="d-flex justify-content-between align-items-center px-0">
@@ -282,3 +288,4 @@ const HomeReport: React.FC = () => {
 };
 
 export default HomeReport;
+

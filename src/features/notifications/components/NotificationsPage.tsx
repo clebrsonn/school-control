@@ -11,14 +11,22 @@ const NotificationsPage: React.FC = () => {
     unreadCount, 
     loading, 
     error, 
+    currentPage, 
+    totalPages, 
     fetchNotifications, 
     markAsRead, 
     markAllAsRead 
   } = useNotifications();
 
   useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    fetchNotifications(currentPage);
+  }, [currentPage]);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      fetchNotifications(newPage);
+    }
+  };
 
   if (loading) {
     return <LoadingSpinner />;
@@ -90,6 +98,25 @@ const NotificationsPage: React.FC = () => {
                 </ListGroup.Item>
               ))}
             </ListGroup>
+          )}
+          {notifications.length > 0 && (
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <Button 
+                variant="outline-secondary" 
+                disabled={currentPage === 1} 
+                onClick={() => handlePageChange(currentPage - 1)}
+              >
+                Anterior
+              </Button>
+              <span>Página {currentPage} de {totalPages}</span>
+              <Button 
+                variant="outline-secondary" 
+                disabled={currentPage === totalPages} 
+                onClick={() => handlePageChange(currentPage + 1)}
+              >
+                Próxima
+              </Button>
+            </div>
           )}
         </Card.Body>
       </Card>

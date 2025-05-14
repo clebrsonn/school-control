@@ -31,3 +31,5 @@ dist-ssr
 /.idea/
 /.vscode/settings.json
 /backend/uploads/*
+.aider*
+.env

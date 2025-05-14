@@ -1,8 +1,8 @@
 export interface StudentRequest {
   name: string;
   email: string;
-  cpf?: string;
   responsibleId: string;
+  classroom: string;
 }
 
 export interface StudentResponse extends StudentRequest{

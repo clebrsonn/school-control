@@ -6,16 +6,14 @@ export enum PaymentMethod {
   TRANSFERENCIA_BANCARIA = "TRANSFERENCIA_BANCARIA"
 }
 
-export interface PaymentRequest {
-  invoiceId: string;
-  amount: number;
-  paymentMethod: PaymentMethod;
-}
-
-export interface PaymentResponse {
-  id: string;
+export interface PaymentRequest{
   amount: number;
   paymentDate: Date;
   paymentMethod: PaymentMethod;
   invoiceId: string;
+}
+
+export interface PaymentResponse extends PaymentRequest{
+  id: string;
+
 }

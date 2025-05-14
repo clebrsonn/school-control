@@ -1,5 +1,3 @@
-// filepath: /e:/IdeaProjects/school-control/frontend/src/services/PaymentService.ts
-
 import { get, post } from '../../../config/axios';
 import { PaymentRequest, PaymentResponse } from '../types/PaymentTypes';
 

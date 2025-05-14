@@ -5,5 +5,4 @@ export interface INotification {
     message: string;
     isRead: boolean;
     createdAt: Date;
-    updatedAt: Date;
 }

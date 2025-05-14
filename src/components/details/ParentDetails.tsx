@@ -12,6 +12,8 @@ import { ErrorBoundary } from '../common/ErrorBoundary.tsx';
 import notification from '../common/Notification.tsx';
 import ErrorMessage from '../common/ErrorMessage.tsx';
 import { FaCreditCard, FaEnvelope, FaPhone, FaPlus, FaUser, FaUserGraduate } from 'react-icons/fa';
+import { getConsolidatedStatement } from '../../features/billing/services/BillingService';
+import { ConsolidatedStatement, StatementLineItem } from '../../features/billing/types/BillingTypes';
 
 const ParentDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +21,7 @@ const ParentDetails: React.FC = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
   const [payments, setPayments] = useState<PaymentResponse[]>([]);
+  const [consolidatedStatement, setConsolidatedStatement] = useState<ConsolidatedStatement | null>(null);
 
   useEffect(() => {
     const loadPayments = async () => {
@@ -28,6 +31,22 @@ const ParentDetails: React.FC = () => {
     };
 
     loadPayments();
+  }, [id]);
+
+  useEffect(() => {
+    const loadConsolidatedStatement = async () => {
+      try {
+        const parentId = id as string;
+        const currentDate = new Date();
+        const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+        const statement = await getConsolidatedStatement(parentId, yearMonth);
+        setConsolidatedStatement(statement);
+      } catch (error: any) {
+        notification(error.message || 'Erro ao carregar as invoices.', 'error');
+      }
+    };
+
+    loadConsolidatedStatement();
   }, [id]);
 
   const groupPaymentsByMonth = (payments: PaymentResponse[]): { [month: string]: PaymentResponse[] } => {
@@ -43,7 +62,6 @@ const ParentDetails: React.FC = () => {
   };
 
   const groupedPayments = groupPaymentsByMonth(payments);
-
 
   const handleMarkMonthAsPaid = async (month: string) => {
     try {
@@ -68,13 +86,32 @@ const ParentDetails: React.FC = () => {
     }
   };
 
+  const handleProcessPayment = async (invoice: StatementLineItem) => {
+    try {
+      await processPayment({
+        invoiceId: invoice.invoiceId,
+        amount: invoice.amount,
+        paymentMethod: PaymentMethod.PIX, // Método de pagamento padrão
+      });
 
-  const formatDate = (dateString: string | Date): string => { // Aceita string ou Date
-    const date = new Date(dateString); // Cria um objeto Date
+      notification('Pagamento processado com sucesso!', 'success');
+
+      // Atualizar a lista de pagamentos em aberto após o pagamento
+      const parentId = id as string;
+      const currentDate = new Date();
+      const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+      const updatedStatement = await getConsolidatedStatement(parentId, yearMonth);
+      setConsolidatedStatement(updatedStatement);
+    } catch (error: any) {
+      notification(error.message || 'Erro ao processar o pagamento.', 'error');
+    }
+  };
+
+  const formatDate = (dateString: string | Date): string => {
+    const date = new Date(dateString);
     const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
     return date.toLocaleDateString('pt-BR', options);
   };
-
 
   if (error) return <ErrorMessage message={error} />;
   if (!parent) return <LoadingSpinner />;
@@ -191,26 +228,14 @@ const ParentDetails: React.FC = () => {
           <Card.Header className="bg-transparent d-flex justify-content-between align-items-center">
             <h5 className="mb-0">
               <FaCreditCard className="me-2 text-success" />
-              Pagamentos
+              Pagamentos Realizados
             </h5>
           </Card.Header>
           <Card.Body>
             {Object.entries(groupedPayments).length > 0 ? (
               Object.entries(groupedPayments).map(([month, monthPayments]) => (
                 <div key={month} className="mb-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 className="mb-0 fw-bold">{month}</h6>
-                    <Button
-                      variant="success"
-                      size="sm"
-                      onClick={() => handleMarkMonthAsPaid(month)}
-                      className="d-flex align-items-center"
-                    >
-                      <FaCreditCard className="me-2" />
-                      Pagar {monthPayments.reduce((sum, p) => sum + p.amount, 0)
-                        .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </Button>
-                  </div>
+                  <h6 className="mb-3 fw-bold">{month}</h6>
                   <div className="table-responsive">
                     <Table hover className="border-0">
                       <thead className="table-light">
@@ -237,6 +262,66 @@ const ParentDetails: React.FC = () => {
               ))
             ) : (
               <p className="text-muted text-center my-4">Nenhum pagamento registrado</p>
+            )}
+          </Card.Body>
+        </Card>
+
+        <Card className="dashboard-card border-0">
+          <Card.Header className="bg-transparent d-flex justify-content-between align-items-center">
+            <h5 className="mb-0">
+              <FaCreditCard className="me-2 text-warning" />
+              Pagamentos em Aberto
+            </h5>
+          </Card.Header>
+          <Card.Body>
+            {consolidatedStatement ? (
+              <div>
+                <h6 className="mb-3 fw-bold">
+                  Total: R$ {consolidatedStatement.totalAmountDue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </h6>
+                <div className="table-responsive">
+                  <Table hover className="border-0">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Aluno</th>
+                        <th>Descrição</th>
+                        <th>Valor</th>
+                        <th>Data de Vencimento</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {consolidatedStatement.items.map((item: StatementLineItem) => (
+                        <tr key={item.invoiceId}>
+                          <td>{item.studentName}</td>
+                          <td>{item.description}</td>
+                          <td className="fw-bold">R$ {item.amount.toLocaleString('pt-BR')}</td>
+                          <td>{formatDate(item.dueDate)}</td>
+                          <td>
+                            <span className={`badge ${item.amount === 0 ? 'bg-success' : 'bg-warning'}`}>
+                              {item.amount === 0 ? 'Paga' : 'Pendente'}
+                            </span>
+                          </td>
+                          <td>
+                            {item.amount > 0 && (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleProcessPayment(item)}
+                              >
+                                Pagar
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              </div>
+            ) : (
+              <p className="text-muted text-center my-4">Nenhum pagamento em aberto</p>
             )}
           </Card.Body>
         </Card>

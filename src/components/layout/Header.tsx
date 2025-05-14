@@ -56,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 <Dropdown.Item disabled>Não há notificações</Dropdown.Item>
               ) : (
                 <>
-                  {notifications.slice(0, 5).map(notification => (
+                  {notifications?.slice(0, 5).map(notification => (
                     <Dropdown.Item 
                       key={notification.id} 
                       className={`border-bottom ${!notification.isRead ? 'bg-light' : ''}`}

@@ -1,210 +1,129 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Pagination } from 'react-bootstrap';
-import ErrorMessage from '../common/ErrorMessage.tsx';
-import { PageResponse } from '../../types/PageResponse';
-import { usePagination } from '../../hooks/usePagination';
-import { PaymentResponse } from '../../features/payments/types/PaymentTypes.ts';
-import { FaList, FaMoneyBillWave } from 'react-icons/fa';
+import { Badge, Button, Card, ListGroup } from 'react-bootstrap';
+import { getConsolidatedStatements } from '../../features/billing/services/BillingService';
+import { ConsolidatedStatement, StatementLineItem } from '../../features/billing/types/BillingTypes';
+import { processPayment } from '../../features/payments/services/PaymentService';
+import { PaymentMethod, PaymentRequest } from '../../features/payments/types/PaymentTypes';
+import notification from '../common/Notification.tsx';
+import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
 
 const PaymentManager: React.FC = () => {
-  const { 
-    currentPage, 
-    pageSize, 
-    handlePageChange,
-    createEmptyPageResponse
-  } = usePagination<PaymentResponse>();
+    const [consolidatedStatements, setConsolidatedStatements] = useState<ConsolidatedStatement[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
-  const [paymentPage, setPaymentPage] = useState<PageResponse<PaymentResponse>>(createEmptyPageResponse());
-  const [error, setError] = useState<string | null>(null);
+    useEffect(() => {
+        const fetchInvoices = async () => {
+            try {
+                setLoading(true);
+                const currentDate = new Date();
+                const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+                const statements = await getConsolidatedStatements(yearMonth);
+                setConsolidatedStatements(statements);
+                setLoading(false);
+            } catch (err: any) {
+                setError(err.message || 'Erro ao carregar as invoices.');
+                setLoading(false);
+            }
+        };
 
-  useEffect(() => {
-    const getPayments = async () => {
-      try {
-       // const paymentsData = await getPaymentsByResponsible(currentPage, pageSize);
-        //setPaymentPage(paymentsData);
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch payments');
-      }
+        fetchInvoices();
+    }, []);
+
+    const handleProcessPayment = async (invoice: ConsolidatedStatement) => {
+        try {
+            const paymentRequest: PaymentRequest = {
+                invoiceId: invoice.items[0].invoiceId,
+                amount: invoice.totalAmountDue,
+                paymentMethod: PaymentMethod.PIX, // Exemplo: pode ser alterado para outro método de pagamento
+                paymentDate: new Date().toISOString(),
+            };
+
+            await processPayment(paymentRequest);
+            notification(`Pagamento processado para a invoice ${invoice.items[0].invoiceId}`, 'success');
+
+            // Atualizar a lista de invoices após o pagamento
+            const currentDate = new Date();
+            const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+            const updatedStatements = await getConsolidatedStatements(yearMonth);
+            setConsolidatedStatements(updatedStatements);
+        } catch (err: any) {
+            notification(err.message || 'Erro ao processar o pagamento.', 'error');
+        }
     };
 
-    getPayments();
-  }, [currentPage, pageSize]);
+    const formatDate = (dateString: string): string => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
 
-  // const handleAddPayment = async () => {
-  //   try {
-  //     const newPayment = { amount: parseFloat(amount), date, discountId, parentId, classId };
-  //     const addedPayment = await createPayment(newPayment);
-  //     setPayments([...payments, addedPayment]);
-  //     setAmount('');
-  //     setDate('');
-  //     setDiscountId('');
-  //     setParentId('');
-  //     setClassId('');
-  //     setError(null);
-  //   } catch (err: any) {
-  //     setError(err.message || 'Failed to add payment');
-  //   }
-  // };
+    if (loading) {
+        return <LoadingSpinner />;
+    }
 
-  // const handleDelete = async (id: string) => {
-  //   try {
-  //     await deletePaymentById(id);
-  //     setPayments(payments.filter((student) => student.id !== id));
-  //     notification("Pagamento removido com sucesso.");
-  //   } catch {
-  //     setError("Erro ao remover o pagamento.");
-  //   }
-  // };
+    if (error) {
+        return <p className="text-danger">{error}</p>;
+    }
 
-  return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="mb-0">
-          <FaMoneyBillWave className="me-2" />
-          Gerenciar Pagamentos
-        </h1>
-      </div>
+    return (
+        <div>
+            <h1 className="mb-4">Gerenciar Pagamentos</h1>
 
-      {error && <ErrorMessage message={error} />}
-
-      {/* Commented form - keeping as is but with updated styling */}
-      {/* <Card className="form-card mb-4">
-        <Card.Header className="d-flex justify-content-between align-items-center">
-          <h5 className="mb-0">Adicionar Pagamento</h5>
-        </Card.Header>
-        <Card.Body>
-          <Form>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3" controlId="formPaymentAmount">
-                  <Form.Label>Valor</Form.Label>
-                  <Form.Control
-                    type="number"
-                    placeholder="Valor"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3" controlId="formPaymentDate">
-                  <Form.Label>Data</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col md={4}>
-                <Form.Group className="mb-3" controlId="formPaymentDiscountId">
-                  <Form.Label>ID do Desconto</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="ID do Desconto"
-                    value={discountId}
-                    onChange={(e) => setDiscountId(e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3" controlId="formPaymentParentId">
-                  <Form.Label>ID do Responsável</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="ID do Responsável"
-                    value={parentId}
-                    onChange={(e) => setParentId(e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3" controlId="formPaymentClassId">
-                  <Form.Label>ID da Classe</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="ID da Classe"
-                    value={classId}
-                    onChange={(e) => setClassId(e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <div className="d-flex mt-3">
-              <Button 
-                variant="primary" 
-                onClick={handleAddPayment} 
-                className="d-flex align-items-center"
-              >
-                <FaSave className="me-2" />
-                Salvar
-              </Button>
-            </div>
-          </Form>
-        </Card.Body>
-      </Card> */}
-
-      <Card className="table-card">
-        <Card.Header className="d-flex justify-content-between align-items-center">
-          <h5 className="mb-0">
-            <FaList className="me-2" />
-            Pagamentos Agrupados
-          </h5>
-        </Card.Header>
-        <Card.Body>
-          <p className="text-muted">TODO: ajustar criando no backend os endpoints</p>
-
-          {/*{paymentPage.content.map((group) => (*/}
-          {/*  <div key={`${group.year}-${group.month}-${group.responsible}`}>*/}
-          {/*    <h3>{`${group.month}/${group.year} - ${group.responsible.name}`}</h3>*/}
-          {/*    <p>Total Amount: {group.totalAmount}</p>*/}
-          {/*    <ListGroup>*/}
-          {/*      {group.payments.map((payment: ITuition) => (*/}
-          {/*        <ListGroup.Item key={payment.id}>*/}
-          {/*          {payment.amount} - {new Date(payment.dueDate).toLocaleDateString()} - {payment.status.toString()}*/}
-          {/*        </ListGroup.Item>*/}
-          {/*      ))}*/}
-          {/*    </ListGroup>*/}
-          {/*  </div>*/}
-          {/*))}*/}
-
-          {paymentPage.totalPages > 1 && (
-            <Pagination className="justify-content-center mt-4">
-              <Pagination.First
-                onClick={() => handlePageChange(1)}
-                disabled={paymentPage.number === 0}
-              />
-              <Pagination.Prev
-                onClick={() => handlePageChange(paymentPage.number)}
-                disabled={paymentPage.number === 0}
-              />
-              {Array.from({ length: paymentPage.totalPages }, (_, i) => i + 1).map(pageNum => (
-                <Pagination.Item
-                  key={pageNum}
-                  active={pageNum === paymentPage.number + 1}
-                  onClick={() => handlePageChange(pageNum)}
-                >
-                  {pageNum}
-                </Pagination.Item>
-              ))}
-              <Pagination.Next
-                onClick={() => handlePageChange(paymentPage.number + 2)}
-                disabled={paymentPage.number === paymentPage.totalPages - 1}
-              />
-              <Pagination.Last
-                onClick={() => handlePageChange(paymentPage.totalPages)}
-                disabled={paymentPage.number === paymentPage.totalPages - 1}
-              />
-            </Pagination>
-          )}
-        </Card.Body>
-      </Card>
-    </div>
-  );
+            {consolidatedStatements.length > 0 ? (
+                consolidatedStatements.map((statement) => (
+                    <Card className="dashboard-card border-0 mb-4" key={statement.responsibleId}>
+                        <Card.Header className="bg-transparent d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 className="mb-0">Responsável: {statement.responsibleName}</h5>
+                            </div>
+                            <div className="d-flex align-items-center">
+                                <Badge
+                                    bg={statement.totalAmountDue === 0 ? 'success' : 'warning'}
+                                    className="me-3"
+                                >
+                                    {statement.totalAmountDue === 0 ? 'Paga' : 'Aberta'}
+                                </Badge>
+                                {statement.totalAmountDue > 0 && (
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        onClick={() => handleProcessPayment(statement)}
+                                    >
+                                        Pagar
+                                    </Button>
+                                )}
+                            </div>
+                        </Card.Header>
+                        <Card.Body>
+                            <h6 className="mb-3">
+                                Total: R$ {statement.totalAmountDue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </h6>
+                            <ListGroup variant="flush">
+                                {statement.items
+                                    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                                    .map((item: StatementLineItem) => (
+                                        <ListGroup.Item
+                                            key={item.invoiceId}
+                                            className="d-flex justify-content-between align-items-center"
+                                        >
+                                            <div>
+                                                <strong>{item.studentName}</strong>
+                                                <div className="text-muted small">
+                                                    {item.description} - Vencimento: {formatDate(item.dueDate)}
+                                                </div>
+                                            </div>
+                                        </ListGroup.Item>
+                                    ))}
+                            </ListGroup>
+                        </Card.Body>
+                    </Card>
+                ))
+            ) : (
+                <p className="text-muted text-center">Nenhuma invoice encontrada.</p>
+            )}
+        </div>
+    );
 };
 
 export default PaymentManager;
+
