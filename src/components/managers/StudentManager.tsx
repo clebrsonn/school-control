@@ -49,10 +49,11 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
     const [parents, setParents] = useState<ResponsibleResponse[]>([]);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [cpf, setCpf] = useState<string>();
     const [classId, setClassId] = useState('');
     const [selectedResponsible, setSelectedResponsible] = useState(responsible);
     const [selectedResponsibleName, setSelectedResponsibleName] = useState('');
+    const [enrollmentFee, setEnrollmentFee] = useState<number | undefined>(undefined);
+    const [monthlyFee, setMonthlyFee] = useState<number | undefined>(undefined);
     const [editingStudent, setEditingStudent] = useState<StudentResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -65,7 +66,10 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
             try {
                 let studentPageData;
                 if (responsible) {
-                    studentPageData = await getStudentsByResponsibleId(responsible, { page: currentPage, size: pageSize });
+                    studentPageData = await getStudentsByResponsibleId(responsible, {
+                        page: currentPage,
+                        size: pageSize
+                    });
                 } else {
                     studentPageData = await getAllStudents({ page: currentPage, size: pageSize });
                 }
@@ -116,10 +120,11 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
     const resetForm = () => {
         setName('');
         setEmail('');
-        setCpf();
         setClassId('');
         setSelectedResponsible(responsible || '');
         setSelectedResponsibleName('');
+        setEnrollmentFee(undefined);
+        setMonthlyFee(undefined);
         setEditingStudent(null);
     };
 
@@ -129,15 +134,14 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
         setFieldErrors({});
         setLoading(true);
 
-        // Client-side validation
         const clientErrors: Record<string, string> = {};
-        if (!name) clientErrors.name = "Nome do aluno é obrigatório";
-        if (!email) clientErrors.email = "Email do aluno é obrigatório";
-        if (!responsible && !selectedResponsible) clientErrors.responsibleId = "Responsável é obrigatório";
-        if(!classId) clientErrors.classId = "Turma é obrigatório";
+        if (!name) clientErrors.name = 'Nome do aluno é obrigatório';
+        if (!email) clientErrors.email = 'Email do aluno é obrigatório';
+        if (!responsible && !selectedResponsible) clientErrors.responsibleId = 'Responsável é obrigatório';
+        if (!classId) clientErrors.classId = 'Turma é obrigatório';
         if (Object.keys(clientErrors).length > 0) {
             setFieldErrors(clientErrors);
-            setError("Por favor, corrija os erros no formulário.");
+            setError('Por favor, corrija os erros no formulário.');
             setLoading(false);
             return;
         }
@@ -147,7 +151,9 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                 name: name,
                 email: email,
                 responsibleId: (responsible || selectedResponsible) as string,
-                classroom: classId
+                classroom: classId,
+                enrollmentFee: enrollmentFee || 0,
+                monthyFee: monthlyFee || 0,
             };
 
             if (editingStudent) {
@@ -191,8 +197,10 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
         setName(student.name);
         setEmail(student.email || '');
         setClassId(student.classroom || '');
-        setSelectedResponsible(student.responsibleId  || '');
+        setSelectedResponsible(student.responsibleId || '');
         setSelectedResponsibleName(student.responsibleName || '');
+        setEnrollmentFee(student.enrollmentFee || undefined);
+        setMonthlyFee(student.monthyFee || undefined);
     };
 
     const handleDelete = async (id: string) => {
@@ -257,6 +265,43 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
 
                         <Row>
                             <Col md={6}>
+                                <Form.Group className="mb-3" controlId="formEnrollmentFee">
+                                    <Form.Label>Taxa de Matrícula</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        placeholder="Digite a taxa de matrícula"
+                                        value={enrollmentFee || ''}
+                                        onChange={(e) => setEnrollmentFee(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                        isInvalid={!!fieldErrors.enrollmentFee}
+                                    />
+                                    {fieldErrors.enrollmentFee && (
+                                        <Form.Control.Feedback type="invalid">
+                                            {fieldErrors.enrollmentFee}
+                                        </Form.Control.Feedback>
+                                    )}
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3" controlId="formMonthlyFee">
+                                    <Form.Label>Mensalidade</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        placeholder="Digite o valor da mensalidade"
+                                        value={monthlyFee || ''}
+                                        onChange={(e) => setMonthlyFee(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                        isInvalid={!!fieldErrors.monthyFee}
+                                    />
+                                    {fieldErrors.monthyFee && (
+                                        <Form.Control.Feedback type="invalid">
+                                            {fieldErrors.monthyFee}
+                                        </Form.Control.Feedback>
+                                    )}
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Row>
+                            <Col md={6}>
                                 <Form.Group className="mb-3" controlId="formParent">
                                     <Form.Label>Responsável</Form.Label>
                                     <Form.Control
@@ -302,25 +347,24 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                                     )}
                                 </Form.Group>
                             </Col>
-
                         </Row>
 
                         <div className="d-flex mt-3">
-                            <Button 
-                                variant="primary" 
-                                onClick={handleAddOrUpdateStudent} 
+                            <Button
+                                variant="primary"
+                                onClick={handleAddOrUpdateStudent}
                                 className="me-2 d-flex align-items-center"
                                 disabled={loading}
                             >
                                 <FaSave className="me-2" />
-                                {loading 
-                                    ? (editingStudent ? 'Atualizando...' : 'Salvando...') 
+                                {loading
+                                    ? (editingStudent ? 'Atualizando...' : 'Salvando...')
                                     : (editingStudent ? 'Atualizar' : 'Salvar')
                                 }
                             </Button>
                             {editingStudent && (
-                                <Button 
-                                    variant="secondary" 
+                                <Button
+                                    variant="secondary"
                                     onClick={resetForm}
                                     className="d-flex align-items-center"
                                 >
@@ -341,9 +385,9 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                     </h5>
                 </Card.Header>
                 <Card.Body>
-                    <ListRegistries 
+                    <ListRegistries
                         page={studentPage}
-                        entityName={'students'} 
+                        entityName={'students'}
                         onDelete={handleDelete}
                         onEdit={handleEdit}
                         onPageChange={handlePageChange}
@@ -355,3 +399,4 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
 };
 
 export default StudentManager;
+

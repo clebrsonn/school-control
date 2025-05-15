@@ -6,20 +6,20 @@ import {
     me,
     register as registerService
 } from '../services/AuthService.ts';
-import { IUser } from '@hyteck/shared';
 import notification from '../../../components/common/Notification.tsx';
+import { UserRequest } from '../../users/types/UserTypes.ts';
 
 interface AuthContextType {
-    user: Partial<IUser> | null;
+    user: Partial<UserRequest> | null;
     login: (email: string, password: string) => Promise<void>;
-    register: (email: string, password: string) => Promise<void>;
+    register: (userToregistry: UserRequest) => Promise<void>;
     logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AuthProvider = ({children}: { children: ReactNode }) => {
-    const [user, setUser] = useState<Partial<IUser> | null>(null);
+    const [user, setUser] = useState<Partial<UserRequest> | null>(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const location = useLocation();
@@ -58,9 +58,9 @@ const AuthProvider = ({children}: { children: ReactNode }) => {
         }
     };
 
-    const register = async (email: string, password: string) => {
+    const register = async (userToRegistry: UserRequest) => {
         try {
-            const data = await registerService({email, passwordHash: password} as Partial<IUser>);
+            const data = await registerService(userToRegistry);
             setUser(data.user);
             notification('Registration successful', 'success');
             navigate('/');

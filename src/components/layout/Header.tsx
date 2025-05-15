@@ -99,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                   <FaUser />
                 </div>
                 {user && (
-                  <span className="ms-2 d-none d-md-inline">{user.name || user.email}</span>
+                  <span className="ms-2 d-none d-md-inline">{user.username || user.email}</span>
                 )}
               </div>
             </Dropdown.Toggle>

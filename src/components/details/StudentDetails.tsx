@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button, Card, Col, Form, Row } from 'react-bootstrap';
-import { enrollStudent, getStudentEnrollments } from '../../features/enrollments/services/EnrollmentService.ts';
+import {
+    cancelEnrollment,
+    enrollStudent,
+    getStudentEnrollments,
+    renewEnrollment
+} from '../../features/enrollments/services/EnrollmentService.ts';
 import { ClassRoomResponse } from '../../features/classes/types/ClassRoomTypes';
 import { EnrollmentResponse } from '../../features/enrollments/types/EnrollmentTypes';
 import notification from '../common/Notification.tsx';
@@ -119,13 +124,13 @@ const StudentDetails: React.FC = () => {
         const EnrollmentForm = ({ buttonLabel }: { buttonLabel: string }) => (
             <Form>
                 <Form.Group controlId="formClassSelect">
-                    <Form.Label>Select a Class</Form.Label>
+                    <Form.Label>Selecione uma Turma</Form.Label>
                     <Form.Control
                         as="select"
                         value={selectedClassId}
                         onChange={(e) => setSelectedClassId(e.target.value)}
                     >
-                        <option value="">Select a class</option>
+                        <option value="">Selecione uma turma</option>
                         {classes.map((classOption) => (
                             <option key={classOption.id as string} value={classOption.id as string}>
                                 {classOption.name}
@@ -134,19 +139,19 @@ const StudentDetails: React.FC = () => {
                     </Form.Control>
                 </Form.Group>
                 <Form.Group controlId="formEnrollmentFee" className="mt-3">
-                    <Form.Label>Enrollment Fee</Form.Label>
+                    <Form.Label>Taxa de Matrícula</Form.Label>
                     <Form.Control
                         type="number"
-                        placeholder="Enter enrollment fee"
+                        placeholder="Digite a taxa de matrícula"
                         value={enrollmentFee || ''}
                         onChange={(e) => setEnrollmentFee(e.target.value ? parseFloat(e.target.value) : undefined)}
                     />
                 </Form.Group>
                 <Form.Group controlId="formMonthlyFee" className="mt-3">
-                    <Form.Label>Monthly Fee</Form.Label>
+                    <Form.Label>Mensalidade</Form.Label>
                     <Form.Control
                         type="number"
-                        placeholder="Enter monthly fee"
+                        placeholder="Digite o valor da mensalidade"
                         value={monthlyFee || ''}
                         onChange={(e) => setMonthlyFee(e.target.value ? parseFloat(e.target.value) : undefined)}
                     />
@@ -193,7 +198,8 @@ const StudentDetails: React.FC = () => {
                                             <div>
                                                 <div className="text-muted small">Responsável</div>
                                                 <div className="fw-bold">
-                                                    <Link to={`/parents/${student.responsibleId}`} className="text-decoration-none">
+                                                    <Link to={`/parents/${student.responsibleId}`}
+                                                          className="text-decoration-none">
                                                         {student.responsibleName}
                                                     </Link>
                                                 </div>
@@ -237,7 +243,8 @@ const StudentDetails: React.FC = () => {
                                                     </div>
                                                     <div>
                                                         <div className="text-muted small">Data de Matrícula</div>
-                                                        <div className="fw-bold">{new Date(enroll.enrollmentDate).toLocaleDateString()}</div>
+                                                        <div
+                                                            className="fw-bold">{new Date(enroll.enrollmentDate).toLocaleDateString()}</div>
                                                     </div>
                                                 </div>
                                             </Col>
@@ -259,16 +266,16 @@ const StudentDetails: React.FC = () => {
                                         <div className="d-flex gap-2">
                                             {enroll.endDate && new Date(enroll.endDate) <= currentDate && (
                                                 <>
-                                                    <Button 
-                                                        variant="danger" 
+                                                    <Button
+                                                        variant="danger"
                                                         onClick={() => handleCancelEnrollment(enroll.id!! as string)}
                                                         className="d-flex align-items-center"
                                                     >
                                                         <FaTimesCircle className="me-2" />
                                                         Cancelar Matrícula
                                                     </Button>
-                                                    <Button 
-                                                        variant="success" 
+                                                    <Button
+                                                        variant="success"
                                                         onClick={() => handleRenewEnrollment(enroll.id!! as string)}
                                                         className="d-flex align-items-center"
                                                     >
@@ -278,8 +285,8 @@ const StudentDetails: React.FC = () => {
                                                 </>
                                             )}
                                             {(!enroll.endDate || new Date(enroll.endDate) > currentDate) && (
-                                                <Button 
-                                                    variant="danger" 
+                                                <Button
+                                                    variant="danger"
                                                     onClick={() => handleCancelEnrollment(enroll.id!! as string)}
                                                     className="d-flex align-items-center"
                                                 >
@@ -340,3 +347,4 @@ const StudentDetails: React.FC = () => {
 ;
 
 export default StudentDetails;
+

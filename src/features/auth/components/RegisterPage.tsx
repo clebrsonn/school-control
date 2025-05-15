@@ -8,6 +8,7 @@ import { extractFieldErrors } from '../../../utils/errorUtils';
 
 function RegisterPage() {
     const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const {register} = useAuth();
@@ -17,7 +18,7 @@ function RegisterPage() {
         setFieldErrors({});
 
         try {
-            await register(email, password);
+            await register({ username, email, password });
         } catch (error) {
             const errors = extractFieldErrors(error);
             setFieldErrors(errors);
@@ -33,6 +34,16 @@ function RegisterPage() {
             </div>
 
             <Form onSubmit={handleSubmit}>
+                <FormField
+                    id="formBasicUsername"
+                    label="Username"
+                    type="text"
+                    placeholder="Digite seu nome de usuário"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    error={fieldErrors.username || null}
+                    required
+                />
                 <FormField
                     id="formBasicEmail"
                     label="Email"

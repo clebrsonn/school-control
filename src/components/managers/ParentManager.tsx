@@ -17,13 +17,12 @@ import FormField from '../common/FormField';
 import { extractFieldErrors } from '../../utils/errorUtils';
 import { ResponsibleRequest, ResponsibleResponse } from '../../features/parents/types/ResponsibleTypes.ts';
 
-// Constants for reusable initial states
 const INITIAL_PARENT_STATE: ResponsibleRequest = { name: '', phone: '', email: '' };
 
 const ParentManager: React.FC = () => {
-    const { 
-        currentPage, 
-        pageSize, 
+    const {
+        currentPage,
+        pageSize,
         handlePageChange,
         createEmptyPageResponse
     } = usePagination<ResponsibleResponse>();
@@ -73,31 +72,27 @@ const ParentManager: React.FC = () => {
         console.error(err);
     };
 
-    // Updates the form state dynamically
     const updateFormState = (field: keyof typeof formState, value: string) => {
         setFormState((prev) => ({ ...prev, [field]: value }));
     };
 
-    // Handles adding a new parent
-    const handleAddParent = async () => {
-        // Reset errors and set submitting state
+   const handleAddParent = async () => {
         setError(null);
         setFieldErrors({});
         setSubmitting(true);
 
-        // Client-side validation
         const clientErrors: Record<string, string> = {};
-        if (!formState.name) clientErrors.name = "Nome do responsável é obrigatório";
-        if (!formState.phone) clientErrors.phone = "Telefone do responsável é obrigatório";
+        if (!formState.name) clientErrors.name = 'Nome do responsável é obrigatório';
+        if (!formState.phone) clientErrors.phone = 'Telefone do responsável é obrigatório';
 
         // Validate email format if provided
         if (formState.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.email)) {
-            clientErrors.email = "Formato de email inválido";
+            clientErrors.email = 'Formato de email inválido';
         }
 
         if (Object.keys(clientErrors).length > 0) {
             setFieldErrors(clientErrors);
-            setError("Por favor, corrija os erros no formulário.");
+            setError('Por favor, corrija os erros no formulário.');
             setSubmitting(false);
             return;
         }
@@ -154,7 +149,7 @@ const ParentManager: React.FC = () => {
                 <Card.Body>
                     <Form>
                         <Row>
-                            <Col md={6}>
+                            <Col md={12}>
                                 <FormField
                                     id="formParentName"
                                     label="Nome"
@@ -164,6 +159,20 @@ const ParentManager: React.FC = () => {
                                     onChange={(e) => updateFormState('name', e.target.value)}
                                     error={fieldErrors.name || null}
                                     required
+                                />
+                            </Col>
+
+                        </Row>
+                        <Row>
+                            <Col md={6}>
+                                <FormField
+                                    id="formParentEmail"
+                                    label="Email"
+                                    type="email"
+                                    placeholder="Email do Responsável"
+                                    value={formState.email || ''}
+                                    onChange={(e) => updateFormState('email', e.target.value)}
+                                    error={fieldErrors.email || null}
                                 />
                             </Col>
                             <Col md={6}>
@@ -179,23 +188,10 @@ const ParentManager: React.FC = () => {
                                 />
                             </Col>
                         </Row>
-                        <Row>
-                            <Col md={12}>
-                                <FormField
-                                    id="formParentEmail"
-                                    label="Email"
-                                    type="email"
-                                    placeholder="Email do Responsável"
-                                    value={formState.email || ''}
-                                    onChange={(e) => updateFormState('email', e.target.value)}
-                                    error={fieldErrors.email || null}
-                                />
-                            </Col>
-                        </Row>
                         <div className="d-flex mt-3">
-                            <Button 
-                                variant="primary" 
-                                onClick={handleAddParent} 
+                            <Button
+                                variant="primary"
+                                onClick={handleAddParent}
                                 className="d-flex align-items-center"
                                 disabled={submitting}
                             >
@@ -215,11 +211,11 @@ const ParentManager: React.FC = () => {
                     </h5>
                 </Card.Header>
                 <Card.Body>
-                    <ListRegistries 
-                        page={parentPage} 
+                    <ListRegistries
+                        page={parentPage}
                         entityName="parents"
-                        onDelete={handleDelete} 
-                        onPageChange={handlePageChange} 
+                        onDelete={handleDelete}
+                        onPageChange={handlePageChange}
                     />
                 </Card.Body>
             </Card>

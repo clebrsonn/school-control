@@ -3,6 +3,8 @@ export interface StudentRequest {
   email: string;
   responsibleId: string;
   classroom: string;
+  enrollmentFee: number;
+  monthyFee: number;
 }
 
 export interface StudentResponse extends StudentRequest{

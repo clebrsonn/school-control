@@ -21,12 +21,6 @@ export const getStudentEnrollments = async (studentId: string): Promise<Enrollme
   return response;
 };
 
-// Legacy method - kept for backward compatibility
-export const enrollStudentLegacy = async (studentId: string, classId: string, enrollmentFee = 0, monthyFee = 0) => {
-  const response = await post('/enrollments', { studentId, classRoomId: classId, enrollmentFee, monthyFee });
-  return response;
-};
-
 /**
  * @deprecated This method is not part of the new API specification.
  * Use enrollStudent and getStudentEnrollments instead.
