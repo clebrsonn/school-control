@@ -1,5 +1,5 @@
 import { axiosPut, get } from '../../../config/axios';
-import { IUser } from '@hyteck/shared';
+import { UserResponse } from '../types/UserTypes.ts';
 
 interface UserProfileUpdateData {
   username?: string;
@@ -14,16 +14,16 @@ interface UserProfileUpdateData {
  * @param userData User profile data to update
  * @returns Updated user data
  */
-export const updateUserProfile = async (userData: UserProfileUpdateData): Promise<Partial<IUser>> => {
-  return await axiosPut<UserProfileUpdateData, Partial<IUser>>('/users/profile', userData);
+export const updateUserProfile = async (userData: UserProfileUpdateData): Promise<Partial<UserResponse>> => {
+  return await axiosPut<UserProfileUpdateData, Partial<UserResponse>>('/users/profile', userData);
 };
 
 /**
  * Get user profile
  * @returns User profile data
  */
-export const getUserProfile = async (): Promise<Partial<IUser>> => {
-  return await get<Partial<IUser>>('/users/profile');
+export const getUserProfile = async (): Promise<Partial<UserResponse>> => {
+  return await get<Partial<UserResponse>>('/users/profile');
 };
 
 /**

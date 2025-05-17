@@ -1,10 +1,14 @@
-// Interface definition
-export interface IDiscount {
-    id?: string;
+export interface DiscountRequest {
     name: string;
     value: number;
     validUntil: Date;
-    type: 'enroll' | 'tuition';  // Using literal types for better type safety
-    createdAt: Date;
-    updatedAt: Date;
+    type: 'MATRICULA' | 'MENSALIDADE';  // Using literal types for better type safety
 }
+export interface DiscountResponse {
+    id: string;
+
+}
+
+
+
+

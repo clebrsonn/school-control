@@ -14,7 +14,7 @@ const PaymentDetails: React.FC = () => {
   useEffect(() => {
     const getPayment = async () => {
         try{
-            const paymentData = await getPaymentById(id);
+            const paymentData = await getPaymentById(id as string);
             setPayment(paymentData);
         }catch (e) {
             notification(e.message || 'Failed to fetch payment data.', 'error');

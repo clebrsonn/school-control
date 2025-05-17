@@ -30,7 +30,7 @@ const UserProfilePage: React.FC = () => {
       setFormData({
         username: user.username || '',
         email: user.email || '',
-        name: user.name || '',
+        name: user.username || '',
         phone: user.phone || '',
         bio: user.bio || ''
       });

@@ -7,10 +7,10 @@ import {
     register as registerService
 } from '../services/AuthService.ts';
 import notification from '../../../components/common/Notification.tsx';
-import { UserRequest } from '../../users/types/UserTypes.ts';
+import { UserRequest, UserResponse } from '../../users/types/UserTypes.ts';
 
 interface AuthContextType {
-    user: Partial<UserRequest> | null;
+    user: Partial<UserResponse> | null;
     login: (email: string, password: string) => Promise<void>;
     register: (userToregistry: UserRequest) => Promise<void>;
     logout: () => void;
@@ -19,7 +19,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AuthProvider = ({children}: { children: ReactNode }) => {
-    const [user, setUser] = useState<Partial<UserRequest> | null>(null);
+    const [user, setUser] = useState<Partial<UserResponse> | null>(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const location = useLocation();
@@ -47,7 +47,7 @@ const AuthProvider = ({children}: { children: ReactNode }) => {
 
     const login = async (email: string, password: string) => {
         try {
-            const data = await loginService(email, password);
+            const data = await loginService({ login: email, password });
             setUser(data.user);
             const from = (location.state)?.from?.pathname || "/";
             navigate(from, {replace: true});

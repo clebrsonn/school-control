@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Col, Form, Row } from 'react-bootstrap';
-import { IDiscount } from '@hyteck/shared';
 import { createDiscount, deleteDiscount, fetchDiscounts } from '../../features/enrollments/services/DiscountService.ts';
 import ListRegistries from '../common/ListRegistries.tsx';
 import { PageResponse } from '../../types/PageResponse';
@@ -9,6 +8,7 @@ import { FaList, FaPercentage, FaSave } from 'react-icons/fa';
 import ErrorMessage from '../common/ErrorMessage.tsx';
 import FormField from '../common/FormField';
 import { extractFieldErrors } from '../../utils/errorUtils';
+import { DiscountResponse } from '../../features/billing/types/Discount.ts';
 
 const DiscountManager: React.FC = () => {
     const { 
@@ -16,13 +16,13 @@ const DiscountManager: React.FC = () => {
         pageSize, 
         handlePageChange,
         createEmptyPageResponse
-    } = usePagination<IDiscount>();
+    } = usePagination<DiscountResponse>();
 
-    const [discountPage, setDiscountPage] = useState<PageResponse<IDiscount>>(createEmptyPageResponse());
+    const [discountPage, setDiscountPage] = useState<PageResponse<DiscountResponse>>(createEmptyPageResponse());
     const [name, setName] = useState<string>(""); // Nome do desconto
     const [value, setValue] = useState<number>(0); // Valor fixo do desconto
     const [validUntil, setValidUntil] = useState<string>(""); // Data de validade do desconto
-    const [type, setType] = useState<string>("enroll"); // Tipo de desconto
+    const [type, setType] = useState<"MATRICULA" | "MENSALIDADE">("MATRICULA"); // Tipo de desconto
     const [error, setError] = useState<string | null>(null); // Erros do formulário
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({}); // Erros específicos de campo
     const [successMessage, setSuccessMessage] = useState<string | null>(null); // Mensagem de feedback
@@ -66,7 +66,7 @@ const DiscountManager: React.FC = () => {
         }
 
         try {
-            await createDiscount({ name, value, validUntil, type });
+            await createDiscount({ name, value, validUntil: new Date(validUntil), type });
 
             // Refresh the discount list to get the updated data
             const refreshedData = await fetchDiscounts(currentPage, pageSize);
@@ -76,7 +76,7 @@ const DiscountManager: React.FC = () => {
             setName("");
             setValue(0);
             setValidUntil("");
-            setType("enroll");
+            setType("MATRICULA");
             setSuccessMessage("Desconto criado com sucesso!");
         } catch (err: any) {
             // Extract field-specific errors
@@ -172,8 +172,8 @@ const DiscountManager: React.FC = () => {
                                         required
                                         isInvalid={!!fieldErrors.type}
                                     >
-                                        <option value="enroll">Matrícula</option>
-                                        <option value="tuition">Mensalidade</option>
+                                        <option value="MATRICULA">Matrícula</option>
+                                        <option value="MENSALIDADE">Mensalidade</option>
                                     </Form.Control>
                                     {fieldErrors.type && (
                                         <Form.Control.Feedback type="invalid">

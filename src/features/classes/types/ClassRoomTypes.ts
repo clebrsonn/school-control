@@ -6,8 +6,6 @@ export interface ClassRoomRequest {
 
 }
 
-export interface ClassRoomResponse {
+export interface ClassRoomResponse extends ClassRoomRequest{
   id: string;
-  name: string;
-  schoolYear: string;
 }

@@ -2,14 +2,14 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ParentManager from './ParentManager';
-import { createParent, deleteParent, fetchParents } from '../../features/parents/services/ParentService';
+import { createParent, deleteResponsible, fetchParents } from '../../features/parents/services/ParentService';
 import notification from '../common/Notification';
 
 // Mock the dependencies
 vi.mock('../../features/parents/services/ParentService', () => ({
   fetchParents: vi.fn(),
   createParent: vi.fn(),
-  deleteParent: vi.fn()
+  deleteResponsible: vi.fn()
 }));
 
 vi.mock('../common/Notification', () => ({
@@ -139,18 +139,18 @@ describe('ParentManager Component', () => {
       fireEvent.click(instance);
       
       await waitFor(() => {
-        expect(deleteParent).toHaveBeenCalled();
+        expect(deleteResponsible).toHaveBeenCalled();
         expect(notification).toHaveBeenCalledWith('Responsável removido com sucesso.', 'success');
       });
     } else {
       // If the button isn't found, we'll test the function directly
       const mockId = 'parent1';
-      (deleteParent as any).mockResolvedValueOnce({});
+      (deleteResponsible as any).mockResolvedValueOnce({});
       
       // Call the handleDelete function directly
       await (ParentManager as any).prototype.handleDelete(mockId);
       
-      expect(deleteParent).toHaveBeenCalledWith(mockId);
+      expect(deleteResponsible).toHaveBeenCalledWith(mockId);
       expect(notification).toHaveBeenCalledWith('Responsável removido com sucesso.', 'success');
     }
   });

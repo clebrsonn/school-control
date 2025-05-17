@@ -1,46 +1,21 @@
-import { IDiscount } from '@hyteck/shared';
-import { axiosDelete } from '../../../config/axios/delete.ts';
-import { axiosPut } from '../../../config/axios/put.ts';
-import { post } from '../../../config/axios/post.ts';
-import { get } from '../../../config/axios/get.ts';
+import { axiosDelete, axiosPut, get, post } from '../../../config/axios';
 import { PageResponse } from '../../../types/PageResponse';
+import { DiscountRequest, DiscountResponse } from '../../billing/types/Discount.ts';
 
-const API_URL= '/discounts';
-export const fetchDiscounts= async (page = 0, size = 10): Promise<PageResponse<IDiscount>> => {
-    try {
-        const response = await get<PageResponse<IDiscount>>(`${API_URL}?page=${page}&size=${size}`);
-        return response;
-    } catch (error) {
-        console.error('Error fetching discounts', error);
-        throw error;
-    }
-}
+const API_URL = '/discounts';
+export const fetchDiscounts = async (page = 0, size = 10): Promise<PageResponse<DiscountResponse>> => {
+    return await get<PageResponse<DiscountResponse>>(`${API_URL}?page=${page}&size=${size}`);
+};
 
-export const createDiscount= async (discount: IDiscount): Promise<IDiscount> => {
-    try {
-        const response = await post<IDiscount, IDiscount>(API_URL, discount);
-        return response;
-    } catch (error) {
-        console.error('Error creating discount', error);
-        throw error;
-    }
-}
+export const createDiscount = async (discount: DiscountRequest): Promise<DiscountResponse> => {
+    return await post<DiscountRequest, DiscountResponse>(API_URL, discount);
+};
 
-export const updateDiscount= async (id: string, discount: Partial<IDiscount>): Promise<Partial<IDiscount>> => {
-    try {
-        const response = await axiosPut<Partial<IDiscount>, IDiscount>(`${API_URL}/${id}`, discount);
-        return response;
-    } catch (error) {
-        console.error('Error updating discount', error);
-        throw error;
-    }
-}
+export const updateDiscount = async (id: string, discount: Partial<DiscountRequest>): Promise<Partial<DiscountResponse>> => {
+    return await axiosPut<Partial<DiscountRequest>, DiscountResponse>(`${API_URL}/${id}`, discount);
+};
 
-export const deleteDiscount=async (id: number): Promise<void> => {
-    try {
-        await axiosDelete(`${API_URL}/${id}`);
-    } catch (error) {
-        console.error('Error deleting discount', error);
-        throw error;
-    }
-}
+export const deleteDiscount = async (id: string): Promise<void> => {
+    await axiosDelete(`${API_URL}/${id}`);
+
+};

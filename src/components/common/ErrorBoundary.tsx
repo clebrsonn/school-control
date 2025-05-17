@@ -28,9 +28,9 @@ export class ErrorBoundary extends React.Component<
           <p>Ocorreu um erro inesperado. Por favor, tente novamente mais tarde ou entre em contato com o suporte.</p>
           <details className="mt-3">
             <summary>Detalhes técnicos (para desenvolvedores)</summary>
-            <p className="mt-2">{this.state.error && this.state.error.toString()}</p>
+            <p className="mt-2">{this.state.error && (this.state.error as Error).toString()}</p>
             <p className="mt-2">
-              {this.state.errorInfo && this.state.errorInfo.componentStack}
+              {this.state.errorInfo && (this.state.errorInfo as React.ErrorInfo).componentStack}
             </p>
           </details>
           <button 

@@ -62,7 +62,9 @@ const ClassManager: React.FC = () => {
         try {
             const newClass: ClassRoomRequest = {
                 name,
-                schoolYear: new Date().getFullYear().toString() // Use current year as school year
+                schoolYear: new Date().getFullYear().toString(),
+                startTime,
+                endTime
             };
             await createClassRoom(newClass);
 
