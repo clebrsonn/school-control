@@ -74,6 +74,11 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                     studentPageData = await getAllStudents({ page: currentPage, size: pageSize });
                 }
                 setStudentPage(studentPageData as PageResponse<StudentResponse>);
+                setParents([{
+                    name: studentPageData.content[0]?.responsibleName, id: (responsible as string),
+                    email: '',
+                    phone: ''
+                }]);
             } catch (err: any) {
                 setError(err.message || 'Failed to fetch students');
             }
@@ -136,7 +141,7 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
 
         const clientErrors: Record<string, string> = {};
         if (!name) clientErrors.name = 'Nome do aluno é obrigatório';
-        if (!email) clientErrors.email = 'Email do aluno é obrigatório';
+        // if (!email) clientErrors.email = 'Email do aluno é obrigatório';
         if (!responsible && !selectedResponsible) clientErrors.responsibleId = 'Responsável é obrigatório';
         if (!classId) clientErrors.classId = 'Turma é obrigatório';
         if (Object.keys(clientErrors).length > 0) {
@@ -258,7 +263,6 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     error={fieldErrors.email || null}
-                                    required
                                 />
                             </Col>
                         </Row>
@@ -290,6 +294,7 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                                         value={monthlyFee || ''}
                                         onChange={(e) => setMonthlyFee(e.target.value ? parseFloat(e.target.value) : undefined)}
                                         isInvalid={!!fieldErrors.monthyFee}
+                                        min={0}
                                     />
                                     {fieldErrors.monthyFee && (
                                         <Form.Control.Feedback type="invalid">
@@ -309,6 +314,7 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                                         value={selectedResponsible}
                                         onChange={(e) => setSelectedResponsible(e.target.value)}
                                         isInvalid={!!fieldErrors.responsibleId}
+                                        disabled={!!responsible}
                                     >
                                         <option value="">Selecione um responsável</option>
                                         {parents.map((parent) => (

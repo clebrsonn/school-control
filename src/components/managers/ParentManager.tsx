@@ -85,10 +85,10 @@ const ParentManager: React.FC = () => {
         if (!formState.name) clientErrors.name = 'Nome do responsável é obrigatório';
         if (!formState.phone) clientErrors.phone = 'Telefone do responsável é obrigatório';
 
-        // Validate email format if provided
-        if (formState.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.email)) {
-            clientErrors.email = 'Formato de email inválido';
-        }
+        // TODO: Validate email format if provided
+        // if (formState.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.email)) {
+        //     clientErrors.email = 'Formato de email inválido';
+        // }
 
         if (Object.keys(clientErrors).length > 0) {
             setFieldErrors(clientErrors);
