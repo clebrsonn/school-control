@@ -127,7 +127,7 @@ const ClassManager: React.FC = () => {
                 <Card.Body>
                     <Form>
                         <Row>
-                            <Col md={6}>
+                            <Col md={12}>
                                 <FormField
                                     id="formClassName"
                                     label="Nome"
@@ -139,6 +139,9 @@ const ClassManager: React.FC = () => {
                                     required
                                 />
                             </Col>
+                        </Row>
+
+                        <Row>
                             <Col md={6}>
                                 <FormField
                                     id="formClassStartTime"
@@ -150,10 +153,8 @@ const ClassManager: React.FC = () => {
                                     error={fieldErrors.startTime || null}
                                 />
                             </Col>
-                        </Row>
 
-                        <Row>
-                            <Col md={4}>
+                            <Col md={6}>
                                 <FormField
                                     id="formClassEndTime"
                                     label="Horário de término"
@@ -164,7 +165,9 @@ const ClassManager: React.FC = () => {
                                     error={fieldErrors.endTime || null}
                                 />
                             </Col>
-                            <Col md={4}>
+                        </Row>
+                        <Row>
+                            <Col md={6}>
                                 <FormField
                                     id="formClassEnrollmentFee"
                                     label="Matrícula"
@@ -175,7 +178,7 @@ const ClassManager: React.FC = () => {
                                     error={fieldErrors.enrollmentFee || null}
                                 />
                             </Col>
-                            <Col md={4}>
+                            <Col md={6}>
                                 <FormField
                                     id="formClassMonthlyFee"
                                     label="Mensalidade"
