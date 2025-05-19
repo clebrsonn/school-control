@@ -13,7 +13,11 @@ import {
 } from 'react-icons/fa';
 import ErrorMessage from './common/ErrorMessage.tsx';
 import { LoadingSpinner } from './common/LoadingSpinner.tsx';
-import { countInvoicesByStatus, generateMonthlyBiling } from '../features/billing/services/BillingService';
+import {
+    countInvoicesByStatus,
+    generateMonthlyBiling,
+    getConsolidatedMonth
+} from '../features/billing/services/BillingService';
 import notification from './common/Notification.tsx';
 
 const HomeReport: React.FC = () => {
@@ -43,10 +47,15 @@ const HomeReport: React.FC = () => {
         const fetchInvoiceCounts = async () => {
             try {
                 setLoading(true);
-                const [openCount, lateCount] = await Promise.all([
+                const currentDate = new Date();
+                const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+
+                const [total, openCount, lateCount] = await Promise.all([
+                    getConsolidatedMonth(yearMonth),
                     countInvoicesByStatus('PENDING'),
                     countInvoicesByStatus('OVERDUE'),
                 ]);
+                setTotalEstimated(total);
                 setOpenInvoicesCount(openCount);
                 setLateInvoicesCount(lateCount);
                 setLoading(false);

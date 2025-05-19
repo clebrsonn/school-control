@@ -33,10 +33,18 @@ export const generateMonthlyBiling = async ( yearMonth: string): Promise<void> =
 
 /**
  * Generate monthly billing
- * @returns The number od Invoices by status
+ * @returns The number of Invoices by status
  * @param status
  */
 export const countInvoicesByStatus = async ( status: string): Promise<number> => {
   return await get<number>(`/billing/invoices/${status}/count`);
+};
+/**
+ * Generate monthly billing
+ * @returns The total of values to receive on actual month
+ * @param yearMonth
+ */
+export const getConsolidatedMonth = async ( yearMonth: string): Promise<number> => {
+  return await get<number>(`/billing/total-month/${yearMonth}`);
 };
 

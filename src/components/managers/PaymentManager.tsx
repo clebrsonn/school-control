@@ -42,11 +42,11 @@ const PaymentManager: React.FC = () => {
             await processPayment(paymentRequest);
             notification(`Pagamento processado para a invoice ${invoice.items[0].invoiceId}`, 'success');
 
-            // Atualizar a lista de invoices após o pagamento
             const currentDate = new Date();
             const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
             const updatedStatements = await getConsolidatedStatements(yearMonth);
             setConsolidatedStatements(updatedStatements);
+
         } catch (err: any) {
             notification(err.message || 'Erro ao processar o pagamento.', 'error');
         }

@@ -215,7 +215,7 @@ const ClassManager: React.FC = () => {
                 <Card.Body>
                     <ListRegistries 
                         page={classPage} 
-                        entityName={'classe'} 
+                        entityName={'classes'}
                         onDelete={handleDelete}
                         onPageChange={handlePageChange}
                     />

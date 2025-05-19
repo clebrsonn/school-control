@@ -102,17 +102,6 @@ const ParentDetails: React.FC = () => {
                         <FaUser className="me-2" />
                         Detalhes do Responsável
                     </h1>
-                    <Button
-                        variant="primary"
-                        onClick={() => {
-                            setModalType(ModalTypes.STUDENT);
-                            setModalIsOpen(true);
-                        }}
-                        className="d-flex align-items-center"
-                    >
-                        <FaPlus className="me-2" />
-                        Adicionar Aluno
-                    </Button>
                 </div>
 
                 <Row className="mb-4">
