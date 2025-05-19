@@ -7,7 +7,7 @@ export interface StudentRequest {
   monthyFee: number;
 }
 
-export interface StudentResponse extends StudentRequest{
+export interface StudentResponse extends StudentRequest {
   id: string;
   responsibleName: string;
   createdAt: string;
