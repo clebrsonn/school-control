@@ -36,11 +36,14 @@ const PaymentManager: React.FC = () => {
                 invoiceId: invoice.items[0].invoiceId,
                 amount: invoice.totalAmountDue,
                 paymentMethod: PaymentMethod.PIX, // Exemplo: pode ser alterado para outro método de pagamento
-                paymentDate: new Date().toISOString(),
+                paymentDate: new Date(),
             };
 
             await processPayment(paymentRequest);
             notification(`Pagamento processado para a invoice ${invoice.items[0].invoiceId}`, 'success');
+            setConsolidatedStatements(prev =>
+                prev.filter(statement => statement.items[0].invoiceId !== invoice.items[0].invoiceId)
+            );
 
             const currentDate = new Date();
             const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;

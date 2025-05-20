@@ -71,7 +71,7 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                         size: pageSize
                     });
                 } else {
-                    studentPageData = await getAllStudents({ page: currentPage, size: pageSize });
+                    studentPageData = await getAllStudents({ page: currentPage, size: pageSize, sort: 'name,responsible' });
                 }
                 setStudentPage(studentPageData as PageResponse<StudentResponse>);
                 setParents([{

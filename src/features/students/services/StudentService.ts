@@ -9,7 +9,7 @@ const API_URL = '/students';
  * @param pageable Pagination parameters
  * @returns Page of student responses
  */
-export const getAllStudents = async (pageable: { page: number, size: number, sort?: string[] }): Promise<PageResponse<StudentResponse>> => {
+export const getAllStudents = async (pageable: { page: number, size: number, sort?: string }): Promise<PageResponse<StudentResponse>> => {
   return await get<PageResponse<StudentResponse>>(API_URL, { params: pageable });
 };
 
