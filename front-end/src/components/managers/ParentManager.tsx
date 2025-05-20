@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { createParent, deleteParent, fetchParents } from '../../features/parents/services/ParentService.ts';
 import ErrorMessage from '../common/ErrorMessage.tsx';
 import notification from '../common/Notification.tsx';
@@ -6,6 +6,7 @@ import { Button, Form } from 'react-bootstrap';
 import { IResponsible } from '@hyteck/shared';
 import ListRegistries from '../common/ListRegistries.tsx';
 import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
+import EditParentModal from '../modals/EditParentModal'; // Added import
 
 // Constants for reusable initial states
 const INITIAL_PARENT_STATE: Partial<IResponsible> = { name: '', phone: '' };
@@ -13,9 +14,20 @@ const INITIAL_PARENT_STATE: Partial<IResponsible> = { name: '', phone: '' };
 const ParentManager: React.FC = () => {
     const [parents, setParents] = useState<IResponsible[]>([]);
     const [formState, setFormState] = useState(INITIAL_PARENT_STATE);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showEditModal, setShowEditModal] = useState(false); // Added state for modal visibility
+    const [editingParent, setEditingParent] = useState<IResponsible | null>(null); // Added state for parent being edited
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
+
+    const handleParentUpdated = (updatedParent: IResponsible) => { // Implemented callback
+        setParents(prevParents =>
+            prevParents.map(p => (p._id === updatedParent._id ? updatedParent : p))
+        );
+        setShowEditModal(false);
+        setEditingParent(null);
+    };
 
     // Fetch parents when the component is mounted
     useEffect(() => {
@@ -76,6 +88,24 @@ const ParentManager: React.FC = () => {
         }
     };
 
+    const handleEditParent = (id: string) => {
+        const parentToEdit = parents.find(p => p._id === id);
+        if (parentToEdit) {
+            setEditingParent(parentToEdit);
+            setShowEditModal(true);
+            // notification(`Editing parent: ${parentToEdit.name} (Modal not implemented yet)`, 'info'); // Removed placeholder notification
+        }
+    };
+
+    const filteredParents = useMemo(() => {
+        if (!searchTerm) {
+            return parents;
+        }
+        return parents.filter(parent =>
+            parent.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [parents, searchTerm]);
+
     if (!parents) return <LoadingSpinner />;
 
     return (
@@ -106,7 +136,30 @@ const ParentManager: React.FC = () => {
                 </Button>
             </Form>
             <h2>Responsáveis</h2>
-            <ListRegistries data={parents} entityName="parent" onDelete={handleDelete} />
+            <Form.Group controlId="formParentSearch">
+                <Form.Label>Buscar Responsável</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Digite o nome para buscar..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="mb-3"
+                />
+            </Form.Group>
+            <ListRegistries data={filteredParents} entityName="parent" onDelete={handleDelete} onEdit={handleEditParent} /> {/* Added onEdit prop */}
+
+            {/* Replaced Placeholder with EditParentModal */}
+            {editingParent && ( // Ensure editingParent is not null before rendering modal
+                 <EditParentModal
+                    isOpen={showEditModal}
+                    onClose={() => {
+                        setShowEditModal(false);
+                        setEditingParent(null); // Also clear editingParent on manual close
+                    }}
+                    parent={editingParent}
+                    onParentUpdated={handleParentUpdated}
+                />
+            )}
         </div>
     );
 };

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Form } from 'react-bootstrap'; // Added Form import
 import { IExpense } from '@hyteck/shared/';
 import { ExpenseForm } from './ExpenseForm';
 import { ExpenseService } from '../services/ExpenseService.ts';
@@ -9,6 +10,7 @@ export const ExpenseList: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingExpense, setEditingExpense] = useState<IExpense | null>(null);
+    const [searchTerm, setSearchTerm] = useState(''); // Added searchTerm state
 
     const fetchExpenses = async () => {
         try {
@@ -56,6 +58,15 @@ export const ExpenseList: React.FC = () => {
         return <div>Carregando...</div>;
     }
 
+    const filteredExpenses = useMemo(() => {
+        if (!searchTerm) {
+            return expenses;
+        }
+        return expenses.filter(expense =>
+            expense.description.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [expenses, searchTerm]);
+
     return (
         <div className="container mt-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -70,6 +81,16 @@ export const ExpenseList: React.FC = () => {
                     Nova Despesa
                 </button>
             </div>
+
+            <Form.Group controlId="formExpenseSearch" className="mb-3">
+                <Form.Label>Buscar por Descrição</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Digite a descrição para buscar..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </Form.Group>
 
             {showForm && (
                 <div className="card mb-4">
@@ -105,7 +126,7 @@ export const ExpenseList: React.FC = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {expenses.map((expense) => (
+                    {filteredExpenses.map((expense) => (
                         <tr key={expense._id}>
                             <td>{formatDate(expense.date)}</td>
                             <td>{formatCurrency(expense.value)}</td>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Button, Container, Form } from 'react-bootstrap';
 import { IClass, IResponsible, IStudent } from '@hyteck/shared';
 import notification from '../common/Notification.tsx';
@@ -12,6 +12,7 @@ import ListRegistries from '../common/ListRegistries.tsx';
 import { fetchClasses } from '../../features/classes/services/ClassService.ts';
 import { fetchParents } from '../../features/parents/services/ParentService.ts';
 import ErrorMessage from '../common/ErrorMessage.tsx';
+import EditStudentModal from '../modals/EditStudentModal'; // Added import
 
 interface StudentManagerProps {
     responsible: string | undefined;
@@ -24,7 +25,18 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
     const [name, setName] = useState('');
     const [classId, setClassId] = useState('');
     const [selectedResponsible, setSelectedResponsible] = useState(responsible);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingStudent, setEditingStudent] = useState<IStudent | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const handleStudentUpdated = (updatedStudent: IStudent) => {
+        setStudents(prevStudents =>
+            prevStudents.map(s => (s._id === updatedStudent._id ? updatedStudent : s))
+        );
+        setShowEditModal(false);
+        setEditingStudent(null);
+    };
 
     useEffect(() => {
         const getStudents = async () => {
@@ -90,6 +102,24 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
         }
     };
 
+    const handleEditStudent = (id: string) => {
+        const studentToEdit = students.find(s => s._id === id);
+        if (studentToEdit) {
+            setEditingStudent(studentToEdit);
+            setShowEditModal(true);
+            // notification(`Editing student: ${studentToEdit.name}`, 'info'); // Removed placeholder notification
+        }
+    };
+
+    const filteredStudents = useMemo(() => {
+        if (!searchTerm) {
+            return students;
+        }
+        return students.filter(student =>
+            student.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [students, searchTerm]);
+
     return (
         <Container>
             <h1>Gerenciar Alunos</h1>
@@ -141,7 +171,29 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                 </Button>
             </Form>
             <h2>Alunos</h2>
-            <ListRegistries data={students} entityName={'student'} onDelete={handleDelete}></ListRegistries>
+            <Form.Group controlId="formStudentSearch">
+                <Form.Label>Buscar Aluno</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Digite o nome para buscar..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="mb-3"
+                />
+            </Form.Group>
+            <ListRegistries data={filteredStudents} entityName={'student'} onDelete={handleDelete} onEdit={handleEditStudent} />
+
+            {editingStudent && (
+                <EditStudentModal
+                    isOpen={showEditModal}
+                    onClose={() => {
+                        setShowEditModal(false);
+                        setEditingStudent(null);
+                    }}
+                    student={editingStudent}
+                    onStudentUpdated={handleStudentUpdated}
+                />
+            )}
         </Container>
     );
 };

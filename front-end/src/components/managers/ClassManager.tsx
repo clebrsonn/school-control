@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { createClass, deleteClass, fetchClasses } from '../../features/classes/services/ClassService';
 import { Button, Container, Form } from 'react-bootstrap';
 import { IClass } from '@hyteck/shared';
@@ -12,6 +12,7 @@ const ClassManager: React.FC = () => {
     const [endTime, setEndTime] = useState('');
     const [enrollmentFee, setEnrollmentFee] = useState('');
     const [monthlyFee, setMonthlyFee] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -58,6 +59,15 @@ const ClassManager: React.FC = () => {
             setError('Erro ao remover a turma.');
         }
     };
+
+    const filteredClasses = useMemo(() => {
+        if (!searchTerm) {
+            return classes;
+        }
+        return classes.filter(cls =>
+            cls.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [classes, searchTerm]);
 
     return (
         <Container>
@@ -112,7 +122,17 @@ const ClassManager: React.FC = () => {
                 <Button onClick={handleAddClass} className="mt-3">Add Class</Button>
             </Form>
             <h3 className="mt-4">Lista de Turmas</h3>
-            <ListRegistries data={classes} entityName={'classe'} onDelete={handleDelete}></ListRegistries>
+            <Form.Group controlId="formClassSearch">
+                <Form.Label>Buscar Turma</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Digite o nome da turma para buscar..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="mb-3"
+                />
+            </Form.Group>
+            <ListRegistries data={filteredClasses} entityName={'classe'} onDelete={handleDelete}></ListRegistries>
         </Container>
     );
 };

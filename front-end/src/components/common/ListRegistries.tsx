@@ -11,9 +11,10 @@ interface EntityTableProps<T extends IEntity> {
     data: T[];
     entityName: string;
     onDelete?: (id: string) => void;
+    onEdit?: (id: string) => void; // Added onEdit prop
 }
 
-const EntityTable = <T extends IEntity>({ data, entityName, onDelete }: EntityTableProps<T>) => {
+const EntityTable = <T extends IEntity>({ data, entityName, onDelete, onEdit }: EntityTableProps<T>) => { // Added onEdit to destructuring
     const columns = data.length > 0 ? Object.keys(data[0]).filter(key => key !== '_id' && key !== '__v') : [];
 
     const formatDate = (dateString: string) => {
@@ -36,7 +37,7 @@ const EntityTable = <T extends IEntity>({ data, entityName, onDelete }: EntityTa
             <thead>
             <tr>
                 {columns.map((column, index) => <th key={index}>{column}</th>)}
-                {onDelete && <th>Ações</th>}
+                {(onDelete || onEdit) && <th>Ações</th>} {/* Updated condition for Ações header */}
             </tr>
             </thead>
             <tbody>
@@ -57,18 +58,30 @@ const EntityTable = <T extends IEntity>({ data, entityName, onDelete }: EntityTa
                             )}
                         </td>
                     ))}
-                    {onDelete && (
+                    {(onDelete || onEdit) && ( // Updated condition for Ações cell
                         <td>
-                            <Button variant="danger" size="sm" onClick={() => onDelete(item._id)}>
-                                Excluir
-                            </Button>
+                            {onEdit && (
+                                <Button
+                                    variant="warning"
+                                    size="sm"
+                                    onClick={() => onEdit(item._id)}
+                                    className="me-2"
+                                >
+                                    Editar
+                                </Button>
+                            )}
+                            {onDelete && (
+                                <Button variant="danger" size="sm" onClick={() => onDelete(item._id)}>
+                                    Excluir
+                                </Button>
+                            )}
                         </td>
                     )}
                 </tr>
             ))}
             {data.length === 0 && (
                 <tr>
-                    <td colSpan={columns.length + (onDelete ? 1 : 0)} className="text-center">
+                    <td colSpan={columns.length + ((onDelete || onEdit) ? 1 : 0)} className="text-center"> {/* Updated colSpan */}
                         Nenhum {entityName} encontrado.
                     </td>
                 </tr>

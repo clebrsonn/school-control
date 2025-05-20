@@ -19,8 +19,9 @@ export const fetchParentById = async (id: string): Promise<IResponsible> => {
   return response;
 };
 
-export const updateParent = async (id: string, parentData: Partial<IResponsible>): Promise<Partial<IResponsible>> => {
-  return await axiosPut<Partial<IResponsible>, IResponsible>(`/parents/${id}`, parentData);
+export const updateParent = async (id: string, parentData: Partial<IResponsible>): Promise<IResponsible> => {
+  const response = await axiosPut<Partial<IResponsible>, IResponsible>(`/parents/${id}`, parentData);
+  return response;
 };
 
 export const deleteParent = async (id: string) => {

@@ -2,6 +2,7 @@ import { IStudent } from '@hyteck/shared';
 import { get } from '../../../config/axios/get.ts';
 import { post } from '../../../config/axios/post.ts';
 import { axiosDelete } from '../../../config/axios/delete.ts';
+import { axiosPut } from '../../../config/axios/put.ts'; // Ensure axiosPut is imported
 
 export const fetchStudents = async () => {
   const response = await get('/students');
@@ -41,4 +42,9 @@ export const cancelEnrollment = async (enrollmentId: string) => {
 export const renewEnrollment = async (enrollmentId: string) => {
   const response = await get<{ enrollmentId: string }>(`/enrollments/${enrollmentId}/renew`);
   return response;
-}
+};
+
+export const updateStudent = async (id: string, studentData: Partial<IStudent>): Promise<IStudent> => {
+    const response = await axiosPut<Partial<IStudent>, IStudent>(`/students/${id}`, studentData);
+    return response;
+};

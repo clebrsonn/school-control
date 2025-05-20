@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Alert, Button, Form } from 'react-bootstrap';
 import { IDiscount } from '@hyteck/shared';
 
@@ -11,6 +11,7 @@ const DiscountManager: React.FC = () => {
     const [value, setValue] = useState<number>(0); // Valor fixo do desconto
     const [validUntil, setValidUntil] = useState<string>(""); // Data de validade do desconto
     const [type, setType] = useState<string>("enroll"); // Tipo de desconto
+    const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState<string | null>(null); // Erros do formulário
     const [successMessage, setSuccessMessage] = useState<string | null>(null); // Mensagem de feedback
 
@@ -58,6 +59,15 @@ const DiscountManager: React.FC = () => {
             setError("Erro ao excluir o desconto.");
         }
     };
+
+    const filteredDiscounts = useMemo(() => {
+        if (!searchTerm) {
+            return discounts;
+        }
+        return discounts.filter(discount =>
+            discount.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [discounts, searchTerm]);
 
     return (
         <div>
@@ -118,7 +128,17 @@ const DiscountManager: React.FC = () => {
             </Form>
 
             <h3 className="mt-4">Lista de Descontos</h3>
-            <ListRegistries data={discounts} entityName={'discount'}  onDelete={handleDelete}></ListRegistries>
+            <Form.Group controlId="formDiscountSearch" className="mt-4">
+                <Form.Label>Buscar Desconto</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Digite o nome do desconto para buscar..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="mb-3"
+                />
+            </Form.Group>
+            <ListRegistries data={filteredDiscounts} entityName={'discount'}  onDelete={handleDelete}></ListRegistries>
 
         </div>
     );
