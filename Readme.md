@@ -1,34 +1,50 @@
-# School Control
+# React + TypeScript + Vite
 
-Este repositório contém um sistema de controle escolar dividido em três partes principais: backend, front-end e shared.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Estrutura do Projeto
+Currently, two official plugins are available:
 
-- `backend/`: Contém a API e a lógica do servidor.
-- `front-end/`: Contém a aplicação web desenvolvida em React.
-- `shared/`: Contém os tipos e modelos compartilhados entre o backend e o front-end.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Configuração do Ambiente
+## Expanding the ESLint configuration
 
-1. Clone o repositório:
-   ```sh
-   git clone https://github.com/seu-usuario/school-control.git
-   cd school-control
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-2. Instale as dependências:
-    ` pnpm install `
+- Configure the top-level `parserOptions` property like this:
 
-3. Configure as variáveis de ambiente:
+```js
+export default tseslint.config({
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
+```
 
-    Crie um arquivo .env no diretório backend e front-end com as variáveis necessárias.
+- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
+- Optionally add `...tseslint.configs.stylisticTypeChecked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
 
+```js
+// eslint.config.js
+import react from 'eslint-plugin-react'
 
-## Scripts Disponíveis
-pnpm dev: Inicia o backend e o front-end em modo de desenvolvimento.
-pnpm build: Compila backend e o front-end para produção.
-
-
-## Licença
-
-Este projeto está licenciado sob a licença MIT.
-
+export default tseslint.config({
+  // Set the react version
+  settings: { react: { version: '18.3' } },
+  plugins: {
+    // Add the react plugin
+    react,
+  },
+  rules: {
+    // other rules...
+    // Enable its recommended rules
+    ...react.configs.recommended.rules,
+    ...react.configs['jsx-runtime'].rules,
+  },
+})
+```
