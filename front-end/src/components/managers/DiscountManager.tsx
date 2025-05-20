@@ -4,6 +4,7 @@ import { IDiscount } from '@hyteck/shared';
 
 import { createDiscount, deleteDiscount, fetchDiscounts } from '../../features/enrollments/services/DiscountService.ts';
 import ListRegistries from '../common/ListRegistries.tsx';
+import EditDiscountModal from '../modals/EditDiscountModal'; // Added import
 
 const DiscountManager: React.FC = () => {
     const [discounts, setDiscounts] = useState<IDiscount[]>([]); // Lista de descontos
@@ -12,8 +13,18 @@ const DiscountManager: React.FC = () => {
     const [validUntil, setValidUntil] = useState<string>(""); // Data de validade do desconto
     const [type, setType] = useState<string>("enroll"); // Tipo de desconto
     const [searchTerm, setSearchTerm] = useState('');
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingDiscount, setEditingDiscount] = useState<IDiscount | null>(null);
     const [error, setError] = useState<string | null>(null); // Erros do formulário
     const [successMessage, setSuccessMessage] = useState<string | null>(null); // Mensagem de feedback
+
+    const handleDiscountUpdated = (updatedDiscount: IDiscount) => { // Implemented callback
+        setDiscounts(prevDiscounts =>
+            prevDiscounts.map(d => (d._id === updatedDiscount._id ? updatedDiscount : d))
+        );
+        setShowEditModal(false);
+        setEditingDiscount(null);
+    };
 
     // Carrega os descontos ao montar o componente
     useEffect(() => {
@@ -57,6 +68,17 @@ const DiscountManager: React.FC = () => {
             setDiscounts(discounts.filter((discount) => discount._id !== id)); // Atualiza a lista
         } catch (err: any) {
             setError("Erro ao excluir o desconto.");
+        }
+    };
+
+    const handleEditDiscount = (id: string) => {
+        const discountToEdit = discounts.find(d => d._id === id);
+        if (discountToEdit) {
+            setEditingDiscount(discountToEdit);
+            setShowEditModal(true);
+            // For now, a simple notification or log, actual modal will be separate
+            // console.log("Editing discount:", discountToEdit); 
+            // notification(`Editing discount: ${discountToEdit.name}`, 'info'); // Placeholder
         }
     };
 
@@ -138,8 +160,19 @@ const DiscountManager: React.FC = () => {
                     className="mb-3"
                 />
             </Form.Group>
-            <ListRegistries data={filteredDiscounts} entityName={'discount'}  onDelete={handleDelete}></ListRegistries>
+            <ListRegistries data={filteredDiscounts} entityName={'discount'}  onDelete={handleDelete} onEdit={handleEditDiscount} />
 
+            {editingDiscount && (
+                <EditDiscountModal
+                    isOpen={showEditModal}
+                    onClose={() => {
+                        setShowEditModal(false);
+                        setEditingDiscount(null);
+                    }}
+                    discountToEdit={editingDiscount}
+                    onDiscountUpdated={handleDiscountUpdated}
+                />
+            )}
         </div>
     );
 };

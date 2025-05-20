@@ -1,4 +1,4 @@
-import { axiosDelete, get, post } from '../../../config/axios';
+import { axiosDelete, get, post, axiosPut } from '../../../config/axios'; // Added axiosPut
 import { IClass } from '@hyteck/shared';
 
 const API_URL='/classes';
@@ -20,4 +20,9 @@ export const fetchClassById = async (id: string): Promise<IClass> => {
 export const deleteClass = async (id: string) => {
   const response = await axiosDelete(`${API_URL}/${id}`);
   return response;
-}
+};
+
+export const updateClass = async (id: string, classData: Partial<IClass>): Promise<IClass> => {
+    const response = await axiosPut<Partial<IClass>, IClass>(`${API_URL}/${id}`, classData);
+    return response;
+};

@@ -4,6 +4,7 @@ import { Button, Container, Form } from 'react-bootstrap';
 import { IClass } from '@hyteck/shared';
 import notification from '../common/Notification.tsx';
 import ListRegistries from '../common/ListRegistries.tsx';
+import EditClassModal from '../modals/EditClassModal'; // Added import
 
 const ClassManager: React.FC = () => {
     const [classes, setClasses] = useState<IClass[]>([]);
@@ -13,7 +14,17 @@ const ClassManager: React.FC = () => {
     const [enrollmentFee, setEnrollmentFee] = useState('');
     const [monthlyFee, setMonthlyFee] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingClass, setEditingClass] = useState<IClass | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const handleClassUpdated = (updatedClass: IClass) => { // Implemented callback
+        setClasses(prevClasses =>
+            prevClasses.map(c => (c._id === updatedClass._id ? updatedClass : c))
+        );
+        setShowEditModal(false);
+        setEditingClass(null);
+    };
 
     useEffect(() => {
         const getClasses = async () => {
@@ -57,6 +68,15 @@ const ClassManager: React.FC = () => {
             notification('Turma removida com sucesso.');
         } catch {
             setError('Erro ao remover a turma.');
+        }
+    };
+
+    const handleEditClass = (id: string) => {
+        const classToEdit = classes.find(c => c._id === id);
+        if (classToEdit) {
+            setEditingClass(classToEdit);
+            setShowEditModal(true);
+            // notification(`Editing class: ${classToEdit.name}`, 'info'); // Removed placeholder notification
         }
     };
 
@@ -132,7 +152,19 @@ const ClassManager: React.FC = () => {
                     className="mb-3"
                 />
             </Form.Group>
-            <ListRegistries data={filteredClasses} entityName={'classe'} onDelete={handleDelete}></ListRegistries>
+            <ListRegistries data={filteredClasses} entityName={'classe'} onDelete={handleDelete} onEdit={handleEditClass} />
+
+            {editingClass && (
+                <EditClassModal
+                    isOpen={showEditModal}
+                    onClose={() => {
+                        setShowEditModal(false);
+                        setEditingClass(null);
+                    }}
+                    classToEdit={editingClass}
+                    onClassUpdated={handleClassUpdated}
+                />
+            )}
         </Container>
     );
 };

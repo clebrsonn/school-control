@@ -25,10 +25,12 @@ export const createDiscount= async (discount: IDiscount): Promise<IDiscount> => 
     }
 }
 
-export const updateDiscount= async (id: string, discount: Partial<IDiscount>): Promise<Partial<IDiscount>> => {
+export const updateDiscount= async (id: string, discount: Partial<IDiscount>): Promise<IDiscount> => {
     try {
+        // Assuming axiosPut is correctly typed to return the full updated object (IDiscount)
+        // as the second generic type parameter to axiosPut suggests.
         const response = await axiosPut<Partial<IDiscount>, IDiscount>(`${API_URL}/${id}`, discount);
-        return response;
+        return response; // This should be the full IDiscount object
     } catch (error) {
         console.error('Error updating discount', error);
         throw error;
