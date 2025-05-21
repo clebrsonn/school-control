@@ -33,12 +33,20 @@ export class ErrorBoundary extends React.Component<
               {this.state.errorInfo && (this.state.errorInfo as React.ErrorInfo).componentStack}
             </p>
           </details>
-          <button 
-            className="btn btn-primary mt-3"
-            onClick={() => window.location.reload()}
-          >
-            Recarregar página
-          </button>
+          <div className="d-flex gap-2 mt-3">
+            <button
+              className="btn btn-primary"
+              onClick={() => window.location.reload()}
+            >
+              Recarregar página
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => window.location.href = '/'}
+            >
+              Voltar para o início
+            </button>
+          </div>
         </div>
       );
     }

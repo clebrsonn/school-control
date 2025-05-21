@@ -10,17 +10,21 @@ function LoginPage() {
     const [username, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [loading, setLoading] = useState(false);
     const {login} = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setFieldErrors({});
+        setLoading(true);
 
         try {
             await login(username, password);
         } catch (error) {
             const errors = extractFieldErrors(error);
             setFieldErrors(errors);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -55,8 +59,15 @@ function LoginPage() {
                     required
                 />
 
-                <Button variant="primary" type="submit" className="w-100">
-                    Login
+                <Button variant="primary" type="submit" className="w-100" disabled={loading}>
+                    {loading ? (
+                        <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Entrando...
+                        </>
+                    ) : (
+                        'Login'
+                    )}
                 </Button>
 
                 <div className="text-center mt-3">

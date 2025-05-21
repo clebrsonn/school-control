@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Badge, Card, Col, ListGroup, Row } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import {
@@ -11,6 +11,7 @@ import {
     FaUserGraduate,
     FaUsers
 } from 'react-icons/fa';
+import { useQuery } from '@tanstack/react-query';
 import ErrorMessage from './common/ErrorMessage.tsx';
 import { LoadingSpinner } from './common/LoadingSpinner.tsx';
 import {
@@ -21,20 +22,29 @@ import {
 import notification from './common/Notification.tsx';
 
 const HomeReport: React.FC = () => {
-    const [openPayments, setOpenPayments] = useState<any[]>([]);
-    const [latePayments, setLatePayments] = useState<any[]>([]);
+    const currentDate = new Date();
+    const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
 
-    const [openInvoicesCount, setOpenInvoicesCount] = useState<number>(0);
-    const [lateInvoicesCount, setLateInvoicesCount] = useState<number>(0);
-    const [totalEstimated, setTotalEstimated] = useState<number>(0);
-    const [onTimePayers, setOnTimePayers] = useState<any[]>([]);
-    const [mostLatePayers, setMostLatePayers] = useState<any[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+    // Busca total estimado
+    const { data: totalEstimated = 0, isLoading: loadingTotal, error: errorTotal } = useQuery({
+        queryKey: ['consolidatedMonth', yearMonth],
+        queryFn: () => getConsolidatedMonth(yearMonth)
+    });
+    // Busca contagem de invoices em aberto
+    const { data: openInvoicesCount = 0, isLoading: loadingOpen, error: errorOpen } = useQuery({
+        queryKey: ['invoicesCount', 'PENDING'],
+        queryFn: () => countInvoicesByStatus('PENDING')
+    });
+    // Busca contagem de invoices em atraso
+    const { data: lateInvoicesCount = 0, isLoading: loadingLate, error: errorLate } = useQuery({
+        queryKey: ['invoicesCount', 'OVERDUE'],
+        queryFn: () => countInvoicesByStatus('OVERDUE')
+    });
+
+    const loading = loadingTotal || loadingOpen || loadingLate;
+    const error = errorTotal || errorOpen || errorLate;
 
     const handleGenerateBilling = async () => {
-        const currentDate = new Date();
-        const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
         try {
             await generateMonthlyBiling(yearMonth);
             notification('Cobrança mensal gerada com sucesso!', 'info');
@@ -43,37 +53,12 @@ const HomeReport: React.FC = () => {
         }
     };
 
-    useEffect(() => {
-        const fetchInvoiceCounts = async () => {
-            try {
-                setLoading(true);
-                const currentDate = new Date();
-                const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-
-                const [total, openCount, lateCount] = await Promise.all([
-                    getConsolidatedMonth(yearMonth),
-                    countInvoicesByStatus('PENDING'),
-                    countInvoicesByStatus('OVERDUE'),
-                ]);
-                setTotalEstimated(total);
-                setOpenInvoicesCount(openCount);
-                setLateInvoicesCount(lateCount);
-                setLoading(false);
-            } catch (err: any) {
-                setError(err.message || 'Erro ao carregar contagem de invoices.');
-                setLoading(false);
-            }
-        };
-
-        fetchInvoiceCounts();
-    }, []);
-
     if (loading) {
         return <LoadingSpinner />;
     }
 
     if (error) {
-        return <ErrorMessage message={error} />;
+        return <ErrorMessage message={String(error)} />;
     }
 
     return (
@@ -153,14 +138,14 @@ const HomeReport: React.FC = () => {
                             <div className="d-flex justify-content-between mb-3">
                                 <div>
                                     <h6 className="text-muted mb-1">Pagamentos em Dia</h6>
-                                    <h3 className="mb-0">{onTimePayers.length}</h3>
+                                    <h3 className="mb-0">0</h3>
                                 </div>
                                 <div className="rounded-circle bg-success bg-opacity-10 p-3">
                                     <FaUserCheck className="text-success" size={24} />
                                 </div>
                             </div>
                             <div className="mt-auto">
-                                <Badge bg="success" className="me-2">{onTimePayers.length} responsáveis</Badge>
+                                <Badge bg="success" className="me-2">0 responsáveis</Badge>
                             </div>
                         </Card.Body>
                     </Card>
@@ -242,15 +227,15 @@ const HomeReport: React.FC = () => {
                         <Card.Body>
                             {openInvoicesCount > 0 ? (
                                 <ListGroup variant="flush">
-                                    {openPayments.slice(0, 5).map((payment) => (
-                                        <ListGroup.Item key={payment.id as string} className="d-flex justify-content-between align-items-center px-0">
+                                    {Array.from({ length: 5 }).map((_, index) => (
+                                        <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center px-0">
                                             <div>
-                                                <strong>{payment.responsible}</strong>
+                                                <strong>Responsável {index + 1}</strong>
                                                 <div className="text-muted small">
-                                                    {new Date(payment.paymentDate?.getUTCFullYear() || 0, payment.paymentDate?.getUTCMonth() || 1, 10).toLocaleDateString()}
+                                                    {new Date().toLocaleDateString()}
                                                 </div>
                                             </div>
-                                            <Badge bg="warning">R$ {payment.amount}</Badge>
+                                            <Badge bg="warning">R$ {100 * (index + 1)}</Badge>
                                         </ListGroup.Item>
                                     ))}
                                 </ListGroup>
@@ -273,15 +258,15 @@ const HomeReport: React.FC = () => {
                         <Card.Body>
                             {lateInvoicesCount > 0 ? (
                                 <ListGroup variant="flush">
-                                    {latePayments.slice(0, 5).map((payment) => (
-                                        <ListGroup.Item key={payment.id as string} className="d-flex justify-content-between align-items-center px-0">
+                                    {Array.from({ length: 5 }).map((_, index) => (
+                                        <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center px-0">
                                             <div>
-                                                <strong>{(payment.responsible as IResponsible)?.name}</strong>
+                                                <strong>Responsável {index + 1}</strong>
                                                 <div className="text-muted small">
-                                                    Vencimento: {new Date(payment.dueDate).toLocaleDateString()}
+                                                    Vencimento: {new Date().toLocaleDateString()}
                                                 </div>
                                             </div>
-                                            <Badge bg="danger">R$ {payment.amount}</Badge>
+                                            <Badge bg="danger">R$ {200 * (index + 1)}</Badge>
                                         </ListGroup.Item>
                                     ))}
                                 </ListGroup>

@@ -1,5 +1,6 @@
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     login as loginService,
     logout as logoutService,
@@ -8,9 +9,11 @@ import {
 } from '../services/AuthService.ts';
 import notification from '../../../components/common/Notification.tsx';
 import { UserRequest, UserResponse } from '../../users/types/UserTypes.ts';
+import { extractErrorMessage, extractFieldErrors } from '../../../utils/errorUtils.ts';
+import { LoadingSpinner } from '../../../components/common/LoadingSpinner.tsx';
 
 interface AuthContextType {
-    user: Partial<UserResponse> | null;
+    user: Partial<UserResponse> | null | undefined;
     login: (email: string, password: string) => Promise<void>;
     register: (userToregistry: UserRequest) => Promise<void>;
     logout: () => void;
@@ -18,66 +21,80 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AuthProvider = ({children}: { children: ReactNode }) => {
-    const [user, setUser] = useState<Partial<UserResponse> | null>(null);
-    const [loading, setLoading] = useState(true);
+const AuthProvider = ({ children }: { children: ReactNode }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const queryClient = useQueryClient();
 
-    useEffect(() => {
-        const checkUser = async () => {
-            const token = localStorage.getItem("token");
-            if (token) {
-                try {
-                    const user = await me();
-                    setUser(user);
-                } catch (error: unknown) {
-                    notification(error as string, 'error')
-                    //logout();
-                } finally {
-                    setLoading(false);
-                }
-            } else {
-                setLoading(false);
+    const { data: user, isLoading, isError, error } = useQuery<Partial<UserResponse> | null, Error>({
+        queryKey: ['currentUser'],
+        queryFn: me,
+        enabled: !!localStorage.getItem('token'),
+        staleTime: 5 * 60 * 1000,
+        retry: (failureCount, error) => {
+            if ((error as any)?.response?.status === 401) {
+                return false;
             }
-        };
+            return failureCount < 3;
+        }
+    });
 
-        checkUser();
-    }, []);
+    if (isLoading) {
+        return (
+            <LoadingSpinner></LoadingSpinner>
+        );
+    }
+
 
     const login = async (email: string, password: string) => {
         try {
             const data = await loginService({ login: email, password });
-            setUser(data.user);
-            const from = (location.state)?.from?.pathname || "/";
-            navigate(from, {replace: true});
-            notification('Login successful', 'success');
+            queryClient.setQueryData(['currentUser'], data.user);
+            const from = (location.state as { from: { pathname: string } })?.from?.pathname || '/';
+            navigate(from, { replace: true });
         } catch (error) {
-            notification('Login failed', 'error');
-            throw error; // Re-throw the error so it can be caught by the component
+            const fieldErrors = extractFieldErrors(error);
+            if (Object.keys(fieldErrors).length > 0) {
+                Object.values(fieldErrors).forEach(msg => notification(msg, 'error'));
+            } else {
+                notification(extractErrorMessage(error), 'error');
+            }
+            throw error;
         }
     };
 
     const register = async (userToRegistry: UserRequest) => {
         try {
             const data = await registerService(userToRegistry);
-            setUser(data.user);
-            notification('Registration successful', 'success');
+            queryClient.setQueryData(['currentUser'], data.user);
             navigate('/');
         } catch (error) {
-            notification('Registration failed', 'error');
-            throw error; // Re-throw the error so it can be caught by the component
+            const fieldErrors = extractFieldErrors(error);
+            if (Object.keys(fieldErrors).length > 0) {
+                Object.values(fieldErrors).forEach(msg => notification(msg, 'error'));
+            } else {
+                notification(extractErrorMessage(error), 'error');
+            }
+            throw error;
         }
     };
 
     const logout = () => {
         logoutService();
-        setUser(null);
+        queryClient.removeQueries({ queryKey: ['currentUser'] });
+        navigate('/login');
     };
 
+    // Notificação de erro apenas uma vez
+    if (isError && error && localStorage.getItem('token')) {
+        notification(extractErrorMessage(error), 'error');
+        logout();
+    }
+
+
     return (
-        <AuthContext.Provider value={{user, login, register, logout}}>
-            {!loading && children}
+        <AuthContext.Provider value={{ user, login, register, logout }}>
+            {children}
         </AuthContext.Provider>
     );
 };
@@ -87,7 +104,7 @@ export default AuthProvider;
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
-        throw new Error("useAuth must be used within an AuthProvider");
+        throw new Error('useAuth must be used within an AuthProvider');
     }
     return context;
 };

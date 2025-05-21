@@ -1,53 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import { ExpenseForm } from './ExpenseForm';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { ExpenseForm } from './ExpenseForm.tsx';
 import { ExpenseService } from '../services/ExpenseService.ts';
 import notification from '../../../components/common/Notification.tsx';
-import { usePagination } from '../../../hooks/usePagination';
-import { PageResponse } from '../../../types/PageResponse';
 import { Expense } from '../types/ExpenseTypes.ts';
 
 export const ExpenseList: React.FC = () => {
-    const {
-        currentPage,
-        pageSize,
-        handlePageChange,
-        createEmptyPageResponse
-    } = usePagination<Expense>();
-
-    const [expensesPage, setExpensesPage] = useState<PageResponse<Expense>>(createEmptyPageResponse());
-    const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(0);
+    const pageSize = 10;
     const [showForm, setShowForm] = useState(false);
     const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+    const queryClient = useQueryClient();
 
-    const fetchExpenses = async () => {
-        try {
-            const data = await ExpenseService.getAll(currentPage, pageSize);
-            setExpensesPage(data);
-        } catch (error) {
-            console.error('Error fetching expenses:', error);
-            notification('Erro ao carregar despesas', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Busca despesas paginadas
+    const {
+        data: expensesPage = { content: [], number: 0, totalPages: 1, size: pageSize },
+        isLoading,
+        error,
+        refetch
+    } = useQuery({
+        queryKey: ['expenses', currentPage, pageSize],
+        queryFn: () => ExpenseService.getAll(currentPage, pageSize),
+        keepPreviousData: true
+    });
 
-    useEffect(() => {
-        fetchExpenses();
-    }, [currentPage, pageSize]);
-
-    const handleDelete = async (id: string) => {
-        if (!window.confirm('Tem certeza que deseja excluir esta despesa?')) {
-            return;
-        }
-
-        try {
-            await ExpenseService.delete(id);
+    // Mutation para deletar despesa
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => ExpenseService.delete(id),
+        onSuccess: () => {
             notification('Despesa excluída com sucesso!', 'success');
-            fetchExpenses();
-        } catch (error) {
-            console.error('Error deleting expense:', error);
+            queryClient.invalidateQueries({ queryKey: ['expenses'] });
+        },
+        onError: () => {
             notification('Erro ao excluir despesa', 'error');
         }
+    });
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm('Tem certeza que deseja excluir esta despesa?')) return;
+        deleteMutation.mutate(id);
     };
 
     const formatCurrency = (value: number) => {
@@ -57,12 +48,15 @@ export const ExpenseList: React.FC = () => {
         }).format(value);
     };
 
-    const formatDate = (date: Date) => {
+    const formatDate = (date: Date | string) => {
         return new Date(date).toLocaleDateString('pt-BR');
     };
 
-    if (loading) {
+    if (isLoading) {
         return <div>Carregando...</div>;
+    }
+    if (error) {
+        return <div className="text-danger">Erro ao carregar despesas.</div>;
     }
 
     return (
@@ -96,7 +90,7 @@ export const ExpenseList: React.FC = () => {
                             } : undefined}
                             onSuccess={() => {
                                 setShowForm(false);
-                                fetchExpenses();
+                                refetch();
                             }}
                         />
                     </div>
@@ -147,6 +141,7 @@ export const ExpenseList: React.FC = () => {
                                 <button
                                     className="btn btn-sm btn-outline-danger"
                                     onClick={() => handleDelete(expense.id!)}
+                                    disabled={deleteMutation.isLoading}
                                 >
                                     Excluir
                                 </button>
@@ -160,20 +155,20 @@ export const ExpenseList: React.FC = () => {
                     <div className="d-flex justify-content-center mt-4">
                         <nav>
                             <ul className="pagination">
-                                <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}>
+                                <li className={`page-item ${expensesPage.number === 0 ? 'disabled' : ''}`}>
                                     <button
                                         className="page-link"
-                                        onClick={() => handlePageChange(1)}
-                                        disabled={currentPage === 0}
+                                        onClick={() => setCurrentPage(0)}
+                                        disabled={expensesPage.number === 0}
                                     >
                                         Primeira
                                     </button>
                                 </li>
-                                <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}>
+                                <li className={`page-item ${expensesPage.number === 0 ? 'disabled' : ''}`}>
                                     <button
                                         className="page-link"
-                                        onClick={() => handlePageChange(currentPage - 1)}
-                                        disabled={currentPage === 0}
+                                        onClick={() => setCurrentPage(expensesPage.number - 1)}
+                                        disabled={expensesPage.number === 0}
                                     >
                                         Anterior
                                     </button>
@@ -182,31 +177,31 @@ export const ExpenseList: React.FC = () => {
                                 {Array.from({ length: expensesPage.totalPages }, (_, i) => i + 1).map(pageNum => (
                                     <li
                                         key={pageNum}
-                                        className={`page-item ${pageNum === currentPage + 1 ? 'active' : ''}`}
+                                        className={`page-item ${pageNum === expensesPage.number + 1 ? 'active' : ''}`}
                                     >
                                         <button
                                             className="page-link"
-                                            onClick={() => handlePageChange(pageNum)}
+                                            onClick={() => setCurrentPage(pageNum - 1)}
                                         >
                                             {pageNum}
                                         </button>
                                     </li>
                                 ))}
 
-                                <li className={`page-item ${currentPage === expensesPage.totalPages - 1 ? 'disabled' : ''}`}>
+                                <li className={`page-item ${expensesPage.number === expensesPage.totalPages - 1 ? 'disabled' : ''}`}>
                                     <button
                                         className="page-link"
-                                        onClick={() => handlePageChange(currentPage + 2)}
-                                        disabled={currentPage === expensesPage.totalPages - 1}
+                                        onClick={() => setCurrentPage(expensesPage.number + 1)}
+                                        disabled={expensesPage.number === expensesPage.totalPages - 1}
                                     >
                                         Próxima
                                     </button>
                                 </li>
-                                <li className={`page-item ${currentPage === expensesPage.totalPages - 1 ? 'disabled' : ''}`}>
+                                <li className={`page-item ${expensesPage.number === expensesPage.totalPages - 1 ? 'disabled' : ''}`}>
                                     <button
                                         className="page-link"
-                                        onClick={() => handlePageChange(expensesPage.totalPages)}
-                                        disabled={currentPage === expensesPage.totalPages - 1}
+                                        onClick={() => setCurrentPage(expensesPage.totalPages - 1)}
+                                        disabled={expensesPage.number === expensesPage.totalPages - 1}
                                     >
                                         Última
                                     </button>
@@ -219,3 +214,4 @@ export const ExpenseList: React.FC = () => {
         </div>
     );
 };
+

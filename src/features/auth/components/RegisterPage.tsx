@@ -11,17 +11,21 @@ function RegisterPage() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [loading, setLoading] = useState(false); // novo estado
     const {register} = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setFieldErrors({});
+        setLoading(true); // inicia carregamento
 
         try {
             await register({ username, email, password });
         } catch (error) {
             const errors = extractFieldErrors(error);
             setFieldErrors(errors);
+        } finally {
+            setLoading(false); // encerra carregamento
         }
     };
 
@@ -66,8 +70,15 @@ function RegisterPage() {
                     required
                 />
 
-                <Button variant="primary" type="submit" className="w-100">
-                    Registrar
+                <Button variant="primary" type="submit" className="w-100" disabled={loading}>
+                    {loading ? (
+                        <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Registrando...
+                        </>
+                    ) : (
+                        'Registrar'
+                    )}
                 </Button>
 
                 <div className="text-center mt-3">

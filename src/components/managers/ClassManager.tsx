@@ -1,60 +1,49 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useCrudManager } from '../../hooks/useCrudManager';
 import { createClassRoom, deleteClassRoom, getAllClassRooms } from '../../features/classes/services/ClassService';
 import { ClassRoomRequest, ClassRoomResponse } from '../../features/classes/types/ClassRoomTypes';
 import { Button, Card, Col, Form, Row } from 'react-bootstrap';
 import notification from '../common/Notification.tsx';
 import ListRegistries from '../common/ListRegistries.tsx';
-import { PageResponse } from '../../types/PageResponse';
-import { usePagination } from '../../hooks/usePagination';
 import { FaChalkboardTeacher, FaList, FaSave } from 'react-icons/fa';
 import ErrorMessage from '../common/ErrorMessage.tsx';
 import FormField from '../common/FormField';
 import { extractFieldErrors } from '../../utils/errorUtils';
 
 const ClassManager: React.FC = () => {
-    const { 
-        currentPage, 
-        pageSize, 
-        handlePageChange,
-        createEmptyPageResponse
-    } = usePagination<ClassRoomResponse>();
+    const {
+        pageData: classPage,
+        isLoading,
+        error,
+        currentPage,
+        setCurrentPage,
+        create,
+        remove,
+        refetch
+    } = useCrudManager<ClassRoomResponse, ClassRoomRequest>({
+        entityName: 'classes',
+        fetchPage: (page, size) => getAllClassRooms({ page, size }),
+        createItem: createClassRoom,
+        deleteItem: deleteClassRoom
+    });
 
-    const [classPage, setClassPage] = useState<PageResponse<ClassRoomResponse>>(createEmptyPageResponse());
     const [name, setName] = useState('');
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [enrollmentFee, setEnrollmentFee] = useState('');
     const [monthlyFee, setMonthlyFee] = useState('');
-    const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState<boolean>(false);
 
-    useEffect(() => {
-        const getClasses = async () => {
-            try {
-                const classData = await getAllClassRooms({ page: currentPage, size: pageSize });
-                setClassPage(classData);
-            } catch (err: any) {
-                setError(err.message || 'Failed to fetch classes');
-            }
-        };
-
-        getClasses();
-    }, [currentPage, pageSize]);
-
     const handleAddClass = async () => {
-        // Reset errors and set loading state
-        setError(null);
         setFieldErrors({});
         setLoading(true);
 
-        // Client-side validation
         const clientErrors: Record<string, string> = {};
         if (!name) clientErrors.name = "Nome da turma é obrigatório";
 
         if (Object.keys(clientErrors).length > 0) {
             setFieldErrors(clientErrors);
-            setError("Por favor, corrija os erros no formulário.");
             setLoading(false);
             return;
         }
@@ -66,30 +55,19 @@ const ClassManager: React.FC = () => {
                 startTime,
                 endTime
             };
-            await createClassRoom(newClass);
+            await create(newClass);
 
-            // Refresh the class list to get the updated data
-            const refreshedData = await getAllClassRooms({ page: currentPage, size: pageSize });
-            setClassPage(refreshedData);
-
-            // Reset form
             setName('');
             setStartTime('');
             setEndTime('');
             setEnrollmentFee('');
             setMonthlyFee('');
-            setError(null);
-
+            setFieldErrors({});
             notification('Turma adicionada com sucesso.', 'success');
+            refetch();
         } catch (err) {
-            // Extract field-specific errors
             const errors = extractFieldErrors(err);
             setFieldErrors(errors);
-
-            // If there are no field-specific errors, set a general error message
-            if (Object.keys(errors).length === 0) {
-                setError(err.message || 'Erro ao adicionar turma');
-            }
         } finally {
             setLoading(false);
         }
@@ -97,15 +75,11 @@ const ClassManager: React.FC = () => {
 
     const handleDelete = async (id: string) => {
         try {
-            await deleteClassRoom(id);
-
-            // Refresh the class list to get the updated data
-            const refreshedData = await getAllClassRooms({ page: currentPage, size: pageSize });
-            setClassPage(refreshedData);
-
-            notification('Turma removida com sucesso.');
+            await remove(id);
+            notification('Turma removida com sucesso.', 'success');
+            refetch();
         } catch {
-            setError('Erro ao remover a turma.');
+            notification('Erro ao remover a turma.', 'error');
         }
     };
 
@@ -214,10 +188,10 @@ const ClassManager: React.FC = () => {
                 </Card.Header>
                 <Card.Body>
                     <ListRegistries 
-                        page={classPage} 
+                        page={classPage || { content: [], number: 0, totalPages: 1, size: 10 }}
                         entityName={'classes'}
                         onDelete={handleDelete}
-                        onPageChange={handlePageChange}
+                        onPageChange={(page) => setCurrentPage(page - 1)}
                     />
                 </Card.Body>
             </Card>

@@ -1,18 +1,5 @@
 import { Button, Form } from 'react-bootstrap';
 import { useState } from 'react';
-import StudentManager from '../managers/StudentManager.tsx';
-
-export const StudentFormModal: React.FC<{ parentId: string; onClose: () => void }> = ({
-  parentId,
-  onClose
-}) => (
-  <>
-    <h2>Add Student</h2>
-    <StudentManager responsible={parentId} />
-    <Button onClick={onClose}>Close</Button>
-
-  </>
-);
 
 export const MonthlyFeeFormModal: React.FC<{
   onSubmit: (amount: string, dueDate: string) => void;
@@ -47,3 +34,4 @@ export const MonthlyFeeFormModal: React.FC<{
     </>
   );
 };
+

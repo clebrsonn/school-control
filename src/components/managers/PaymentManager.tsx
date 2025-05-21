@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Badge, Button, Card, ListGroup } from 'react-bootstrap';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getConsolidatedStatements } from '../../features/billing/services/BillingService';
 import { ConsolidatedStatement, StatementLineItem } from '../../features/billing/types/BillingTypes';
 import { processPayment } from '../../features/payments/services/PaymentService';
@@ -8,51 +9,43 @@ import notification from '../common/Notification.tsx';
 import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
 
 const PaymentManager: React.FC = () => {
-    const [consolidatedStatements, setConsolidatedStatements] = useState<ConsolidatedStatement[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+    const queryClient = useQueryClient();
+    const currentDate = new Date();
+    const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
 
-    useEffect(() => {
-        const fetchInvoices = async () => {
-            try {
-                setLoading(true);
-                const currentDate = new Date();
-                const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-                const statements = await getConsolidatedStatements(yearMonth);
-                setConsolidatedStatements(statements);
-                setLoading(false);
-            } catch (err: any) {
-                setError(err.message || 'Erro ao carregar as invoices.');
-                setLoading(false);
-            }
-        };
+    // Busca consolidada de statements
+    const {
+        data: consolidatedStatements = [],
+        isLoading,
+        error,
+        refetch
+    } = useQuery({
+        queryKey: ['consolidatedStatements', yearMonth],
+        queryFn: () => getConsolidatedStatements(yearMonth),
+    });
 
-        fetchInvoices();
-    }, []);
-
-    const handleProcessPayment = async (invoice: ConsolidatedStatement) => {
-        try {
+    // Mutation para processar pagamento
+    const processPaymentMutation = useMutation({
+        mutationFn: async (invoice: ConsolidatedStatement) => {
             const paymentRequest: PaymentRequest = {
                 invoiceId: invoice.items[0].invoiceId,
                 amount: invoice.totalAmountDue,
-                paymentMethod: PaymentMethod.PIX, // Exemplo: pode ser alterado para outro método de pagamento
+                paymentMethod: PaymentMethod.PIX,
                 paymentDate: new Date(),
             };
-
             await processPayment(paymentRequest);
-            notification(`Pagamento processado para a invoice ${invoice.items[0].invoiceId}`, 'success');
-            setConsolidatedStatements(prev =>
-                prev.filter(statement => statement.items[0].invoiceId !== invoice.items[0].invoiceId)
-            );
-
-            const currentDate = new Date();
-            const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-            const updatedStatements = await getConsolidatedStatements(yearMonth);
-            setConsolidatedStatements(updatedStatements);
-
-        } catch (err: any) {
+        },
+        onSuccess: () => {
+            notification('Pagamento processado com sucesso!', 'success');
+            queryClient.invalidateQueries({ queryKey: ['consolidatedStatements', yearMonth] });
+        },
+        onError: (err: any) => {
             notification(err.message || 'Erro ao processar o pagamento.', 'error');
         }
+    });
+
+    const handleProcessPayment = (invoice: ConsolidatedStatement) => {
+        processPaymentMutation.mutate(invoice);
     };
 
     const formatDate = (dateString: string): string => {
@@ -60,12 +53,12 @@ const PaymentManager: React.FC = () => {
         return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
 
-    if (loading) {
+    if (isLoading) {
         return <LoadingSpinner />;
     }
 
     if (error) {
-        return <p className="text-danger">{error}</p>;
+        return <p className="text-danger">{String(error)}</p>;
     }
 
     return (
@@ -91,6 +84,7 @@ const PaymentManager: React.FC = () => {
                                         variant="primary"
                                         size="sm"
                                         onClick={() => handleProcessPayment(statement)}
+                                        disabled={processPaymentMutation.isLoading}
                                     >
                                         Pagar
                                     </Button>

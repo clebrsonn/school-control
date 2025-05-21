@@ -5,6 +5,7 @@ import NotificationProvider from './features/notifications/contexts/Notification
 import Layout from './components/layout/Layout';
 import AppRoutes from './routes/Routes';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { ThemeProvider } from './hooks/useTheme';
 
 const App: React.FC = () => {
     return (
@@ -12,9 +13,11 @@ const App: React.FC = () => {
             <Router>
                 <AuthProvider>
                     <NotificationProvider>
-                        <Layout>
-                            <AppRoutes/>
-                        </Layout>
+                        <ThemeProvider>
+                            <Layout>
+                                <AppRoutes/>
+                            </Layout>
+                        </ThemeProvider>
                     </NotificationProvider>
                 </AuthProvider>
             </Router>

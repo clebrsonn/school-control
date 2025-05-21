@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
     createResponsible,
     deleteResponsible,
-    fetchParents,
     getAllResponsibles
 } from '../../features/parents/services/ParentService.ts';
 import ErrorMessage from '../common/ErrorMessage.tsx';
@@ -10,74 +9,44 @@ import notification from '../common/Notification.tsx';
 import { Button, Card, Col, Form, Row } from 'react-bootstrap';
 import ListRegistries from '../common/ListRegistries.tsx';
 import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
-import { PageResponse } from '../../types/PageResponse';
-import { usePagination } from '../../hooks/usePagination';
-import { FaList, FaSave, FaUsers } from 'react-icons/fa';
+import { ResponsibleRequest, ResponsibleResponse } from '../../features/parents/types/ResponsibleTypes.ts';
+import { useCrudManager } from '../../hooks/useCrudManager';
 import FormField from '../common/FormField';
 import { extractFieldErrors } from '../../utils/errorUtils';
-import { ResponsibleRequest, ResponsibleResponse } from '../../features/parents/types/ResponsibleTypes.ts';
+import { FaList, FaSave, FaUsers } from 'react-icons/fa';
 
 const INITIAL_PARENT_STATE: ResponsibleRequest = { name: '', phone: '', email: '' };
 
 const ParentManager: React.FC = () => {
     const {
+        pageData,
+        isLoading,
+        error,
         currentPage,
-        pageSize,
-        handlePageChange,
-        createEmptyPageResponse
-    } = usePagination<ResponsibleResponse>();
+        setCurrentPage,
+        create,
+        remove,
+        refetch
+    } = useCrudManager<ResponsibleResponse, ResponsibleRequest>({
+        entityName: 'parents',
+        fetchPage: (page, size) => getAllResponsibles({ page, size }),
+        createItem: createResponsible,
+        deleteItem: deleteResponsible
+    });
 
-    const [parentPage, setParentPage] = useState<PageResponse<ResponsibleResponse>>(createEmptyPageResponse());
     const [formState, setFormState] = useState(INITIAL_PARENT_STATE);
-    const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [loading, setLoading] = useState<boolean>(true);
     const [submitting, setSubmitting] = useState<boolean>(false);
 
-
-    // Fetch parents when the component is mounted or pagination changes
-    useEffect(() => {
-        const getParents = async () => {
-            try {
-                setLoading(true);
-
-                const fetchedParentPage = await getAllResponsibles({ page: currentPage, size: pageSize });
-                setParentPage(fetchedParentPage);
-                setLoading(false);
-
-            } catch (err: unknown) {
-                handleApiError(err, 'Failed to fetch parents');
-                setLoading(false);
-            }
-        };
-        getParents();
-    }, [currentPage, pageSize]);
-
-
-    if (loading) {
+    if (isLoading) {
         return <LoadingSpinner />;
     }
-
-
-    // Centralized error handler for API calls
-    const handleApiError = (err: unknown, defaultMessage: string) => {
-        // Extract field-specific errors
-        const errors = extractFieldErrors(err);
-        setFieldErrors(errors);
-
-        // If there are no field-specific errors, set a general error message
-        if (Object.keys(errors).length === 0) {
-            setError((err as Error).message || defaultMessage);
-        }
-        console.error(err);
-    };
 
     const updateFormState = (field: keyof typeof formState, value: string) => {
         setFormState((prev) => ({ ...prev, [field]: value }));
     };
 
-   const handleAddParent = async () => {
-        setError(null);
+    const handleAddParent = async () => {
         setFieldErrors({});
         setSubmitting(true);
 
@@ -85,51 +54,34 @@ const ParentManager: React.FC = () => {
         if (!formState.name) clientErrors.name = 'Nome do responsável é obrigatório';
         if (!formState.phone) clientErrors.phone = 'Telefone do responsável é obrigatório';
 
-        // TODO: Validate email format if provided
-        // if (formState.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.email)) {
-        //     clientErrors.email = 'Formato de email inválido';
-        // }
-
         if (Object.keys(clientErrors).length > 0) {
             setFieldErrors(clientErrors);
-            setError('Por favor, corrija os erros no formulário.');
             setSubmitting(false);
             return;
         }
 
         try {
-            await createResponsible(formState);
-
-            // Refresh the parent list to get the updated data
-            const refreshedData = await fetchParents(currentPage, pageSize);
-            setParentPage(refreshedData);
-
+            await create(formState);
             setFormState(INITIAL_PARENT_STATE);
-            setError(null);
             notification('Responsável adicionado com sucesso', 'success');
+            refetch();
         } catch (err: unknown) {
-            handleApiError(err, 'Erro ao adicionar responsável');
+            const errors = extractFieldErrors(err);
+            setFieldErrors(errors);
         } finally {
             setSubmitting(false);
         }
     };
 
-    // Handles deleting a parent
     const handleDelete = async (id: string) => {
         try {
-            await deleteResponsible(id);
-
-            // Refresh the parent list to get the updated data
-            const refreshedData = await fetchParents(currentPage, pageSize);
-            setParentPage(refreshedData);
-
+            await remove(id);
             notification('Responsável removido com sucesso.', 'success');
+            refetch();
         } catch (err: unknown) {
-            handleApiError(err, 'Erro ao remover o responsável.');
+            notification('Erro ao remover o responsável.', 'error');
         }
     };
-
-    if (!parentPage.content) return <LoadingSpinner />;
 
     return (
         <div>
@@ -161,7 +113,6 @@ const ParentManager: React.FC = () => {
                                     required
                                 />
                             </Col>
-
                         </Row>
                         <Row>
                             <Col md={6}>
@@ -212,10 +163,10 @@ const ParentManager: React.FC = () => {
                 </Card.Header>
                 <Card.Body>
                     <ListRegistries
-                        page={parentPage}
+                        page={pageData || { content: [], number: 0, totalPages: 1, size: 10 }}
                         entityName="parents"
                         onDelete={handleDelete}
-                        onPageChange={handlePageChange}
+                        onPageChange={(page) => setCurrentPage(page - 1)}
                     />
                 </Card.Body>
             </Card>

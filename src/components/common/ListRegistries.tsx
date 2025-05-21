@@ -1,5 +1,5 @@
-import React from 'react';
-import { Button, Pagination, Table } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Button, Form, Pagination, Table } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
 interface IEntity {
@@ -23,12 +23,28 @@ interface EntityTableProps<T extends IEntity> {
     onPageChange?: (page: number) => void;
 }
 
-
 const ListRegistries = <T extends IEntity>({
-                                            page, entityName, onDelete, onEdit, onPageChange
-                                        }: EntityTableProps<T>) => {
-    const { content, number, totalPages } = page;
-    const currentPage = number ? number + 1 : 1; // tornado 1-based para exibição
+    page,
+    entityName,
+    onDelete,
+    onEdit,
+    onPageChange
+}: EntityTableProps<T>) => {
+    // Garante valor padrão seguro para page
+    const safePage = page || { content: [], number: 0, totalPages: 1, size: 10 };
+    const { content, number, totalPages } = safePage;
+    const currentPage = number ? number + 1 : 1;
+
+    // Busca local
+    const [search, setSearch] = useState('');
+    const filteredContent = search
+        ? content.filter(entity =>
+            Object.values(entity)
+                .join(' ')
+                .toLowerCase()
+                .includes(search.toLowerCase())
+        )
+        : content;
 
     // Get all keys from the first entity to use as table headers
     const getHeaders = () => {
@@ -44,8 +60,27 @@ const ListRegistries = <T extends IEntity>({
 
     const headers = getHeaders();
 
+    // Paginação controlada por evento React, sem reload
+    const handlePageChange = (pageNum: number) => {
+        if (onPageChange && pageNum !== currentPage) {
+            onPageChange(pageNum - 1); // pageNum é 1-based, backend geralmente espera 0-based
+        }
+    };
+
     return (
         <>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+                <Form.Control
+                    type="text"
+                    placeholder={`Buscar ${entityName}...`}
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    style={{ maxWidth: 300 }}
+                />
+                <span className="text-muted small">
+                    Página {currentPage} de {totalPages}
+                </span>
+            </div>
             <Table striped bordered hover responsive>
                 <thead>
                     <tr>
@@ -56,76 +91,74 @@ const ListRegistries = <T extends IEntity>({
                     </tr>
                 </thead>
                 <tbody>
-                    {content && content.map(entity => (
-                        <tr key={entity.id}>
-                            {headers.map((header, index) => (
-                                <td key={`${entity.id}-${header}`}>
-                                    {index === 0 ? (
-                                        <Link to={`/${entityName}/${entity.id}`}>
-                                            {typeof entity[header] === 'boolean' 
+                    {filteredContent && filteredContent.length > 0 ? (
+                        filteredContent.map(entity => (
+                            <tr key={entity.id}>
+                                {headers.map((header, index) => (
+                                    <td key={`${entity.id}-${header}`}>
+                                        {index === 0 ? (
+                                            <Link to={`/${entityName}/${entity.id}`}>
+                                                {typeof entity[header] === 'boolean'
+                                                    ? entity[header] ? 'Sim' : 'Não'
+                                                    : String(entity[header] || '')}
+                                            </Link>
+                                        ) : (
+                                            typeof entity[header] === 'boolean'
                                                 ? entity[header] ? 'Sim' : 'Não'
-                                                : String(entity[header] || '')}
-                                        </Link>
-                                    ) : (
-                                        typeof entity[header] === 'boolean' 
-                                            ? entity[header] ? 'Sim' : 'Não'
-                                            : String(entity[header] || '')
+                                                : String(entity[header] || '')
+                                        )}
+                                    </td>
+                                ))}
+                                <td>
+                                    {onEdit && (
+                                        <Button
+                                            variant="info"
+                                            size="sm"
+                                            onClick={() => onEdit(entity)}
+                                            className="me-2"
+                                            aria-label={`Editar ${entityName}`}
+                                        >
+                                            Editar
+                                        </Button>
+                                    )}
+                                    {onDelete && (
+                                        <Button
+                                            variant="danger"
+                                            size="sm"
+                                            onClick={() => onDelete(entity.id)}
+                                            aria-label={`Excluir ${entityName}`}
+                                        >
+                                            Excluir
+                                        </Button>
                                     )}
                                 </td>
-                            ))}
-                            <td>
-                                {onEdit && (
-                                    <Button 
-                                        variant="info" 
-                                        size="sm" 
-                                        onClick={() => onEdit(entity)}
-                                        className="me-2"
-                                    >
-                                        Editar
-                                    </Button>
-                                )}
-                                {onDelete && (
-                                    <Button 
-                                        variant="danger" 
-                                        size="sm" 
-                                        onClick={() => onDelete(entity.id)}
-                                    >
-                                        Excluir
-                                    </Button>
-                                )}
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={headers.length + 1} className="text-center text-muted">
+                                Nenhum registro encontrado.
                             </td>
                         </tr>
-                    ))}
+                    )}
                 </tbody>
             </Table>
 
             {totalPages > 1 && onPageChange && (
-                <Pagination className="justify-content-center">
-                    <Pagination.First
-                        onClick={() => onPageChange(1)}
-                        disabled={currentPage === 1}
-                    />
-                    <Pagination.Prev
-                        onClick={() => onPageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                    />
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                <Pagination className="justify-content-center mt-3">
+                    <Pagination.First onClick={() => handlePageChange(1)} disabled={currentPage === 1} />
+                    <Pagination.Prev onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} />
+                    {Array.from({ length: totalPages }, (_, i) => (
                         <Pagination.Item
-                            key={pageNum}
-                            active={pageNum === currentPage}
-                            onClick={() => onPageChange(pageNum)}
+                            key={i + 1}
+                            active={i + 1 === currentPage}
+                            onClick={() => handlePageChange(i + 1)}
                         >
-                            {pageNum}
+                            {i + 1}
                         </Pagination.Item>
                     ))}
-                    <Pagination.Next
-                        onClick={() => onPageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                    />
-                    <Pagination.Last
-                        onClick={() => onPageChange(totalPages)}
-                        disabled={currentPage === totalPages}
-                    />
+                    <Pagination.Next onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} />
+                    <Pagination.Last onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} />
                 </Pagination>
             )}
         </>

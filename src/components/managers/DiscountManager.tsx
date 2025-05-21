@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Button, Card, Col, Form, Row } from 'react-bootstrap';
+import { useCrudManager } from '../../hooks/useCrudManager';
 import { createDiscount, deleteDiscount, fetchDiscounts } from '../../features/enrollments/services/DiscountService.ts';
 import ListRegistries from '../common/ListRegistries.tsx';
-import { PageResponse } from '../../types/PageResponse';
-import { usePagination } from '../../hooks/usePagination';
 import { FaList, FaPercentage, FaSave } from 'react-icons/fa';
 import ErrorMessage from '../common/ErrorMessage.tsx';
 import FormField from '../common/FormField';
@@ -11,47 +10,34 @@ import { extractFieldErrors } from '../../utils/errorUtils';
 import { DiscountResponse } from '../../features/billing/types/Discount.ts';
 
 const DiscountManager: React.FC = () => {
-    const { 
-        currentPage, 
-        pageSize, 
-        handlePageChange,
-        createEmptyPageResponse
-    } = usePagination<DiscountResponse>();
+    const {
+        pageData: discountPage,
+        isLoading,
+        error,
+        currentPage,
+        setCurrentPage,
+        create,
+        remove,
+        refetch
+    } = useCrudManager<DiscountResponse>({
+        entityName: 'discounts',
+        fetchPage: (page, size) => fetchDiscounts(page, size),
+        createItem: createDiscount,
+        deleteItem: deleteDiscount
+    });
 
-    const [discountPage, setDiscountPage] = useState<PageResponse<DiscountResponse>>(createEmptyPageResponse());
-    const [name, setName] = useState<string>(""); // Nome do desconto
-    const [value, setValue] = useState<number>(0); // Valor fixo do desconto
-    const [validUntil, setValidUntil] = useState<string>(""); // Data de validade do desconto
-    const [type, setType] = useState<"MATRICULA" | "MENSALIDADE">("MATRICULA"); // Tipo de desconto
-    const [error, setError] = useState<string | null>(null); // Erros do formulário
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({}); // Erros específicos de campo
-    const [successMessage, setSuccessMessage] = useState<string | null>(null); // Mensagem de feedback
-    const [loading, setLoading] = useState<boolean>(false); // Estado de carregamento
+    const [name, setName] = useState<string>("");
+    const [value, setValue] = useState<number>(0);
+    const [validUntil, setValidUntil] = useState<string>("");
+    const [type, setType] = useState<"MATRICULA" | "MENSALIDADE">("MATRICULA");
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [loading, setLoading] = useState<boolean>(false);
 
-    // Carrega os descontos ao montar o componente ou quando a paginação muda
-    useEffect(() => {
-        const getDiscounts = async () => {
-            try {
-                const fetchedDiscounts = await fetchDiscounts(currentPage, pageSize);
-                setDiscountPage(fetchedDiscounts);
-            } catch (err: any) {
-                setError("Erro ao carregar os descontos.");
-            }
-        };
-        getDiscounts();
-    }, [currentPage, pageSize]);
-
-    // Submissão do formulário para adicionar um novo desconto
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Reset errors and set loading state
-        setError(null);
         setFieldErrors({});
-        setSuccessMessage(null);
         setLoading(true);
 
-        // Client-side validation
         const clientErrors: Record<string, string> = {};
         if (!name) clientErrors.name = "Nome do desconto é obrigatório";
         if (value <= 0) clientErrors.value = "Valor deve ser maior que zero";
@@ -60,48 +46,33 @@ const DiscountManager: React.FC = () => {
 
         if (Object.keys(clientErrors).length > 0) {
             setFieldErrors(clientErrors);
-            setError("Por favor, corrija os erros no formulário.");
             setLoading(false);
             return;
         }
 
         try {
-            await createDiscount({ name, value, validUntil: new Date(validUntil), type });
-
-            // Refresh the discount list to get the updated data
-            const refreshedData = await fetchDiscounts(currentPage, pageSize);
-            setDiscountPage(refreshedData);
-
-            // Reset form
+            await create({ name, value, validUntil: new Date(validUntil), type });
             setName("");
             setValue(0);
             setValidUntil("");
             setType("MATRICULA");
-            setSuccessMessage("Desconto criado com sucesso!");
+            notification("Desconto criado com sucesso!", "success");
+            refetch();
         } catch (err: any) {
-            // Extract field-specific errors
             const errors = extractFieldErrors(err);
             setFieldErrors(errors);
-
-            // If there are no field-specific errors, set a general error message
-            if (Object.keys(errors).length === 0) {
-                setError(err.message || "Erro ao criar o desconto.");
-            }
         } finally {
             setLoading(false);
         }
     };
 
-    // Exclusão de um desconto
     const handleDelete = async (id: string) => {
         try {
-            await deleteDiscount(id);
-
-            // Refresh the discount list to get the updated data
-            const refreshedData = await fetchDiscounts(currentPage, pageSize);
-            setDiscountPage(refreshedData);
+            await remove(id);
+            notification("Desconto removido com sucesso.", "success");
+            refetch();
         } catch (err: any) {
-            setError("Erro ao excluir o desconto.");
+            notification("Erro ao excluir o desconto.", "error");
         }
     };
 
@@ -115,7 +86,6 @@ const DiscountManager: React.FC = () => {
             </div>
 
             {error && <ErrorMessage message={error} />}
-            {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
             <Card className="form-card mb-4">
                 <Card.Header className="d-flex justify-content-between align-items-center">
@@ -208,10 +178,10 @@ const DiscountManager: React.FC = () => {
                 </Card.Header>
                 <Card.Body>
                     <ListRegistries 
-                        page={discountPage} 
+                        page={discountPage || { content: [], number: 0, totalPages: 1, size: 10 }}
                         entityName={'discounts'}
                         onDelete={handleDelete}
-                        onPageChange={handlePageChange}
+                        onPageChange={(page) => setCurrentPage(page - 1)}
                     />
                 </Card.Body>
             </Card>

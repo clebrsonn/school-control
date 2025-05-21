@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Col, Form, Row } from 'react-bootstrap';
 import notification from '../common/Notification.tsx';
+import { useCrudManager } from '../../hooks/useCrudManager';
 import {
     createStudent,
     deleteStudent,
     getAllStudents,
     updateStudent
 } from '../../features/students/services/StudentService.ts';
-import { fetchParents, getStudentsByResponsibleId } from '../../features/parents/services/ParentService.ts';
+import { getAllResponsibles, getStudentsByResponsibleId } from '../../features/parents/services/ParentService.ts';
 import ListRegistries from '../common/ListRegistries.tsx';
 import { getAllClassRooms } from '../../features/classes/services/ClassService.ts';
 import ErrorMessage from '../common/ErrorMessage.tsx';
@@ -22,29 +23,7 @@ interface StudentManagerProps {
     responsible: string | undefined;
 }
 
-interface PageResponse<T> {
-    content: T[];
-    pageable: {
-        pageNumber: number;
-        pageSize: number;
-    };
-    totalElements: number;
-    totalPages: number;
-    last: boolean;
-    size: number;
-    number: number;
-}
-
 const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
-    const [studentPage, setStudentPage] = useState<PageResponse<StudentResponse>>({
-        content: [],
-        pageable: { pageNumber: 0, pageSize: 10 },
-        totalElements: 0,
-        totalPages: 0,
-        last: true,
-        size: 10,
-        number: 0
-    });
     const [classes, setClasses] = useState<ClassRoomResponse[]>([]);
     const [parents, setParents] = useState<ResponsibleResponse[]>([]);
     const [name, setName] = useState('');
@@ -55,63 +34,45 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
     const [enrollmentFee, setEnrollmentFee] = useState<number | undefined>(undefined);
     const [monthlyFee, setMonthlyFee] = useState<number | undefined>(undefined);
     const [editingStudent, setEditingStudent] = useState<StudentResponse | null>(null);
-    const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize, setPageSize] = useState(10);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        const getStudents = async () => {
-            try {
-                let studentPageData;
-                if (responsible) {
-                    studentPageData = await getStudentsByResponsibleId(responsible, {
-                        page: currentPage,
-                        size: pageSize
-                    });
-                } else {
-                    studentPageData = await getAllStudents({ page: currentPage, size: pageSize, sort: 'name,responsible' });
-                }
-                setStudentPage(studentPageData as PageResponse<StudentResponse>);
-                setParents([{
-                    name: studentPageData.content[0]?.responsibleName, id: (responsible as string),
-                    email: '',
-                    phone: ''
-                }]);
-            } catch (err: any) {
-                setError(err.message || 'Failed to fetch students');
-            }
-        };
+    const {
+        pageData: studentPage,
+        isLoading,
+        error,
+        currentPage,
+        setCurrentPage,
+        create,
+        update,
+        remove,
+        refetch
+    } = useCrudManager<StudentResponse, StudentRequest>({
+        entityName: 'students',
+        fetchPage: (page, size) => responsible
+            ? getStudentsByResponsibleId(responsible, { page, size })
+            : getAllStudents({ page, size, sort: 'name,responsible' }),
+        createItem: createStudent,
+        updateItem: updateStudent,
+        deleteItem: deleteStudent
+    });
 
+    useEffect(() => {
         const getClasses = async () => {
             try {
                 const classData = await getAllClassRooms();
                 setClasses(classData.content as ClassRoomResponse[]);
-            } catch (err: any) {
-                setError(err.message || 'Failed to fetch classes');
-            }
+            } catch {}
         };
-
         const getParents = async () => {
             try {
-                const parentData = await fetchParents(0, 100); // Fetch first 100 parents
+                const parentData = await getAllResponsibles({ page: 0, size:100, sort: 'name' });
                 setParents(parentData.content);
-            } catch (err: any) {
-                setError(err.message || 'Failed to fetch parents');
-            }
+            } catch {}
         };
-
-        getStudents();
         getClasses();
-        if (!responsible) {
-            getParents();
-        }
-    }, [responsible, currentPage, pageSize]);
-
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page - 1); // Convert from 1-based to 0-based
-    };
+        if (!responsible) getParents();
+    }, [responsible]);
 
     useEffect(() => {
         if (selectedResponsible) {
@@ -134,27 +95,23 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
     };
 
     const handleAddOrUpdateStudent = async () => {
-        // Reset errors and set loading state
-        setError(null);
         setFieldErrors({});
         setLoading(true);
 
         const clientErrors: Record<string, string> = {};
         if (!name) clientErrors.name = 'Nome do aluno é obrigatório';
-        // if (!email) clientErrors.email = 'Email do aluno é obrigatório';
         if (!responsible && !selectedResponsible) clientErrors.responsibleId = 'Responsável é obrigatório';
         if (!classId) clientErrors.classId = 'Turma é obrigatório';
         if (Object.keys(clientErrors).length > 0) {
             setFieldErrors(clientErrors);
-            setError('Por favor, corrija os erros no formulário.');
             setLoading(false);
             return;
         }
 
         try {
             let studentData: StudentRequest = {
-                name: name,
-                email: email,
+                name,
+                email,
                 responsibleId: (responsible || selectedResponsible) as string,
                 classroom: classId,
                 enrollmentFee: enrollmentFee || 0,
@@ -162,36 +119,18 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
             };
 
             if (editingStudent) {
-                // Update existing student
-                await updateStudent(editingStudent.id, studentData);
-
-                // Refresh the student list to get the updated data
-                const refreshedData = await getAllStudents({ page: currentPage, size: pageSize });
-                setStudentPage(refreshedData);
-
+                await update(editingStudent.id, studentData);
                 notification('Aluno atualizado com sucesso', 'success');
             } else {
-                // Create new student
-                await createStudent(studentData);
-
-                // Refresh the student list to get the updated data
-                const refreshedData = await getAllStudents({ page: currentPage, size: pageSize });
-                setStudentPage(refreshedData);
-
+                await create(studentData);
                 notification('Aluno adicionado com sucesso', 'success');
             }
 
             resetForm();
-            setError(null);
+            refetch();
         } catch (err: any) {
-            // Extract field-specific errors
             const errors = extractFieldErrors(err);
             setFieldErrors(errors);
-
-            // If there are no field-specific errors, set a general error message
-            if (Object.keys(errors).length === 0) {
-                setError(err.message || 'Erro ao salvar aluno');
-            }
         } finally {
             setLoading(false);
         }
@@ -210,15 +149,11 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
 
     const handleDelete = async (id: string) => {
         try {
-            await deleteStudent(id);
-
-            // Refresh the student list to get the updated data
-            const refreshedData = await getAllStudents({ page: currentPage, size: pageSize });
-            setStudentPage(refreshedData);
-
+            await remove(id);
             notification('Estudante removido com sucesso.', 'success');
+            refetch();
         } catch {
-            setError('Erro ao remover o estudante.');
+            notification('Erro ao remover o estudante.', 'error');
         }
     };
 
@@ -392,11 +327,11 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                 </Card.Header>
                 <Card.Body>
                     <ListRegistries
-                        page={studentPage}
+                        page={studentPage || { content: [], number: 0, totalPages: 1, size: 10 }}
                         entityName={'students'}
                         onDelete={handleDelete}
                         onEdit={handleEdit}
-                        onPageChange={handlePageChange}
+                        onPageChange={(page) => setCurrentPage(page - 1)}
                     />
                 </Card.Body>
             </Card>

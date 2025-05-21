@@ -1,35 +1,58 @@
-import { useEffect, useState } from 'react';
-import { PaymentResponse } from '../../payments/types/PaymentTypes';
+import { useQuery } from '@tanstack/react-query';
 import { fetchParentById, getStudentsByResponsibleId } from '../services/ParentService.ts';
 import { getPaymentsByResponsible } from '../../payments/services/PaymentService.ts';
-import { ResponsibleResponse } from '../types/ResponsibleTypes.ts';
-import { StudentResponse } from '../../students/types/StudentTypes.ts';
 
 export const useParentDetails = (id: string) => {
-    const [parent, setParent] = useState<ResponsibleResponse>();
-    const [students, setStudents] = useState<StudentResponse[]>([]);
-    const [monthlyFees, setMonthlyFees] = useState<PaymentResponse[]>([]);
-    const [error, setError] = useState<string | null>(null);
+    // Query para buscar o responsável
+    const {
+        data: parent,
+        isLoading: parentLoading,
+        error: parentError,
+        refetch: refetchParent
+    } = useQuery({
+        queryKey: ['parent', id],
+        queryFn: () => fetchParentById(id),
+        enabled: !!id
+    });
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [parentData, studentData, paymentData] = await Promise.all([
-                    fetchParentById(id),
-                    getStudentsByResponsibleId(id, { page: 0, size: 100 }),
-                    getPaymentsByResponsible(id)
-                ]);
+    // Query para buscar os estudantes
+    const {
+        data: studentsData,
+        isLoading: studentsLoading,
+        error: studentsError,
+        refetch: refetchStudents
+    } = useQuery({
+        queryKey: ['parent-students', id],
+        queryFn: () => getStudentsByResponsibleId(id, { page: 0, size: 100 }),
+        enabled: !!id
+    });
 
-                setParent(parentData);
-                setStudents(studentData.content);
-                setMonthlyFees(paymentData);
-            } catch (err) {
-                setError((err as Error).message || 'Failed to fetch data');
-            }
-        };
+    // Query para buscar os pagamentos
+    const {
+        data: monthlyFees,
+        isLoading: paymentsLoading,
+        error: paymentsError,
+        refetch: refetchPayments
+    } = useQuery({
+        queryKey: ['parent-payments', id],
+        queryFn: () => getPaymentsByResponsible(id),
+        enabled: !!id
+    });
 
-        fetchData();
-    }, [id]);
+    // Estados combinados para loading e erro
+    const isLoading = parentLoading || studentsLoading || paymentsLoading;
+    const error = parentError || studentsError || paymentsError || null;
 
-    return { parent, students, monthlyFees, error };
+    return {
+        parent,
+        students: studentsData?.content ?? [],
+        monthlyFees: monthlyFees ?? [],
+        isLoading,
+        error,
+        refetchAll: () => {
+            refetchParent();
+            refetchStudents();
+            refetchPayments();
+        }
+    };
 };

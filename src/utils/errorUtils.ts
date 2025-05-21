@@ -64,18 +64,25 @@ export const extractFieldErrors = (error: unknown): Record<string, string> => {
   }
 
   return {};
-};
+}
 
 /**
- * Gets a field error message if it exists
- * @param fieldName The name of the field
- * @param fieldErrors The object containing field errors
- * @returns The error message for the field or null
+ * Extrai uma mensagem amigável de erro de uma resposta Axios ou erro genérico
  */
-export const getFieldError = (
-  fieldName: string, 
-  fieldErrors: Record<string, string> | null
-): string | null => {
-  if (!fieldErrors) return null;
-  return fieldErrors[fieldName] || null;
+export const extractErrorMessage = (error: unknown): string => {
+  if (!error) return 'Ocorreu um erro desconhecido.';
+  const axiosError = error as AxiosError<any>;
+  if (axiosError.response?.data) {
+    if (axiosError.response.data.message) {
+      return axiosError.response.data.message;
+    } else if (axiosError.response.data.error) {
+      return axiosError.response.data.error;
+    } else if (axiosError.response.statusText) {
+      return `${axiosError.response.status}: ${axiosError.response.statusText}`;
+    }
+  } else if ((error as Error).message) {
+    return (error as Error).message;
+  }
+  return 'Ocorreu um erro inesperado.';
 };
+

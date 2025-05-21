@@ -10,14 +10,8 @@ const API_URL = '/responsibles';
  * @param pageable Pagination parameters
  * @returns Page of responsible responses
  */
-export const getAllResponsibles = async (pageable: { page: number, size: number, sort?: string[] }): Promise<PageResponse<ResponsibleResponse>> => {
+export const getAllResponsibles = async (pageable: { page: number, size: number, sort?: string }): Promise<PageResponse<ResponsibleResponse>> => {
   const response = await get<PageResponse<ResponsibleResponse>>(API_URL, { params: pageable });
-  return response;
-};
-
-// Legacy method - kept for backward compatibility
-export const fetchParents = async (page = 0, size = 10) => {
-  const response = await get<PageResponse<ResponsibleResponse>>(`${API_URL}?page=${page}&size=${size}`);
   return response;
 };
 
@@ -28,12 +22,6 @@ export const fetchParents = async (page = 0, size = 10) => {
  */
 export const createResponsible = async (responsibleData: ResponsibleRequest): Promise<ResponsibleResponse> => {
   const response = await post<ResponsibleRequest, ResponsibleResponse>(API_URL, responsibleData);
-  return response;
-};
-
-// Legacy method - kept for backward compatibility
-export const createParent = async (parentData: ResponsibleRequest): Promise<ResponsibleResponse> => {
-  const response = await post<ResponsibleRequest, ResponsibleResponse>(API_URL, parentData);
   return response;
 };
 

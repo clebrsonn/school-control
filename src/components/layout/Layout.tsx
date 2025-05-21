@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer.tsx';
 import '../../styles/dashboard.css';
+import { useTheme } from '../../hooks/useTheme';
 
 interface LayoutProps {
     children: ReactNode;
@@ -13,6 +14,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
     const [sidebarExpanded, setSidebarExpanded] = useState(true);
     const location = useLocation();
+    const { theme } = useTheme();
 
     // Check if current route is login or register
     const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
@@ -44,18 +46,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     // For login/register pages, use a simplified layout without sidebar and header
     if (isAuthPage) {
         return (
-            <div className="auth-container">
+            <div className={`auth-container theme-${theme}`}>
                 <div className="auth-content">
                     {children}
                 </div>
-                <ToastContainer />
+                <ToastContainer position="bottom-right" theme={theme} />
             </div>
         );
     }
 
     // For all other pages, use the full dashboard layout
     return (
-        <div className="dashboard-container">
+        <div className={`dashboard-container theme-${theme}`}>
             <Sidebar expanded={sidebarExpanded} toggleSidebar={toggleSidebar} />
 
             <div className={`main-content ${sidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
@@ -68,7 +70,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Footer />
             </div>
 
-            <ToastContainer />
+            <ToastContainer position="bottom-right" theme={theme} />
         </div>
     );
 };

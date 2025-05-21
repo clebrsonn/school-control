@@ -4,22 +4,20 @@ import Modal from 'react-modal';
 import { Button, Card, Col, ListGroup, Row, Table } from 'react-bootstrap';
 import { PaymentMethod, PaymentResponse } from '../../features/payments/types/PaymentTypes';
 import { getPaymentsByResponsible, processPayment } from '../../features/payments/services/PaymentService.ts';
-import { ModalType, ModalTypes } from '../../types/modal.ts';
 import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
 import { useParentDetails } from '../../features/parents/components/useParentDetails.ts';
-import { MonthlyFeeFormModal, StudentFormModal } from '../modals/StudentFormModal.tsx';
 import { ErrorBoundary } from '../common/ErrorBoundary.tsx';
 import notification from '../common/Notification.tsx';
 import ErrorMessage from '../common/ErrorMessage.tsx';
 import { FaCreditCard, FaEnvelope, FaPhone, FaPlus, FaUser, FaUserGraduate } from 'react-icons/fa';
 import { getConsolidatedStatement } from '../../features/billing/services/BillingService';
 import { ConsolidatedStatement, StatementLineItem } from '../../features/billing/types/BillingTypes';
+import StudentManager from '../managers/StudentManager';
 
 const ParentDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const { parent, students, monthlyFees, error } = useParentDetails(id as string);
+    const { parent, students, error } = useParentDetails(id as string);
     const [modalIsOpen, setModalIsOpen] = useState(false);
-    const [modalType, setModalType] = useState<ModalType | null>(null);
     const [payments, setPayments] = useState<PaymentResponse[]>([]);
     const [consolidatedStatement, setConsolidatedStatement] = useState<ConsolidatedStatement | null>(null);
 
@@ -91,7 +89,7 @@ const ParentDetails: React.FC = () => {
         return date.toLocaleDateString('pt-BR', options);
     };
 
-    if (error) return <ErrorMessage message={error} />;
+    if (error) return <ErrorMessage message={error?.message || String(error)} />;
     if (!parent) return <LoadingSpinner />;
 
     return (
@@ -159,7 +157,7 @@ const ParentDetails: React.FC = () => {
                             variant="outline-primary"
                             size="sm"
                             onClick={() => {
-                                setModalType(ModalTypes.STUDENT);
+                                //setModalType(ModalTypes.STUDENT);
                                 setModalIsOpen(true);
                             }}
                             className="d-flex align-items-center"
@@ -322,22 +320,8 @@ const ParentDetails: React.FC = () => {
                         }
                     }}
                 >
-                    {modalType === ModalTypes.STUDENT && (
-                        <StudentFormModal parentId={id as string} onClose={() => setModalIsOpen(false)} />
-                    )}
-                    {modalType === ModalTypes.MONTHLY_FEE && (
-                        <MonthlyFeeFormModal
-                            onSubmit={(amount, dueDate) => {
-                                // Convert to PaymentRequest
-                                return processPayment({
-                                    invoiceId: `invoice-${Date.now()}`, // Generate a temporary invoice ID
-                                    amount: parseFloat(amount),
-                                    paymentMethod: PaymentMethod.PIX,
-                                    paymentDate: new Date(dueDate)
-                                });
-                            }}
-                            onClose={() => setModalIsOpen(false)}
-                        />
+                    {(
+                        <StudentManager responsible={id as string} />
                     )}
                 </Modal>
             </div>
