@@ -63,7 +63,7 @@ const ListRegistries = <T extends IEntity>({
     // Paginação controlada por evento React, sem reload
     const handlePageChange = (pageNum: number) => {
         if (onPageChange && pageNum !== currentPage) {
-            onPageChange(pageNum - 1); // pageNum é 1-based, backend geralmente espera 0-based
+            onPageChange(pageNum); // pageNum já é 1-based, backend espera 0-based, ajuste feito no pai
         }
     };
 
