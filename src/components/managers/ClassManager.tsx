@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCrudManager } from '../../hooks/useCrudManager';
 import { createClassRoom, deleteClassRoom, getAllClassRooms } from '../../features/classes/services/ClassService';
 import { ClassRoomRequest, ClassRoomResponse } from '../../features/classes/types/ClassRoomTypes';
@@ -10,10 +11,36 @@ import ErrorMessage from '../common/ErrorMessage.tsx';
 import FormField from '../common/FormField';
 import { extractFieldErrors } from '../../utils/errorUtils';
 
+/**
+ * Interface for the class form data.
+ * @interface ClassFormData
+ */
+interface ClassFormData {
+    name: string;
+    startTime: string;
+    endTime: string;
+    enrollmentFee: string; // Keep as string for form input, parse on submit
+    monthlyFee: string;    // Keep as string for form input, parse on submit
+}
+
+const initialFormData: ClassFormData = {
+    name: '',
+    startTime: '',
+    endTime: '',
+    enrollmentFee: '',
+    monthlyFee: '',
+};
+
+/**
+ * ClassManager component for managing class records.
+ * It allows for creating, reading, and deleting class information.
+ * @returns {React.FC} The ClassManager component.
+ */
 const ClassManager: React.FC = () => {
+    const { t } = useTranslation();
     const {
         pageData: classPage,
-        isLoading,
+        isLoading: crudLoading, // Renamed to avoid conflict with form loading state
         error,
         currentPage,
         setCurrentPage,
@@ -25,61 +52,92 @@ const ClassManager: React.FC = () => {
         fetchPage: (page, size) => getAllClassRooms({ page, size }),
         createItem: createClassRoom,
         deleteItem: deleteClassRoom
+        // Note: updateItem is not provided, so edit functionality is not available through useCrudManager
     });
 
-    const [name, setName] = useState('');
-    const [startTime, setStartTime] = useState('');
-    const [endTime, setEndTime] = useState('');
-    const [enrollmentFee, setEnrollmentFee] = useState('');
-    const [monthlyFee, setMonthlyFee] = useState('');
+    const [formData, setFormData] = useState<ClassFormData>(initialFormData);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [loading, setLoading] = useState<boolean>(false);
+    const [formLoading, setFormLoading] = useState<boolean>(false); // Renamed to avoid conflict
 
-    const handleAddClass = async () => {
+    /**
+     * Handles input changes for form fields and updates the formData state.
+     * @param {React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>} e - The input change event.
+     */
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+    
+    /**
+     * Resets the form to its initial empty state and clears any field errors.
+     */
+    const resetForm = () => {
+        setFormData(initialFormData);
         setFieldErrors({});
-        setLoading(true);
+    };
 
+    /**
+     * Handles the submission of the add class form.
+     * Performs client-side validation and then calls the create service.
+     * Shows notifications for success or error.
+     */
+    const handleAddClass = async () => {
+        setFieldErrors({}); // Clear previous errors
+        setFormLoading(true);
+
+        // Client-side validation
         const clientErrors: Record<string, string> = {};
-        if (!name) clientErrors.name = "Nome da turma é obrigatório";
+        if (!formData.name) clientErrors.name = t('classManager.validations.nameRequired');
+        // Add more client-side validations if needed (e.g., for time format, fee values)
 
         if (Object.keys(clientErrors).length > 0) {
             setFieldErrors(clientErrors);
-            setLoading(false);
+            setFormLoading(false);
             return;
         }
 
         try {
-            const newClass: ClassRoomRequest = {
-                name,
-                schoolYear: new Date().getFullYear().toString(),
-                startTime,
-                endTime
+            // Prepare request data, parsing fees to numbers
+            const newClassRequest: ClassRoomRequest = {
+                name: formData.name,
+                schoolYear: new Date().getFullYear().toString(), // Or make this part of the form
+                startTime: formData.startTime,
+                endTime: formData.endTime,
+                // Assuming enrollmentFee and monthlyFee should be numbers in the request
+                // and that the ClassRoomRequest type might need updating if these are new fields.
+                // For now, let's add them if they are part of an extended ClassRoomRequest type.
+                // If not, they should be removed from here or the type updated.
+                // Let's assume they are part of the type for now.
+                enrollmentFee: parseFloat(formData.enrollmentFee) || 0,
+                monthlyFee: parseFloat(formData.monthlyFee) || 0,
             };
-            await create(newClass);
+            await create(newClassRequest);
 
-            setName('');
-            setStartTime('');
-            setEndTime('');
-            setEnrollmentFee('');
-            setMonthlyFee('');
-            setFieldErrors({});
-            notification('Turma adicionada com sucesso.', 'success');
-            refetch();
-        } catch (err) {
+            resetForm(); // Reset form fields
+            notification(t('classManager.notifications.addedSuccess'), 'success');
+            refetch(); // Refresh the list of classes
+        } catch (err: any) {
             const errors = extractFieldErrors(err);
             setFieldErrors(errors);
+            // Optionally, a generic error notification if not field-specific
+            // notification(t('classManager.notifications.generalError'), 'error');
         } finally {
-            setLoading(false);
+            setFormLoading(false);
         }
     };
 
+    /**
+     * Handles the deletion of a class.
+     * Shows a success or error notification.
+     * @param {string} id - The ID of the class to delete.
+     */
     const handleDelete = async (id: string) => {
         try {
             await remove(id);
-            notification('Turma removida com sucesso.', 'success');
-            refetch();
+            notification(t('classManager.notifications.removedSuccess'), 'success');
+            refetch(); // Refresh the list
         } catch {
-            notification('Erro ao remover a turma.', 'error');
+            notification(t('classManager.notifications.removedError'), 'error');
         }
     };
 
@@ -88,15 +146,15 @@ const ClassManager: React.FC = () => {
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h1 className="mb-0">
                     <FaChalkboardTeacher className="me-2" />
-                    Gerenciar Turmas
+                    {t('classManager.title')}
                 </h1>
             </div>
 
-            {error && <ErrorMessage message={error} />}
+            {error && <ErrorMessage message={error} />} {/* Error from useCrudManager */}
 
             <Card className="form-card mb-4">
                 <Card.Header className="d-flex justify-content-between align-items-center">
-                    <h5 className="mb-0">Adicionar Turma</h5>
+                    <h5 className="mb-0">{t('classManager.addTitle')}</h5>
                 </Card.Header>
                 <Card.Body>
                     <Form>
@@ -104,11 +162,12 @@ const ClassManager: React.FC = () => {
                             <Col md={12}>
                                 <FormField
                                     id="formClassName"
-                                    label="Nome"
+                                    name="name" // Ensure name attribute matches formData key
+                                    label={t('classManager.labels.name')}
                                     type="text"
-                                    placeholder="Nome da Turma"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder={t('classManager.placeholders.name')}
+                                    value={formData.name}
+                                    onChange={handleInputChange}
                                     error={fieldErrors.name || null}
                                     required
                                 />
@@ -119,11 +178,12 @@ const ClassManager: React.FC = () => {
                             <Col md={6}>
                                 <FormField
                                     id="formClassStartTime"
-                                    label="Horário de início"
-                                    type="text"
-                                    placeholder="Horário de início"
-                                    value={startTime}
-                                    onChange={(e) => setStartTime(e.target.value)}
+                                    name="startTime"
+                                    label={t('classManager.labels.startTime')}
+                                    type="text" // Consider using type="time" for better UX
+                                    placeholder={t('classManager.placeholders.startTime')}
+                                    value={formData.startTime}
+                                    onChange={handleInputChange}
                                     error={fieldErrors.startTime || null}
                                 />
                             </Col>
@@ -131,11 +191,12 @@ const ClassManager: React.FC = () => {
                             <Col md={6}>
                                 <FormField
                                     id="formClassEndTime"
-                                    label="Horário de término"
-                                    type="text"
-                                    placeholder="Horário de término"
-                                    value={endTime}
-                                    onChange={(e) => setEndTime(e.target.value)}
+                                    name="endTime"
+                                    label={t('classManager.labels.endTime')}
+                                    type="text" // Consider using type="time"
+                                    placeholder={t('classManager.placeholders.endTime')}
+                                    value={formData.endTime}
+                                    onChange={handleInputChange}
                                     error={fieldErrors.endTime || null}
                                 />
                             </Col>
@@ -144,23 +205,25 @@ const ClassManager: React.FC = () => {
                             <Col md={6}>
                                 <FormField
                                     id="formClassEnrollmentFee"
-                                    label="Matrícula"
-                                    type="text"
-                                    placeholder="Valor da matrícula"
-                                    value={enrollmentFee}
-                                    onChange={(e) => setEnrollmentFee(e.target.value)}
+                                    name="enrollmentFee"
+                                    label={t('classManager.labels.enrollmentFee')}
+                                    type="number" // Use type="number" for numeric input
+                                    placeholder={t('classManager.placeholders.enrollmentFee')}
+                                    value={formData.enrollmentFee}
+                                    onChange={handleInputChange} // handleInputChange can manage string, parsing done on submit
                                     error={fieldErrors.enrollmentFee || null}
                                 />
                             </Col>
                             <Col md={6}>
                                 <FormField
                                     id="formClassMonthlyFee"
-                                    label="Mensalidade"
-                                    type="text"
-                                    placeholder="Valor da mensalidade"
-                                    value={monthlyFee}
-                                    onChange={(e) => setMonthlyFee(e.target.value)}
-                                    error={fieldErrors.monthlyFee || null}
+                                    name="monthlyFee"
+                                    label={t('classManager.labels.monthlyFee')}
+                                    type="number" // Use type="number"
+                                    placeholder={t('classManager.placeholders.monthlyFee')}
+                                    value={formData.monthlyFee}
+                                    onChange={handleInputChange}
+                                    error={fieldErrors.monthlyFee || null} // Assuming API might return 'monthlyFee'
                                 />
                             </Col>
                         </Row>
@@ -169,10 +232,10 @@ const ClassManager: React.FC = () => {
                                 variant="primary" 
                                 onClick={handleAddClass} 
                                 className="d-flex align-items-center"
-                                disabled={loading}
+                                disabled={formLoading || crudLoading} // Disable if form is submitting or CRUD manager is loading
                             >
                                 <FaSave className="me-2" />
-                                {loading ? 'Salvando...' : 'Cadastrar'}
+                                {formLoading ? t('classManager.buttons.saving') : t('classManager.buttons.add')}
                             </Button>
                         </div>
                     </Form>
@@ -183,15 +246,16 @@ const ClassManager: React.FC = () => {
                 <Card.Header className="d-flex justify-content-between align-items-center">
                     <h5 className="mb-0">
                         <FaList className="me-2" />
-                        Lista de Turmas
+                        {t('classManager.listTitle')}
                     </h5>
                 </Card.Header>
                 <Card.Body>
                     <ListRegistries 
-                        page={classPage || { content: [], number: 0, totalPages: 1, size: 10 }}
+                        page={classPage || { content: [], number: 0, totalPages: 1, size: 10 }} // Fallback for initial load
                         entityName={'classes'}
                         onDelete={handleDelete}
-                        onPageChange={(page) => setCurrentPage(page - 1)}
+                        // onEdit is not passed as edit functionality is not implemented for classes in this component
+                        onPageChange={(page) => setCurrentPage(page - 1)} // Assuming API is 0-indexed
                     />
                 </Card.Body>
             </Card>

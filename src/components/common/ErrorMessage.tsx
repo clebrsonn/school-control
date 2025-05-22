@@ -1,9 +1,26 @@
 import React from 'react';
 
+/**
+ * @interface ErrorMessageProps
+ * Props for the ErrorMessage component.
+ */
 interface ErrorMessageProps {
+  /**
+   * The error message string to display. If null or empty, the component will not render.
+   * This message should be pre-translated before being passed to this component.
+   * @type {string | null}
+   */
   message: string | null;
 }
 
+/**
+ * ErrorMessage is a functional component that displays a styled error message.
+ * It includes a warning icon and the provided message text.
+ * If the message is null or empty, the component does not render.
+ *
+ * @param {ErrorMessageProps} props - The props for the component.
+ * @returns {React.ReactElement | null} A div containing the styled error message, or null.
+ */
 const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => {
   if (!message) return null;
 

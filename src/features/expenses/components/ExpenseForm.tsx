@@ -1,26 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
 import { ExpenseService } from '../services/ExpenseService.ts';
 import notification from '../../../components/common/Notification.tsx';
 import FormField from '../../../components/common/FormField';
 import { extractFieldErrors } from '../../../utils/errorUtils';
 import { Expense } from '../types/ExpenseTypes.ts';
 
+/**
+ * @interface ExpenseFormProps
+ * Props for the ExpenseForm component.
+ */
 interface ExpenseFormProps {
+  /** Optional callback function triggered on successful form submission. */
   onSuccess?: () => void;
+  /** Optional initial data for editing an existing expense. */
   initialData?: Expense;
 }
 
+/**
+ * ExpenseForm is a component for creating or editing expenses.
+ * It includes fields for date, value, description, and an optional receipt upload.
+ * Handles client-side validation and communicates with ExpenseService for backend operations.
+ *
+ * @param {ExpenseFormProps} props - The props for the component.
+ * @returns {React.ReactElement} The ExpenseForm component.
+ */
 export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, initialData }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
-    date: initialData?.date || new Date().toISOString().split('T')[0],
-    value: initialData?.value || '',
+    date: initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    value: initialData?.value?.toString() || '', // Store as string for form input
     description: initialData?.description || '',
   });
   const [receipt, setReceipt] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  // Effect to update form when initialData changes (e.g., when used in an edit modal)
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        date: initialData.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        value: initialData.value?.toString() || '',
+        description: initialData.description || '',
+      });
+      setReceipt(null); // Reset receipt on initial data change
+    }
+  }, [initialData]);
+
+
+  /**
+   * Handles the form submission for creating or updating an expense.
+   * Performs client-side validation and makes an API call.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -28,10 +62,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, initialData
 
     // Client-side validation
     const clientErrors: Record<string, string> = {};
-    if (!formData.date) clientErrors.date = "Data é obrigatória";
-    if (!formData.value) clientErrors.value = "Valor é obrigatório";
-    if (Number(formData.value) <= 0) clientErrors.value = "Valor deve ser maior que zero";
-    if (!formData.description) clientErrors.description = "Descrição é obrigatória";
+    if (!formData.date) clientErrors.date = t('expenses.form.validations.dateRequired');
+    if (!formData.value) clientErrors.value = t('expenses.form.validations.valueRequired');
+    const numericValue = parseFloat(formData.value);
+    if (isNaN(numericValue) || numericValue <= 0) clientErrors.value = t('expenses.form.validations.valuePositive');
+    if (!formData.description) clientErrors.description = t('expenses.form.validations.descriptionRequired');
 
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors(clientErrors);
@@ -40,40 +75,42 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, initialData
     }
 
     try {
-      const data = new FormData();
-      data.append('date', formData.date.toString());
-      data.append('value', formData.value.toString());
-      data.append('description', formData.description);
+      const dataPayload = new FormData(); // Use FormData for file uploads
+      dataPayload.append('date', formData.date);
+      dataPayload.append('value', numericValue.toString()); // Send numeric value as string
+      dataPayload.append('description', formData.description);
 
       if (receipt) {
-        data.append('receipt', receipt);
+        dataPayload.append('receipt', receipt);
       }
 
-      if (initialData) {
-        await ExpenseService.update(initialData.id!, data);
-        notification('Despesa atualizada com sucesso!', 'success');
+      if (initialData && initialData.id) { // Ensure initialData and its id are present for update
+        await ExpenseService.update(initialData.id, dataPayload);
+        notification(t('expenses.form.notifications.updateSuccess'), 'success');
       } else {
-        await ExpenseService.create(data);
-        notification('Despesa cadastrada com sucesso!', 'success');
+        await ExpenseService.create(dataPayload);
+        notification(t('expenses.form.notifications.createSuccess'), 'success');
       }
 
+      // Reset form state
       setFormData({
         date: new Date().toISOString().split('T')[0],
         value: '',
         description: '',
       });
       setReceipt(null);
-      onSuccess?.();
-    } catch (error) {
+      // Clear file input visually (this is a common challenge, direct value set is not allowed for security)
+      const fileInput = document.getElementById('receipt') as HTMLInputElement;
+      if (fileInput) fileInput.value = ''; 
+      
+      onSuccess?.(); // Call onSuccess callback if provided
+    } catch (error: any) {
       console.error('Error saving expense:', error);
-
-      // Extract field-specific errors
       const errors = extractFieldErrors(error);
       setFieldErrors(errors);
 
-      // If there are no field-specific errors, show a general error notification
       if (Object.keys(errors).length === 0) {
-        notification('Erro ao salvar despesa', 'error');
+        notification(t('expenses.form.notifications.saveError'), 'error');
       }
     } finally {
       setLoading(false);
@@ -84,24 +121,27 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, initialData
     <Form onSubmit={handleSubmit}>
       <FormField
         id="date"
-        label="Data"
+        name="date"
+        label={t('expenses.form.labels.date')}
         type="date"
-        value={formData.date.toString()}
+        value={formData.date}
         onChange={(e) => setFormData({ ...formData, date: e.target.value })}
         error={fieldErrors.date || null}
         required
       />
 
       <Form.Group className="mb-3" controlId="value">
-        <Form.Label>Valor</Form.Label>
+        <Form.Label>{t('expenses.form.labels.value')}</Form.Label>
         <InputGroup>
           <InputGroup.Text>R$</InputGroup.Text>
           <Form.Control
+            name="value" // Add name attribute for consistency if FormField was directly used
             type="number"
             value={formData.value}
             onChange={(e) => setFormData({ ...formData, value: e.target.value })}
             step="0.01"
             min="0"
+            placeholder={t('expenses.form.placeholders.value')} // Added placeholder
             required
             isInvalid={!!fieldErrors.value}
           />
@@ -114,12 +154,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, initialData
       </Form.Group>
 
       <Form.Group className="mb-3" controlId="description">
-        <Form.Label>Descrição</Form.Label>
+        <Form.Label>{t('expenses.form.labels.description')}</Form.Label>
         <Form.Control
+          name="description" // Add name attribute
           as="textarea"
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           rows={3}
+          placeholder={t('expenses.form.placeholders.description')} // Added placeholder
           required
           isInvalid={!!fieldErrors.description}
         />
@@ -131,15 +173,16 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, initialData
       </Form.Group>
 
       <Form.Group className="mb-3" controlId="receipt">
-        <Form.Label>Comprovante</Form.Label>
+        <Form.Label>{t('expenses.form.labels.receipt')}</Form.Label>
         <Form.Control
+          name="receipt" // Add name attribute
           type="file"
-          onChange={(e) => setReceipt(e.target.files?.[0] || null)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReceipt(e.target.files?.[0] || null)}
           accept="image/jpeg,image/png,application/pdf"
           isInvalid={!!fieldErrors.receipt}
         />
         <Form.Text className="text-muted">
-          Formatos aceitos: JPEG, PNG e PDF. Tamanho máximo: 5MB
+          {t('expenses.form.receiptHelpText')}
         </Form.Text>
         {fieldErrors.receipt && (
           <Form.Control.Feedback type="invalid">
@@ -153,7 +196,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, initialData
         variant="primary"
         disabled={loading}
       >
-        {loading ? 'Salvando...' : initialData ? 'Atualizar' : 'Cadastrar'}
+        {loading 
+            ? t('expenses.form.buttons.saving') 
+            : initialData 
+                ? t('expenses.form.buttons.update') 
+                : t('expenses.form.buttons.save')}
       </Button>
     </Form>
   );

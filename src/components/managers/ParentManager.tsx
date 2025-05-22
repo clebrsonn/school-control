@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     createResponsible,
     deleteResponsible,
@@ -15,12 +16,19 @@ import FormField from '../common/FormField';
 import { extractFieldErrors } from '../../utils/errorUtils';
 import { FaList, FaSave, FaUsers } from 'react-icons/fa';
 
-const INITIAL_PARENT_STATE: ResponsibleRequest = { name: '', phone: '', email: '' };
+// Renamed for consistency
+const initialFormData: ResponsibleRequest = { name: '', phone: '', email: '' };
 
+/**
+ * ParentManager component for managing parent/responsible records.
+ * It allows for creating, viewing, and deleting parent information.
+ * @returns {React.FC} The ParentManager component.
+ */
 const ParentManager: React.FC = () => {
+    const { t } = useTranslation();
     const {
         pageData,
-        isLoading,
+        isLoading, // This is from useCrudManager, for page loading
         error,
         currentPage,
         setCurrentPage,
@@ -28,58 +36,84 @@ const ParentManager: React.FC = () => {
         remove,
         refetch
     } = useCrudManager<ResponsibleResponse, ResponsibleRequest>({
-        entityName: 'parents',
+        entityName: 'parents', // Used by ListRegistries for i18n keys if needed there
         fetchPage: (page, size) => getAllResponsibles({ page, size }),
         createItem: createResponsible,
         deleteItem: deleteResponsible
     });
 
-    const [formState, setFormState] = useState(INITIAL_PARENT_STATE);
+    // Renamed formState to formData for consistency
+    const [formData, setFormData] = useState<ResponsibleRequest>(initialFormData);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [submitting, setSubmitting] = useState<boolean>(false);
+    const [formIsSubmitting, setFormIsSubmitting] = useState<boolean>(false); // Renamed for clarity
 
-    if (isLoading) {
+    if (isLoading) { // This isLoading is for the page data fetching
         return <LoadingSpinner />;
     }
 
-    const updateFormState = (field: keyof typeof formState, value: string) => {
-        setFormState((prev) => ({ ...prev, [field]: value }));
+    /**
+     * Handles input changes for form fields and updates the formData state.
+     * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
+     */
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+    
+    /**
+     * Resets the form to its initial empty state and clears any field errors.
+     */
+    const resetForm = () => {
+        setFormData(initialFormData);
+        setFieldErrors({});
     };
 
+    /**
+     * Handles the submission of the add parent/responsible form.
+     * Performs client-side validation, then calls the create service.
+     * Shows notifications for success or error.
+     */
     const handleAddParent = async () => {
         setFieldErrors({});
-        setSubmitting(true);
+        setFormIsSubmitting(true);
 
+        // Client-side validation using i18n keys
         const clientErrors: Record<string, string> = {};
-        if (!formState.name) clientErrors.name = 'Nome do responsável é obrigatório';
-        if (!formState.phone) clientErrors.phone = 'Telefone do responsável é obrigatório';
+        if (!formData.name) clientErrors.name = t('parentManager.validations.nameRequired');
+        if (!formData.phone) clientErrors.phone = t('parentManager.validations.phoneRequired');
 
         if (Object.keys(clientErrors).length > 0) {
             setFieldErrors(clientErrors);
-            setSubmitting(false);
+            setFormIsSubmitting(false);
             return;
         }
 
         try {
-            await create(formState);
-            setFormState(INITIAL_PARENT_STATE);
-            notification('Responsável adicionado com sucesso', 'success');
+            await create(formData);
+            resetForm(); // Use the new resetForm function
+            notification(t('parentManager.notifications.addedSuccess'), 'success');
             refetch();
         } catch (err: unknown) {
             const errors = extractFieldErrors(err);
             setFieldErrors(errors);
+            // notification(t('parentManager.notifications.addError'), 'error'); // Optional generic error
         } finally {
-            setSubmitting(false);
+            setFormIsSubmitting(false);
         }
     };
 
+    /**
+     * Handles the deletion of a parent/responsible.
+     * Shows a success or error notification.
+     * @param {string} id - The ID of the parent/responsible to delete.
+     */
     const handleDelete = async (id: string) => {
         try {
             await remove(id);
-            notification('Responsável removido com sucesso.', 'success');
+            notification(t('parentManager.notifications.removedSuccess'), 'success');
             refetch();
         } catch (err: unknown) {
-            notification('Erro ao remover o responsável.', 'error');
+            notification(t('parentManager.notifications.removedError'), 'error');
         }
     };
 
@@ -88,7 +122,7 @@ const ParentManager: React.FC = () => {
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h1 className="mb-0">
                     <FaUsers className="me-2" />
-                    Gerenciar Responsáveis
+                    {t('parentManager.title')}
                 </h1>
             </div>
 
@@ -96,19 +130,20 @@ const ParentManager: React.FC = () => {
 
             <Card className="form-card mb-4">
                 <Card.Header className="d-flex justify-content-between align-items-center">
-                    <h5 className="mb-0">Adicionar Responsável</h5>
+                    <h5 className="mb-0">{t('parentManager.addTitle')}</h5>
                 </Card.Header>
                 <Card.Body>
-                    <Form>
+                    <Form> {/* Removed onSubmit from Form tag, using onClick on Button */}
                         <Row>
                             <Col md={12}>
                                 <FormField
                                     id="formParentName"
-                                    label="Nome"
+                                    name="name" // Add name attribute for handleInputChange
+                                    label={t('parentManager.labels.name')}
                                     type="text"
-                                    placeholder="Nome do Responsável"
-                                    value={formState.name || ''}
-                                    onChange={(e) => updateFormState('name', e.target.value)}
+                                    placeholder={t('parentManager.placeholders.name')}
+                                    value={formData.name || ''}
+                                    onChange={handleInputChange}
                                     error={fieldErrors.name || null}
                                     required
                                 />
@@ -118,22 +153,24 @@ const ParentManager: React.FC = () => {
                             <Col md={6}>
                                 <FormField
                                     id="formParentEmail"
-                                    label="Email"
+                                    name="email" // Add name attribute
+                                    label={t('parentManager.labels.email')}
                                     type="email"
-                                    placeholder="Email do Responsável"
-                                    value={formState.email || ''}
-                                    onChange={(e) => updateFormState('email', e.target.value)}
+                                    placeholder={t('parentManager.placeholders.email')}
+                                    value={formData.email || ''}
+                                    onChange={handleInputChange}
                                     error={fieldErrors.email || null}
                                 />
                             </Col>
                             <Col md={6}>
                                 <FormField
                                     id="formParentPhone"
-                                    label="Telefone"
+                                    name="phone" // Add name attribute
+                                    label={t('parentManager.labels.phone')}
                                     type="text"
-                                    placeholder="Telefone do Responsável"
-                                    value={formState.phone || ''}
-                                    onChange={(e) => updateFormState('phone', e.target.value)}
+                                    placeholder={t('parentManager.placeholders.phone')}
+                                    value={formData.phone || ''}
+                                    onChange={handleInputChange}
                                     error={fieldErrors.phone || null}
                                     required
                                 />
@@ -142,12 +179,12 @@ const ParentManager: React.FC = () => {
                         <div className="d-flex mt-3">
                             <Button
                                 variant="primary"
-                                onClick={handleAddParent}
+                                onClick={handleAddParent} // Using onClick for explicit handler call
                                 className="d-flex align-items-center"
-                                disabled={submitting}
+                                disabled={formIsSubmitting || isLoading} // Disable also if page is loading
                             >
                                 <FaSave className="me-2" />
-                                {submitting ? 'Salvando...' : 'Salvar'}
+                                {formIsSubmitting ? t('parentManager.buttons.saving') : t('parentManager.buttons.save')}
                             </Button>
                         </div>
                     </Form>
@@ -158,15 +195,16 @@ const ParentManager: React.FC = () => {
                 <Card.Header className="d-flex justify-content-between align-items-center">
                     <h5 className="mb-0">
                         <FaList className="me-2" />
-                        Lista de Responsáveis
+                        {t('parentManager.listTitle')}
                     </h5>
                 </Card.Header>
                 <Card.Body>
                     <ListRegistries
                         page={pageData || { content: [], number: 0, totalPages: 1, size: 10 }}
-                        entityName="parents"
+                        entityName="parents" // This could be used by ListRegistries for specific i18n keys too
                         onDelete={handleDelete}
                         onPageChange={(page) => setCurrentPage(page - 1)}
+                        // onEdit is not passed as ParentManager does not implement edit functionality
                     />
                 </Card.Body>
             </Card>

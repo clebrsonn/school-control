@@ -1,6 +1,7 @@
 import React from 'react';
 import { Nav } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 import { useAuth } from '../../features/auth/contexts/AuthProvider';
 import {
     FaBars,
@@ -13,102 +14,87 @@ import {
     FaUsers
 } from 'react-icons/fa';
 
+/**
+ * @interface SidebarProps
+ * Props for the Sidebar component.
+ */
 interface SidebarProps {
+    /** Indicates whether the sidebar is currently expanded or collapsed. */
     expanded: boolean;
+    /** Callback function to toggle the expanded/collapsed state of the sidebar. */
     toggleSidebar: () => void;
 }
 
+/**
+ * Sidebar component provides the main navigation for the application.
+ * It can be expanded or collapsed and displays navigation links with icons.
+ * The links' active state is determined by the current route.
+ *
+ * @param {SidebarProps} props - The props for the component.
+ * @returns {React.ReactElement} The Sidebar navigation component.
+ */
 const Sidebar: React.FC<SidebarProps> = ({ expanded, toggleSidebar }) => {
-    const { user, logout } = useAuth();
+    const { logout } = useAuth(); // user from useAuth is not used here, can be removed if not needed for roles/permissions later
     const location = useLocation();
+    const { t } = useTranslation(); // Initialize useTranslation
 
-    const isActive = (path: string) => location.pathname === path;
+    /**
+     * Checks if a given path is the currently active route.
+     * @param {string} path - The path to check.
+     * @returns {boolean} True if the path is active, false otherwise.
+     */
+    const isActive = (path: string): boolean => location.pathname === path;
+
+    // Navigation items definition
+    const navItems = [
+        { path: "/", icon: FaHome, labelKey: "layout.sidebar.nav.dashboard" },
+        { path: "/parents", icon: FaUsers, labelKey: "layout.sidebar.nav.parents" },
+        { path: "/students", icon: FaUserGraduate, labelKey: "layout.sidebar.nav.students" },
+        { path: "/payments", icon: FaCreditCard, labelKey: "layout.sidebar.nav.payments" },
+        { path: "/classes", icon: FaChalkboardTeacher, labelKey: "layout.sidebar.nav.classes" },
+        { path: "/discounts", icon: FaPercentage, labelKey: "layout.sidebar.nav.discounts" },
+    ];
 
     return (
-        <nav className={`sidebar bg-dark text-white ${expanded ? 'expanded' : 'collapsed'}`} aria-label="Menu lateral"
-             role="navigation">
+        <nav 
+            className={`sidebar bg-dark text-white ${expanded ? 'expanded' : 'collapsed'}`} 
+            aria-label={t('layout.sidebar.ariaLabel')}
+            role="navigation"
+        >
             <div className="sidebar-header d-flex justify-content-between align-items-center p-3">
-                {expanded && <h5 className="m-0">School Control</h5>}
+                {expanded && <h5 className="m-0">{t('layout.sidebar.brand')}</h5>}
                 <button
                     className="btn btn-link text-white p-0"
                     onClick={toggleSidebar}
-                    aria-label={expanded ? 'Recolher menu lateral' : 'Expandir menu lateral'}
+                    aria-label={expanded ? t('layout.sidebar.toggleCollapseAriaLabel') : t('layout.sidebar.toggleExpandAriaLabel')}
                 >
                     <FaBars />
                 </button>
             </div>
 
             <Nav className="flex-column" as="ul">
-                <Nav.Item as="li">
-                    <Link
-                        to="/"
-                        className={`nav-link py-3 ${isActive('/') ? 'active' : ''}`}
-                        aria-current={isActive('/') ? 'page' : undefined}
-                    >
-                        <FaHome className="me-2" aria-hidden="true" />
-                        {expanded && <span>Dashboard</span>}
-                    </Link>
-                </Nav.Item>
-
-                <Nav.Item as="li">
-                    <Link
-                        to="/parents"
-                        className={`nav-link py-3 ${isActive('/parents') ? 'active' : ''}`}
-                        aria-current={isActive('/parents') ? 'page' : undefined}
-                    >
-                        <FaUsers className="me-2" aria-hidden="true" />
-                        {expanded && <span>Responsáveis</span>}
-                    </Link>
-                </Nav.Item>
-
-                <Nav.Item as="li">
-                    <Link
-                        to="/students"
-                        className={`nav-link py-3 ${isActive('/students') ? 'active' : ''}`}
-                        aria-current={isActive('/students') ? 'page' : undefined}
-                    >
-                        <FaUserGraduate className="me-2" aria-hidden="true" />
-                        {expanded && <span>Estudantes</span>}
-                    </Link>
-                </Nav.Item>
-
-                <Nav.Item as="li">
-                    <Link
-                        to="/payments"
-                        className={`nav-link py-3 ${isActive('/payments') ? 'active' : ''}`}
-                        aria-current={isActive('/payments') ? 'page' : undefined}
-                    >
-                        <FaCreditCard className="me-2" aria-hidden="true" />
-                        {expanded && <span>Pagamentos</span>}
-                    </Link>
-                </Nav.Item>
-
-                <Nav.Item as="li">
-                    <Link
-                        to="/classes"
-                        className={`nav-link py-3 ${isActive('/classes') ? 'active' : ''}`}
-                        aria-current={isActive('/classes') ? 'page' : undefined}
-                    >
-                        <FaChalkboardTeacher className="me-2" aria-hidden="true" />
-                        {expanded && <span>Turmas</span>}
-                    </Link>
-                </Nav.Item>
-
-                <Nav.Item as="li">
-                    <Link
-                        to="/discounts"
-                        className={`nav-link py-3 ${isActive('/discounts') ? 'active' : ''}`}
-                        aria-current={isActive('/discounts') ? 'page' : undefined}
-                    >
-                        <FaPercentage className="me-2" aria-hidden="true" />
-                        {expanded && <span>Descontos</span>}
-                    </Link>
-                </Nav.Item>
+                {navItems.map(item => (
+                    <Nav.Item as="li" key={item.path}>
+                        <Link
+                            to={item.path}
+                            className={`nav-link py-3 ${isActive(item.path) ? 'active' : ''}`}
+                            aria-current={isActive(item.path) ? 'page' : undefined}
+                            title={expanded ? undefined : t(item.labelKey)} // Show full title on hover when collapsed
+                        >
+                            <item.icon className="me-2" aria-hidden="true" />
+                            {expanded && <span>{t(item.labelKey)}</span>}
+                        </Link>
+                    </Nav.Item>
+                ))}
             </Nav>
             <div className="mt-auto p-3 border-top">
-                <button className="btn btn-outline-light w-100" onClick={logout} aria-label="Sair">
+                <button 
+                    className="btn btn-outline-light w-100 d-flex align-items-center justify-content-center" // Centered content
+                    onClick={logout} 
+                    aria-label={t('layout.sidebar.logoutAriaLabel')}
+                >
                     <FaSignOutAlt className="me-2" aria-hidden="true" />
-                    {expanded && <span>Sair</span>}
+                    {expanded && <span>{t('layout.sidebar.logoutButton')}</span>}
                 </button>
             </div>
         </nav>

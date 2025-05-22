@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Col, Form, Row } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
 import notification from '../common/Notification.tsx';
 import { useCrudManager } from '../../hooks/useCrudManager';
 import {
@@ -19,20 +20,56 @@ import { FaList, FaSave, FaUndo, FaUserGraduate } from 'react-icons/fa';
 import FormField from '../common/FormField';
 import { extractFieldErrors } from '../../utils/errorUtils';
 
+/**
+ * Props for the StudentManager component.
+ * @interface StudentManagerProps
+ */
 interface StudentManagerProps {
+    /**
+     * The ID of the responsible parent/guardian, if provided.
+     * This will filter the students list to show only students associated with this responsible.
+     * It also pre-selects the responsible in the student form and disables the field.
+     * @type {string | undefined}
+     */
     responsible: string | undefined;
 }
 
+/**
+ * Interface for the student form data.
+ * @interface StudentFormData
+ */
+interface StudentFormData {
+    name: string;
+    email: string;
+    classId: string;
+    selectedResponsible: string;
+    enrollmentFee?: number;
+    monthlyFee?: number;
+}
+
+const initialFormData = (responsibleId?: string): StudentFormData => ({
+    name: '',
+    email: '',
+    classId: '',
+    selectedResponsible: responsibleId || '',
+    enrollmentFee: undefined,
+    monthlyFee: undefined,
+});
+
+/**
+ * StudentManager component for managing student records.
+ * It allows for creating, reading, updating, and deleting student information.
+ * It can be used in a general context or filtered by a specific responsible person.
+ *
+ * @param {StudentManagerProps} props - The component props.
+ * @returns {React.FC<StudentManagerProps>} The StudentManager component.
+ */
 const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
+    const { t } = useTranslation();
     const [classes, setClasses] = useState<ClassRoomResponse[]>([]);
     const [parents, setParents] = useState<ResponsibleResponse[]>([]);
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [classId, setClassId] = useState('');
-    const [selectedResponsible, setSelectedResponsible] = useState(responsible);
-    const [selectedResponsibleName, setSelectedResponsibleName] = useState('');
-    const [enrollmentFee, setEnrollmentFee] = useState<number | undefined>(undefined);
-    const [monthlyFee, setMonthlyFee] = useState<number | undefined>(undefined);
+    const [formData, setFormData] = useState<StudentFormData>(initialFormData(responsible));
+    // const [selectedResponsibleName, setSelectedResponsibleName] = useState(''); // This might be removable if name is part of parents list
     const [editingStudent, setEditingStudent] = useState<StudentResponse | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
@@ -50,58 +87,74 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
     } = useCrudManager<StudentResponse, StudentRequest>({
         entityName: 'students',
         fetchPage: (page, size) => responsible
-            ? getStudentsByResponsibleId(responsible, { page, size })
-            : getAllStudents({ page, size, sort: 'name,responsible' }),
+            ? getStudentsByResponsibleId(responsible, { page, size }) // Fetch students for a specific responsible
+            : getAllStudents({ page, size, sort: 'name,responsible' }), // Fetch all students
         createItem: createStudent,
         updateItem: updateStudent,
         deleteItem: deleteStudent
     });
 
+    // Effect to fetch classes and parents (if no specific responsible is provided)
     useEffect(() => {
         const getClasses = async () => {
             try {
                 const classData = await getAllClassRooms();
                 setClasses(classData.content as ClassRoomResponse[]);
-            } catch {}
+            } catch (err) {
+                // console.error("Failed to fetch classes:", err);
+                // Optionally, show a notification to the user
+            }
         };
         const getParents = async () => {
             try {
-                const parentData = await getAllResponsibles({ page: 0, size:100, sort: 'name' });
+                const parentData = await getAllResponsibles({ page: 0, size: 100, sort: 'name' }); // Fetch a large list for dropdown
                 setParents(parentData.content);
-            } catch {}
+            } catch (err) {
+                // console.error("Failed to fetch parents:", err);
+            }
         };
         getClasses();
-        if (!responsible) getParents();
+        if (!responsible) { // Only fetch all parents if not filtered by a specific responsible
+            getParents();
+        }
     }, [responsible]);
 
-    useEffect(() => {
-        if (selectedResponsible) {
-            const parent = parents.find(p => p.id === selectedResponsible);
-            if (parent) {
-                setSelectedResponsibleName(parent.name);
-            }
-        }
-    }, [selectedResponsible, parents]);
+    // This effect was for selectedResponsibleName, which might be removed or refactored
+    // useEffect(() => {
+    //     if (formData.selectedResponsible) {
+    //         const parent = parents.find(p => p.id === formData.selectedResponsible);
+    //         if (parent) {
+    //             // setSelectedResponsibleName(parent.name); // This state might not be needed
+    //         }
+    //     }
+    // }, [formData.selectedResponsible, parents]);
 
+    /**
+     * Resets the form fields to their initial state.
+     * If a responsible ID was provided as a prop, it preserves that selection.
+     * Clears any existing editing student data.
+     */
     const resetForm = () => {
-        setName('');
-        setEmail('');
-        setClassId('');
-        setSelectedResponsible(responsible || '');
-        setSelectedResponsibleName('');
-        setEnrollmentFee(undefined);
-        setMonthlyFee(undefined);
+        setFormData(initialFormData(responsible));
         setEditingStudent(null);
+        setFieldErrors({}); // Clear any previous field errors
     };
 
+    /**
+     * Handles the submission of the student form, either creating a new student or updating an existing one.
+     * Performs client-side validation before sending the request.
+     * Shows notifications for success or error.
+     */
     const handleAddOrUpdateStudent = async () => {
-        setFieldErrors({});
+        setFieldErrors({}); // Clear previous errors
         setLoading(true);
 
+        // Client-side validation
         const clientErrors: Record<string, string> = {};
-        if (!name) clientErrors.name = 'Nome do aluno é obrigatório';
-        if (!responsible && !selectedResponsible) clientErrors.responsibleId = 'Responsável é obrigatório';
-        if (!classId) clientErrors.classId = 'Turma é obrigatório';
+        if (!formData.name) clientErrors.name = t('studentManager.validations.nameRequired');
+        if (!responsible && !formData.selectedResponsible) clientErrors.responsibleId = t('studentManager.validations.responsibleRequired');
+        if (!formData.classId) clientErrors.classId = t('studentManager.validations.classRequired');
+
         if (Object.keys(clientErrors).length > 0) {
             setFieldErrors(clientErrors);
             setLoading(false);
@@ -109,69 +162,93 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
         }
 
         try {
-            let studentData: StudentRequest = {
-                name,
-                email,
-                responsibleId: (responsible || selectedResponsible) as string,
-                classroom: classId,
-                enrollmentFee: enrollmentFee || 0,
-                monthyFee: monthlyFee || 0,
+            const studentData: StudentRequest = {
+                name: formData.name,
+                email: formData.email,
+                responsibleId: (responsible || formData.selectedResponsible) as string,
+                classroom: formData.classId,
+                enrollmentFee: formData.enrollmentFee || 0,
+                monthyFee: formData.monthlyFee || 0,
             };
 
             if (editingStudent) {
                 await update(editingStudent.id, studentData);
-                notification('Aluno atualizado com sucesso', 'success');
+                notification(t('studentManager.notifications.updatedSuccess'), 'success');
             } else {
                 await create(studentData);
-                notification('Aluno adicionado com sucesso', 'success');
+                notification(t('studentManager.notifications.addedSuccess'), 'success');
             }
 
-            resetForm();
-            refetch();
+            resetForm(); // Reset form after successful operation
+            refetch();   // Refetch the student list
         } catch (err: any) {
+            // Extract and set field-specific errors from the backend response
             const errors = extractFieldErrors(err);
             setFieldErrors(errors);
+            // notification(t('studentManager.notifications.generalError'), 'error'); // Generic error if not field specific
         } finally {
             setLoading(false);
         }
     };
 
+    /**
+     * Populates the form with the data of the student selected for editing.
+     * @param {StudentResponse} student - The student object to edit.
+     */
     const handleEdit = (student: StudentResponse) => {
         setEditingStudent(student);
-        setName(student.name);
-        setEmail(student.email || '');
-        setClassId(student.classroom || '');
-        setSelectedResponsible(student.responsibleId || '');
-        setSelectedResponsibleName(student.responsibleName || '');
-        setEnrollmentFee(student.enrollmentFee || undefined);
-        setMonthlyFee(student.monthyFee || undefined);
+        setFormData({
+            name: student.name,
+            email: student.email || '',
+            classId: student.classroom || '',
+            selectedResponsible: student.responsibleId || '',
+            enrollmentFee: student.enrollmentFee || undefined,
+            monthlyFee: student.monthyFee || undefined,
+        });
+        // setSelectedResponsibleName(student.responsibleName || ''); // This state might not be needed
     };
 
+    /**
+     * Handles the deletion of a student.
+     * Shows a success or error notification.
+     * @param {string} id - The ID of the student to delete.
+     */
     const handleDelete = async (id: string) => {
         try {
             await remove(id);
-            notification('Estudante removido com sucesso.', 'success');
-            refetch();
+            notification(t('studentManager.notifications.removedSuccess'), 'success');
+            refetch(); // Refetch the list after deletion
         } catch {
-            notification('Erro ao remover o estudante.', 'error');
+            notification(t('studentManager.notifications.removedError'), 'error');
         }
     };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleNumericInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value ? parseFloat(value) : undefined }));
+    };
+
 
     return (
         <div>
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h1 className="mb-0">
                     <FaUserGraduate className="me-2" />
-                    Gerenciar Alunos
+                    {t('studentManager.title')}
                 </h1>
             </div>
 
-            {error && <ErrorMessage message={error} />}
+            {error && <ErrorMessage message={error} />} {/* Error from useCrudManager */}
 
             <Card className="form-card mb-4">
                 <Card.Header className="d-flex justify-content-between align-items-center">
                     <h5 className="mb-0">
-                        {editingStudent ? 'Editar Aluno' : 'Adicionar Aluno'}
+                        {editingStudent ? t('studentManager.editTitle') : t('studentManager.addTitle')}
                     </h5>
                 </Card.Header>
                 <Card.Body>
@@ -180,11 +257,12 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                             <Col md={6}>
                                 <FormField
                                     id="formStudentName"
-                                    label="Nome do Aluno"
+                                    label={t('studentManager.labels.studentName')}
                                     type="text"
-                                    placeholder="Nome do Aluno"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    name="name"
+                                    placeholder={t('studentManager.placeholders.studentName')}
+                                    value={formData.name}
+                                    onChange={handleInputChange}
                                     error={fieldErrors.name || null}
                                     required
                                 />
@@ -192,11 +270,12 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                             <Col md={6}>
                                 <FormField
                                     id="formStudentEmail"
-                                    label="Email"
+                                    label={t('studentManager.labels.email')}
                                     type="email"
-                                    placeholder="Email do Aluno"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    name="email"
+                                    placeholder={t('studentManager.placeholders.email')}
+                                    value={formData.email}
+                                    onChange={handleInputChange}
                                     error={fieldErrors.email || null}
                                 />
                             </Col>
@@ -205,12 +284,13 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                         <Row>
                             <Col md={6}>
                                 <Form.Group className="mb-3" controlId="formEnrollmentFee">
-                                    <Form.Label>Taxa de Matrícula</Form.Label>
+                                    <Form.Label>{t('studentManager.labels.enrollmentFee')}</Form.Label>
                                     <Form.Control
                                         type="number"
-                                        placeholder="Digite a taxa de matrícula"
-                                        value={enrollmentFee || ''}
-                                        onChange={(e) => setEnrollmentFee(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                        name="enrollmentFee"
+                                        placeholder={t('studentManager.placeholders.enrollmentFee')}
+                                        value={formData.enrollmentFee || ''}
+                                        onChange={handleNumericInputChange}
                                         isInvalid={!!fieldErrors.enrollmentFee}
                                     />
                                     {fieldErrors.enrollmentFee && (
@@ -222,16 +302,17 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                             </Col>
                             <Col md={6}>
                                 <Form.Group className="mb-3" controlId="formMonthlyFee">
-                                    <Form.Label>Mensalidade</Form.Label>
+                                    <Form.Label>{t('studentManager.labels.monthlyFee')}</Form.Label>
                                     <Form.Control
                                         type="number"
-                                        placeholder="Digite o valor da mensalidade"
-                                        value={monthlyFee || ''}
-                                        onChange={(e) => setMonthlyFee(e.target.value ? parseFloat(e.target.value) : undefined)}
-                                        isInvalid={!!fieldErrors.monthyFee}
+                                        name="monthlyFee"
+                                        placeholder={t('studentManager.placeholders.monthlyFee')}
+                                        value={formData.monthlyFee || ''}
+                                        onChange={handleNumericInputChange}
+                                        isInvalid={!!fieldErrors.monthyFee} // Note: API might use 'monthyFee', ensure consistency
                                         min={0}
                                     />
-                                    {fieldErrors.monthyFee && (
+                                    {fieldErrors.monthyFee && ( // Note: API might use 'monthyFee'
                                         <Form.Control.Feedback type="invalid">
                                             {fieldErrors.monthyFee}
                                         </Form.Control.Feedback>
@@ -243,15 +324,16 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                         <Row>
                             <Col md={6}>
                                 <Form.Group className="mb-3" controlId="formParent">
-                                    <Form.Label>Responsável</Form.Label>
+                                    <Form.Label>{t('studentManager.labels.responsible')}</Form.Label>
                                     <Form.Control
                                         as="select"
-                                        value={selectedResponsible}
-                                        onChange={(e) => setSelectedResponsible(e.target.value)}
+                                        name="selectedResponsible"
+                                        value={formData.selectedResponsible}
+                                        onChange={handleInputChange}
                                         isInvalid={!!fieldErrors.responsibleId}
-                                        disabled={!!responsible}
+                                        disabled={!!responsible} // Disable if a specific responsible is passed as prop
                                     >
-                                        <option value="">Selecione um responsável</option>
+                                        <option value="">{t('studentManager.placeholders.selectResponsible')}</option>
                                         {parents.map((parent) => (
                                             <option key={parent.id} value={parent.id}>
                                                 {parent.name}
@@ -267,14 +349,15 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                             </Col>
                             <Col md={6}>
                                 <Form.Group className="mb-3" controlId="formStudentClass">
-                                    <Form.Label>Turma</Form.Label>
+                                    <Form.Label>{t('studentManager.labels.class')}</Form.Label>
                                     <Form.Control
                                         as="select"
-                                        value={classId}
-                                        onChange={(e) => setClassId(e.target.value)}
+                                        name="classId"
+                                        value={formData.classId}
+                                        onChange={handleInputChange}
                                         isInvalid={!!fieldErrors.classId}
                                     >
-                                        <option value="">Selecione uma turma</option>
+                                        <option value="">{t('studentManager.placeholders.selectClass')}</option>
                                         {classes?.map((classItem) => (
                                             <option key={classItem.id as string} value={classItem.id as string}>
                                                 {classItem.name}
@@ -295,22 +378,22 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                                 variant="primary"
                                 onClick={handleAddOrUpdateStudent}
                                 className="me-2 d-flex align-items-center"
-                                disabled={loading}
+                                disabled={loading || isLoading} // Consider also disabling if useCrudManager is loading
                             >
                                 <FaSave className="me-2" />
                                 {loading
-                                    ? (editingStudent ? 'Atualizando...' : 'Salvando...')
-                                    : (editingStudent ? 'Atualizar' : 'Salvar')
+                                    ? (editingStudent ? t('studentManager.buttons.updating') : t('studentManager.buttons.saving'))
+                                    : (editingStudent ? t('studentManager.buttons.update') : t('studentManager.buttons.save'))
                                 }
                             </Button>
-                            {editingStudent && (
+                            {editingStudent && ( // Show cancel button only when editing
                                 <Button
                                     variant="secondary"
                                     onClick={resetForm}
                                     className="d-flex align-items-center"
                                 >
                                     <FaUndo className="me-2" />
-                                    Cancelar
+                                    {t('studentManager.buttons.cancel')}
                                 </Button>
                             )}
                         </div>
@@ -322,16 +405,16 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                 <Card.Header className="d-flex justify-content-between align-items-center">
                     <h5 className="mb-0">
                         <FaList className="me-2" />
-                        Lista de Alunos
+                        {t('studentManager.listTitle')}
                     </h5>
                 </Card.Header>
                 <Card.Body>
                     <ListRegistries
-                        page={studentPage || { content: [], number: 0, totalPages: 1, size: 10 }}
+                        page={studentPage || { content: [], number: 0, totalPages: 1, size: 10 }} // Fallback for initial load
                         entityName={'students'}
                         onDelete={handleDelete}
                         onEdit={handleEdit}
-                        onPageChange={(page) => setCurrentPage(page - 1)}
+                        onPageChange={(page) => setCurrentPage(page - 1)} // Assuming API is 0-indexed
                     />
                 </Card.Body>
             </Card>

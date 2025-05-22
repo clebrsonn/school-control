@@ -3,14 +3,29 @@ import { ToastContainer } from 'react-toastify';
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import Footer from './Footer.tsx';
+import Footer from './Footer.tsx'; // Corrected import path if it was Footer.tsx
 import '../../styles/dashboard.css';
 import { useTheme } from '../../hooks/useTheme';
 
+/**
+ * @interface LayoutProps
+ * Props for the Layout component.
+ */
 interface LayoutProps {
+    /** The content to be rendered within the main layout area. */
     children: ReactNode;
 }
 
+/**
+ * Layout is the main structural component for the application.
+ * It orchestrates the display of the Sidebar, Header, Footer, and the main content area.
+ * It adapts its structure for authentication pages (login, register) by rendering a simplified layout.
+ * The layout also manages the expanded/collapsed state of the sidebar based on screen size and user interaction,
+ * and applies the current theme to the main container.
+ *
+ * @param {LayoutProps} props - The props for the component.
+ * @returns {React.ReactElement} The main layout structure of the application.
+ */
 const Layout: React.FC<LayoutProps> = ({ children }) => {
     const [sidebarExpanded, setSidebarExpanded] = useState(true);
     const location = useLocation();

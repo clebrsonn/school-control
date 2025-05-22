@@ -1,0 +1,423 @@
+{
+  "greeting": "Hello World!",
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add"
+  },
+  "labels": {
+    "name": "Name",
+    "email": "Email"
+  },
+  "studentManager": {
+    "title": "Manage Students",
+    "addTitle": "Add Student",
+    "editTitle": "Edit Student",
+    "listTitle": "Student List",
+    "labels": {
+      "studentName": "Student Name",
+      "email": "Email",
+      "enrollmentFee": "Enrollment Fee",
+      "monthlyFee": "Monthly Fee",
+      "responsible": "Responsible",
+      "class": "Class"
+    },
+    "placeholders": {
+      "studentName": "Student Name",
+      "email": "Student Email",
+      "enrollmentFee": "Enter enrollment fee",
+      "monthlyFee": "Enter monthly fee",
+      "selectResponsible": "Select a responsible",
+      "selectClass": "Select a class"
+    },
+    "buttons": {
+      "save": "Save",
+      "update": "Update",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "updating": "Updating..."
+    },
+    "validations": {
+      "nameRequired": "Student name is required",
+      "responsibleRequired": "Responsible is required",
+      "classRequired": "Class is required"
+    },
+    "notifications": {
+      "updatedSuccess": "Student updated successfully",
+      "addedSuccess": "Student added successfully",
+      "removedSuccess": "Student removed successfully.",
+      "removedError": "Error removing student.",
+      "generalError": "An error occurred."
+    }
+  },
+  "classManager": {
+    "title": "Manage Classes",
+    "addTitle": "Add Class",
+    "listTitle": "Class List",
+    "labels": {
+      "name": "Name",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "enrollmentFee": "Enrollment Fee",
+      "monthlyFee": "Monthly Fee"
+    },
+    "placeholders": {
+      "name": "Class Name",
+      "startTime": "Start Time (HH:mm)",
+      "endTime": "End Time (HH:mm)",
+      "enrollmentFee": "Enrollment fee amount",
+      "monthlyFee": "Monthly fee amount"
+    },
+    "buttons": {
+      "add": "Register",
+      "saving": "Saving..."
+    },
+    "notifications": {
+      "addedSuccess": "Class added successfully.",
+      "removedSuccess": "Class removed successfully.",
+      "removedError": "Error removing class.",
+      "generalError": "An error occurred while processing the request."
+    },
+    "validations": {
+      "nameRequired": "Class name is required"
+    }
+  },
+  "discountManager": {
+    "title": "Manage Discounts",
+    "addTitle": "Add Discount",
+    "listTitle": "Discount List",
+    "labels": {
+      "name": "Discount Name",
+      "value": "Discount Value",
+      "validUntil": "Discount Valid Until",
+      "type": "Discount Type"
+    },
+    "placeholders": {
+      "name": "E.g.: New student discount",
+      "value": "E.g.: 50"
+    },
+    "types": {
+      "enrollment": "Enrollment",
+      "monthly": "Monthly Fee"
+    },
+    "buttons": {
+      "save": "Save Discount",
+      "saving": "Saving..."
+    },
+    "notifications": {
+      "createdSuccess": "Discount created successfully!",
+      "removedSuccess": "Discount removed successfully.",
+      "removedError": "Error deleting discount.",
+      "creationError": "Error creating discount."
+    },
+    "validations": {
+      "nameRequired": "Discount name is required",
+      "valuePositive": "Value must be greater than zero",
+      "validUntilRequired": "Expiration date is required",
+      "typeRequired": "Discount type is required"
+    }
+  },
+  "parentManager": {
+    "title": "Manage Parents/Responsibles",
+    "addTitle": "Add Parent/Responsible",
+    "listTitle": "Parent/Responsible List",
+    "labels": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "placeholders": {
+      "name": "Parent/Responsible Name",
+      "email": "Parent/Responsible Email",
+      "phone": "Parent/Responsible Phone"
+    },
+    "buttons": {
+      "save": "Save",
+      "saving": "Saving..."
+    },
+    "notifications": {
+      "addedSuccess": "Parent/Responsible added successfully",
+      "removedSuccess": "Parent/Responsible removed successfully.",
+      "removedError": "Error removing parent/responsible.",
+      "addError": "Error adding parent/responsible."
+    },
+    "validations": {
+      "nameRequired": "Parent/Responsible name is required",
+      "phoneRequired": "Parent/Responsible phone is required"
+    }
+  },
+  "paymentManager": {
+    "title": "Manage Payments",
+    "responsibleLabel": "Responsible:",
+    "statusPaid": "Paid",
+    "statusOpen": "Open",
+    "buttons": {
+        "pay": "Pay",
+        "paying": "Processing..."
+    },
+    "totalDueLabel": "Total:",
+    "itemDescriptionLabel": "Due Date:",
+    "noInvoicesFound": "No invoices found.",
+    "notifications": {
+      "paymentSuccess": "Payment processed successfully!",
+      "paymentErrorDefault": "Error processing payment."
+    },
+    "errors": {
+        "noInvoiceItems": "No items in invoice to process payment.",
+        "fetchError": "Error fetching consolidated statements."
+    }
+  },
+  "classDetails": {
+    "title": "Class Details",
+    "infoTitle": "Class Information",
+    "labels": {
+      "name": "Class Name",
+      "schoolYear": "School Year",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "monthlyFee": "Monthly Fee",
+      "enrollmentFee": "Enrollment Fee"
+    },
+    "notDefined": "Not defined",
+    "notifications": {
+      "fetchFailed": "Failed to fetch class data.",
+      "noIdProvided": "No class ID provided.",
+      "classRoomNotFound": "Classroom not found."
+    }
+  },
+  "parentDetails": {
+    "title": "Responsible's Details",
+    "personalInfoTitle": "Personal Information",
+    "labels": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "notInformed": "Not informed"
+    },
+    "studentsTitle": "Students",
+    "buttons": {
+      "addStudent": "Add Student",
+      "viewDetails": "View Details",
+      "pay": "Pay"
+    },
+    "noStudentsRegistered": "No students registered",
+    "realizedPaymentsTitle": "Realized Payments",
+    "table": {
+      "paymentDate": "Payment Date",
+      "value": "Value",
+      "method": "Method",
+      "invoiceId": "Invoice ID",
+      "student": "Student",
+      "description": "Description",
+      "dueDate": "Due Date",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "noPaymentsRegistered": "No payments registered",
+    "pendingPaymentsTitle": "Pending Payments",
+    "totalOpenPayments": "Total Due:",
+    "statusPaid": "Paid",
+    "statusPending": "Pending",
+    "noPendingPayments": "No pending payments",
+    "notifications": {
+      "fetchPaymentsError": "Error loading payments.",
+      "loadInvoicesError": "Error loading invoices.",
+      "paymentSuccess": "Payment processed successfully!",
+      "paymentError": "Error processing payment."
+    }
+  },
+  "paymentDetails": {
+    "title": "Payment Details",
+    "infoTitle": "Payment Information",
+    "labels": {
+      "amount": "Amount",
+      "paymentDate": "Payment Date",
+      "invoiceId": "Invoice ID",
+      "paymentMethod": "Payment Method",
+      "responsibleName": "Responsible"
+    },
+    "notDefined": "Not defined",
+    "invalidDate": "Invalid date",
+    "notifications": {
+      "fetchFailed": "Failed to fetch payment data.",
+      "noIdProvided": "No payment ID provided.",
+      "paymentNotFound": "Payment not found."
+    },
+    "paymentMethods": {
+      "pix": "PIX",
+      "creditCard": "Credit Card",
+      "bankSlip": "Bank Slip"
+    }
+  },
+  "studentDetails": {
+    "title": "Student Details",
+    "personalInfoTitle": "Personal Information",
+    "labels": {
+      "name": "Name",
+      "responsible": "Responsible",
+      "currentClass": "Current Class",
+      "enrollmentDate": "Enrollment Date",
+      "endDate": "End Date"
+    },
+    "noEndDate": "No end date",
+    "notDefined": "Not defined",
+    "invalidDate": "Invalid date",
+    "currentEnrollmentTitle": "Current Enrollment",
+    "tooltips": {
+      "cancelEnrollment": "Cancel Enrollment",
+      "renewEnrollment": "Renew Enrollment"
+    },
+    "buttons": {
+      "cancelEnrollment": "Cancel Enrollment",
+      "renewEnrollment": "Renew Enrollment",
+      "changeClass": "Change Class",
+      "enroll": "Enroll"
+    },
+    "changeClassTitle": "Change Class",
+    "noEnrollmentTitle": "Enrollment",
+    "noEnrollmentMessage": "This student is not enrolled in any class.",
+    "newEnrollmentTitle": "New Enrollment",
+    "enrollmentForm": {
+      "selectClassLabel": "Select a Class",
+      "selectClassPlaceholder": "Select a class",
+      "enrollmentFeeLabel": "Enrollment Fee",
+      "enrollmentFeePlaceholder": "Enter enrollment fee",
+      "monthlyFeeLabel": "Monthly Fee",
+      "monthlyFeePlaceholder": "Enter monthly fee amount"
+    },
+    "notifications": {
+      "fetchStudentError": "Error fetching student data.",
+      "fetchClassesError": "Error fetching classes.",
+      "fetchEnrollmentsError": "Error fetching enrollments.",
+      "enrollmentSelectClassError": "Please select a class.",
+      "enrollmentSuccess": "Student successfully enrolled/updated!",
+      "enrollmentError": "Failed to enroll student.",
+      "cancelSuccess": "Enrollment successfully canceled!",
+      "cancelError": "Failed to cancel enrollment.",
+      "renewSuccess": "Enrollment successfully renewed!",
+      "renewError": "Failed to renew enrollment.",
+      "studentNotFound": "Student not found."
+    },
+    "loading": {
+      "studentData": "Loading student data...",
+      "enrollments": "Loading enrollments...",
+      "icons": "Loading icons..."
+    },
+    "errors": {
+      "invalidId": "Invalid student ID."
+    }
+  },
+  "listRegistries": {
+    "searchPlaceholder": "Search {{entityName}}...",
+    "pageInfo": "Page {{currentPage}} of {{totalPages}}",
+    "actionsHeader": "Actions",
+    "editButton": "Edit",
+    "deleteButton": "Delete",
+    "noRecordsFound": "No records found.",
+    "booleanYes": "Yes",
+    "booleanNo": "No",
+    "ariaEdit": "Edit {{entityName}}",
+    "ariaDelete": "Delete {{entityName}}"
+  },
+  "entities": {
+    "students": "Students",
+    "classes": "Classes",
+    "parents": "Parents",
+    "discounts": "Discounts",
+    "payments": "Payments"
+  },
+  "tables": {
+    "headers": {
+      "common": {
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "value": "Value",
+        "type": "Type",
+        "description": "Description",
+        "status": "Status",
+        "amount": "Amount",
+        "paymentDate": "Payment Date",
+        "paymentMethod": "Payment Method",
+        "invoiceId": "Invoice ID",
+        "dueDate": "Due Date"
+      },
+      "students": {
+        "responsibleName": "Responsible Name",
+        "classroomName": "Class Name",
+        "enrollmentFee": "Enrollment Fee",
+        "monthyFee": "Monthly Fee" 
+      },
+      "classes": {
+        "schoolYear": "School Year",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "enrollmentFee": "Enrollment Fee",
+        "monthlyFee": "Monthly Fee"
+      },
+      "parents": {
+        "responsibleName": "Responsible Name"
+      },
+      "discounts": {
+        "validUntil": "Valid Until"
+      },
+      "payments": {
+        "responsibleName": "Responsible Name"
+      }
+    }
+  },
+  "auth": {
+    "loginPage": {
+      "title": "School Control",
+      "subtitle": "Enter your credentials to access the system",
+      "labels": {
+        "username": "Username",
+        "password": "Password"
+      },
+      "placeholders": {
+        "username": "Enter your username",
+        "password": "Enter your password"
+      },
+      "buttons": {
+        "login": "Login",
+        "loggingIn": "Logging in..."
+      },
+      "links": {
+        "forgotPassword": "Forgot your password?",
+        "noAccount": "Don't have an account?",
+        "register": "Sign up"
+      },
+      "notifications": {
+        "loginFailed": "Login failed. Check your credentials."
+      }
+    },
+    "registerPage": {
+      "title": "Create Account",
+      "subtitle": "Fill in the details below to create your account",
+      "labels": {
+        "username": "Username",
+        "email": "Email",
+        "password": "Password"
+      },
+      "placeholders": {
+        "username": "Enter your username",
+        "email": "Enter your email",
+        "password": "Enter your password"
+      },
+      "buttons": {
+        "register": "Register",
+        "registering": "Registering..."
+      },
+      "links": {
+        "hasAccount": "Already have an account?",
+        "login": "Log in"
+      },
+      "notifications": {
+        "registerSuccess": "Registration successful! You can now log in.",
+        "registerFailed": "Registration failed. Please try again."
+      }
+    }
+  }
+}

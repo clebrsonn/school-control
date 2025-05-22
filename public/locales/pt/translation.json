@@ -1,0 +1,423 @@
+{
+  "greeting": "Olá Mundo!",
+  "actions": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Deletar",
+    "add": "Adicionar"
+  },
+  "labels": {
+    "name": "Nome",
+    "email": "Email"
+  },
+  "studentManager": {
+    "title": "Gerenciar Alunos",
+    "addTitle": "Adicionar Aluno",
+    "editTitle": "Editar Aluno",
+    "listTitle": "Lista de Alunos",
+    "labels": {
+      "studentName": "Nome do Aluno",
+      "email": "Email",
+      "enrollmentFee": "Taxa de Matrícula",
+      "monthlyFee": "Mensalidade",
+      "responsible": "Responsável",
+      "class": "Turma"
+    },
+    "placeholders": {
+      "studentName": "Nome do Aluno",
+      "email": "Email do Aluno",
+      "enrollmentFee": "Digite a taxa de matrícula",
+      "monthlyFee": "Digite o valor da mensalidade",
+      "selectResponsible": "Selecione um responsável",
+      "selectClass": "Selecione uma turma"
+    },
+    "buttons": {
+      "save": "Salvar",
+      "update": "Atualizar",
+      "cancel": "Cancelar",
+      "saving": "Salvando...",
+      "updating": "Atualizando..."
+    },
+    "validations": {
+      "nameRequired": "Nome do aluno é obrigatório",
+      "responsibleRequired": "Responsável é obrigatório",
+      "classRequired": "Turma é obrigatório"
+    },
+    "notifications": {
+      "updatedSuccess": "Aluno atualizado com sucesso",
+      "addedSuccess": "Aluno adicionado com sucesso",
+      "removedSuccess": "Estudante removido com sucesso.",
+      "removedError": "Erro ao remover o estudante.",
+      "generalError": "Ocorreu um erro."
+    }
+  },
+  "classManager": {
+    "title": "Gerenciar Turmas",
+    "addTitle": "Adicionar Turma",
+    "listTitle": "Lista de Turmas",
+    "labels": {
+      "name": "Nome",
+      "startTime": "Horário de início",
+      "endTime": "Horário de término",
+      "enrollmentFee": "Taxa de Matrícula",
+      "monthlyFee": "Mensalidade"
+    },
+    "placeholders": {
+      "name": "Nome da Turma",
+      "startTime": "Horário de início (HH:mm)",
+      "endTime": "Horário de término (HH:mm)",
+      "enrollmentFee": "Valor da matrícula",
+      "monthlyFee": "Valor da mensalidade"
+    },
+    "buttons": {
+      "add": "Cadastrar",
+      "saving": "Salvando..."
+    },
+    "notifications": {
+      "addedSuccess": "Turma adicionada com sucesso.",
+      "removedSuccess": "Turma removida com sucesso.",
+      "removedError": "Erro ao remover a turma.",
+      "generalError": "Ocorreu um erro ao processar a solicitação."
+    },
+    "validations": {
+      "nameRequired": "Nome da turma é obrigatório"
+    }
+  },
+  "discountManager": {
+    "title": "Gerenciar Descontos",
+    "addTitle": "Adicionar Desconto",
+    "listTitle": "Lista de Descontos",
+    "labels": {
+      "name": "Nome do Desconto",
+      "value": "Valor do Desconto",
+      "validUntil": "Validade do Desconto",
+      "type": "Tipo de Desconto"
+    },
+    "placeholders": {
+      "name": "Exemplo: Desconto para alunos novos",
+      "value": "Exemplo: 50"
+    },
+    "types": {
+      "enrollment": "Matrícula",
+      "monthly": "Mensalidade"
+    },
+    "buttons": {
+      "save": "Salvar Desconto",
+      "saving": "Salvando..."
+    },
+    "notifications": {
+      "createdSuccess": "Desconto criado com sucesso!",
+      "removedSuccess": "Desconto removido com sucesso.",
+      "removedError": "Erro ao excluir o desconto.",
+      "creationError": "Erro ao criar o desconto."
+    },
+    "validations": {
+      "nameRequired": "Nome do desconto é obrigatório",
+      "valuePositive": "Valor deve ser maior que zero",
+      "validUntilRequired": "Data de validade é obrigatória",
+      "typeRequired": "Tipo de desconto é obrigatório"
+    }
+  },
+  "parentManager": {
+    "title": "Gerenciar Responsáveis",
+    "addTitle": "Adicionar Responsável",
+    "listTitle": "Lista de Responsáveis",
+    "labels": {
+      "name": "Nome",
+      "email": "Email",
+      "phone": "Telefone"
+    },
+    "placeholders": {
+      "name": "Nome do Responsável",
+      "email": "Email do Responsável",
+      "phone": "Telefone do Responsável"
+    },
+    "buttons": {
+      "save": "Salvar",
+      "saving": "Salvando..."
+    },
+    "notifications": {
+      "addedSuccess": "Responsável adicionado com sucesso",
+      "removedSuccess": "Responsável removido com sucesso.",
+      "removedError": "Erro ao remover o responsável.",
+      "addError": "Erro ao adicionar o responsável."
+    },
+    "validations": {
+      "nameRequired": "Nome do responsável é obrigatório",
+      "phoneRequired": "Telefone do responsável é obrigatório"
+    }
+  },
+  "paymentManager": {
+    "title": "Gerenciar Pagamentos",
+    "responsibleLabel": "Responsável:",
+    "statusPaid": "Paga",
+    "statusOpen": "Aberta",
+    "buttons": {
+        "pay": "Pagar",
+        "paying": "Processando..."
+    },
+    "totalDueLabel": "Total:",
+    "itemDescriptionLabel": "Vencimento:",
+    "noInvoicesFound": "Nenhuma fatura encontrada.",
+    "notifications": {
+      "paymentSuccess": "Pagamento processado com sucesso!",
+      "paymentErrorDefault": "Erro ao processar o pagamento."
+    },
+    "errors": {
+        "noInvoiceItems": "Nenhum item na fatura para processar o pagamento.",
+        "fetchError": "Erro ao buscar os extratos consolidados."
+    }
+  },
+  "classDetails": {
+    "title": "Detalhes da Turma",
+    "infoTitle": "Informações da Turma",
+    "labels": {
+      "name": "Nome da Turma",
+      "schoolYear": "Ano Letivo",
+      "startTime": "Horário de Início",
+      "endTime": "Horário de Término",
+      "monthlyFee": "Mensalidade",
+      "enrollmentFee": "Taxa de Matrícula"
+    },
+    "notDefined": "Não definido",
+    "notifications": {
+      "fetchFailed": "Falha ao buscar dados da turma.",
+      "noIdProvided": "Nenhum ID de turma fornecido.",
+      "classRoomNotFound": "Turma não encontrada."
+    }
+  },
+  "parentDetails": {
+    "title": "Detalhes do Responsável",
+    "personalInfoTitle": "Informações Pessoais",
+    "labels": {
+      "name": "Nome",
+      "email": "Email",
+      "phone": "Telefone",
+      "notInformed": "Não informado"
+    },
+    "studentsTitle": "Alunos",
+    "buttons": {
+      "addStudent": "Adicionar Aluno",
+      "viewDetails": "Ver Detalhes",
+      "pay": "Pagar"
+    },
+    "noStudentsRegistered": "Nenhum aluno cadastrado",
+    "realizedPaymentsTitle": "Pagamentos Realizados",
+    "table": {
+      "paymentDate": "Data de Pagamento",
+      "value": "Valor",
+      "method": "Método",
+      "invoiceId": "ID da Fatura",
+      "student": "Aluno",
+      "description": "Descrição",
+      "dueDate": "Data de Vencimento",
+      "status": "Status",
+      "actions": "Ações"
+    },
+    "noPaymentsRegistered": "Nenhum pagamento registrado",
+    "pendingPaymentsTitle": "Pagamentos em Aberto",
+    "totalOpenPayments": "Total em Aberto:",
+    "statusPaid": "Paga",
+    "statusPending": "Pendente",
+    "noPendingPayments": "Nenhum pagamento em aberto",
+    "notifications": {
+      "fetchPaymentsError": "Erro ao carregar os pagamentos.",
+      "loadInvoicesError": "Erro ao carregar as faturas.",
+      "paymentSuccess": "Pagamento processado com sucesso!",
+      "paymentError": "Erro ao processar o pagamento."
+    }
+  },
+  "paymentDetails": {
+    "title": "Detalhes do Pagamento",
+    "infoTitle": "Informações do Pagamento",
+    "labels": {
+      "amount": "Valor",
+      "paymentDate": "Data de Pagamento",
+      "invoiceId": "ID da Fatura",
+      "paymentMethod": "Método de Pagamento",
+      "responsibleName": "Responsável"
+    },
+    "notDefined": "Não definido",
+    "invalidDate": "Data inválida",
+    "notifications": {
+      "fetchFailed": "Falha ao buscar dados do pagamento.",
+      "noIdProvided": "Nenhum ID de pagamento fornecido.",
+      "paymentNotFound": "Pagamento não encontrado."
+    },
+    "paymentMethods": {
+      "pix": "PIX",
+      "creditCard": "Cartão de Crédito",
+      "bankSlip": "Boleto"
+    }
+  },
+  "studentDetails": {
+    "title": "Detalhes do Aluno",
+    "personalInfoTitle": "Informações Pessoais",
+    "labels": {
+      "name": "Nome",
+      "responsible": "Responsável",
+      "currentClass": "Turma Atual",
+      "enrollmentDate": "Data de Matrícula",
+      "endDate": "Data de Término"
+    },
+    "noEndDate": "Sem data de término",
+    "notDefined": "Não definido",
+    "invalidDate": "Data inválida",
+    "currentEnrollmentTitle": "Matrícula Atual",
+    "tooltips": {
+      "cancelEnrollment": "Cancelar Matrícula",
+      "renewEnrollment": "Renovar Matrícula"
+    },
+    "buttons": {
+      "cancelEnrollment": "Cancelar Matrícula",
+      "renewEnrollment": "Renovar Matrícula",
+      "changeClass": "Alterar Turma",
+      "enroll": "Matricular"
+    },
+    "changeClassTitle": "Alterar Turma",
+    "noEnrollmentTitle": "Matrícula",
+    "noEnrollmentMessage": "Este aluno não está matriculado em nenhuma turma.",
+    "newEnrollmentTitle": "Nova Matrícula",
+    "enrollmentForm": {
+      "selectClassLabel": "Selecione uma Turma",
+      "selectClassPlaceholder": "Selecione uma turma",
+      "enrollmentFeeLabel": "Taxa de Matrícula",
+      "enrollmentFeePlaceholder": "Digite a taxa de matrícula",
+      "monthlyFeeLabel": "Mensalidade",
+      "monthlyFeePlaceholder": "Digite o valor da mensalidade"
+    },
+    "notifications": {
+      "fetchStudentError": "Erro ao buscar dados do aluno.",
+      "fetchClassesError": "Erro ao buscar turmas.",
+      "fetchEnrollmentsError": "Erro ao buscar matrículas.",
+      "enrollmentSelectClassError": "Por favor, selecione uma turma.",
+      "enrollmentSuccess": "Aluno matriculado/atualizado com sucesso!",
+      "enrollmentError": "Falha ao matricular aluno.",
+      "cancelSuccess": "Matrícula cancelada com sucesso!",
+      "cancelError": "Falha ao cancelar matrícula.",
+      "renewSuccess": "Matrícula renovada com sucesso!",
+      "renewError": "Falha ao renovar matrícula.",
+      "studentNotFound": "Aluno não encontrado."
+    },
+    "loading": {
+      "studentData": "Carregando dados do aluno...",
+      "enrollments": "Carregando matrículas...",
+      "icons": "Carregando ícones..."
+    },
+    "errors": {
+      "invalidId": "ID do aluno inválido."
+    }
+  },
+  "listRegistries": {
+    "searchPlaceholder": "Buscar {{entityName}}...",
+    "pageInfo": "Página {{currentPage}} de {{totalPages}}",
+    "actionsHeader": "Ações",
+    "editButton": "Editar",
+    "deleteButton": "Excluir",
+    "noRecordsFound": "Nenhum registro encontrado.",
+    "booleanYes": "Sim",
+    "booleanNo": "Não",
+    "ariaEdit": "Editar {{entityName}}",
+    "ariaDelete": "Excluir {{entityName}}"
+  },
+  "entities": {
+    "students": "Alunos",
+    "classes": "Turmas",
+    "parents": "Responsáveis",
+    "discounts": "Descontos",
+    "payments": "Pagamentos"
+  },
+  "tables": {
+    "headers": {
+      "common": {
+        "name": "Nome",
+        "email": "Email",
+        "phone": "Telefone",
+        "value": "Valor",
+        "type": "Tipo",
+        "description": "Descrição",
+        "status": "Status",
+        "amount": "Quantia",
+        "paymentDate": "Data do Pagamento",
+        "paymentMethod": "Método de Pagamento",
+        "invoiceId": "ID da Fatura",
+        "dueDate": "Data de Vencimento"
+      },
+      "students": {
+        "responsibleName": "Nome do Responsável",
+        "classroomName": "Nome da Turma",
+        "enrollmentFee": "Taxa de Matrícula",
+        "monthyFee": "Mensalidade" 
+      },
+      "classes": {
+        "schoolYear": "Ano Letivo",
+        "startTime": "Horário de Início",
+        "endTime": "Horário de Término",
+        "enrollmentFee": "Taxa de Matrícula",
+        "monthlyFee": "Mensalidade"
+      },
+      "parents": {
+        "responsibleName": "Nome do Responsável"
+      },
+      "discounts": {
+        "validUntil": "Válido Até"
+      },
+      "payments": {
+        "responsibleName": "Nome do Responsável"
+      }
+    }
+  },
+  "auth": {
+    "loginPage": {
+      "title": "School Control",
+      "subtitle": "Entre com suas credenciais para acessar o sistema",
+      "labels": {
+        "username": "Usuário",
+        "password": "Senha"
+      },
+      "placeholders": {
+        "username": "Digite seu usuário",
+        "password": "Digite sua senha"
+      },
+      "buttons": {
+        "login": "Login",
+        "loggingIn": "Entrando..."
+      },
+      "links": {
+        "forgotPassword": "Esqueceu sua senha?",
+        "noAccount": "Não tem uma conta?",
+        "register": "Registre-se"
+      },
+      "notifications": {
+        "loginFailed": "Falha no login. Verifique suas credenciais."
+      }
+    },
+    "registerPage": {
+      "title": "Criar Conta",
+      "subtitle": "Preencha os dados abaixo para criar sua conta",
+      "labels": {
+        "username": "Usuário",
+        "email": "Email",
+        "password": "Senha"
+      },
+      "placeholders": {
+        "username": "Digite seu nome de usuário",
+        "email": "Digite seu email",
+        "password": "Digite sua senha"
+      },
+      "buttons": {
+        "register": "Registrar",
+        "registering": "Registrando..."
+      },
+      "links": {
+        "hasAccount": "Já possui uma conta?",
+        "login": "Faça login"
+      },
+      "notifications": {
+        "registerSuccess": "Registro bem-sucedido! Você pode agora fazer login.",
+        "registerFailed": "Falha no registro. Por favor, tente novamente."
+      }
+    }
+  }
+}
