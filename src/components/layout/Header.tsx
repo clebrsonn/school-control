@@ -1,11 +1,8 @@
 import React from 'react';
 import { Badge, Button, Container, Dropdown, Navbar } from 'react-bootstrap';
 import { FaBars, FaBell, FaMoon, FaSun, FaUser } from 'react-icons/fa';
-import { useAuth } from '../../features/auth/contexts/AuthProvider';
-import { useNotifications } from '../../features/notifications/contexts/NotificationProvider';
-import { useTheme } from '../../hooks/useTheme';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { useHeaderViewModel } from './viewmodels/useHeaderViewModel';
 
 /**
  * @interface HeaderProps
@@ -27,81 +24,73 @@ interface HeaderProps {
  * @returns {React.ReactElement} The Header component.
  */
 const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
-  const { t, i18n } = useTranslation(); // Initialize useTranslation
-  const { user, logout } = useAuth();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
-  const { theme, toggleTheme } = useTheme();
-  
-  const formatDate = (dateString: string | Date): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(i18n.language, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  };
+  const vm = useHeaderViewModel();
 
   return (
     <header>
-      <Navbar bg="white" className="border-bottom shadow-sm" as="nav" role="navigation" aria-label={t('layout.header.ariaLabel')}>
+      <Navbar bg="white" className="border-bottom shadow-sm" as="nav" role="navigation" aria-label={vm.t('layout.header.ariaLabel')}>
         <Container fluid className="px-4">
           <button
             className="btn btn-link text-dark d-md-none"
             onClick={toggleSidebar}
-            aria-label={t('layout.header.toggleSidebarAriaLabel')}
+            aria-label={vm.t('layout.header.toggleSidebarAriaLabel')}
           >
             <FaBars />
           </button>
 
-          <Navbar.Brand className="d-none d-md-block fw-bold text-primary" tabIndex={0} aria-label={t('layout.header.brandAriaLabel')}>
-            {t('layout.header.brandText')}
+          <Navbar.Brand className="d-none d-md-block fw-bold text-primary" tabIndex={0} aria-label={vm.t('layout.header.brandAriaLabel')}>
+            {vm.t('layout.header.brandText')}
           </Navbar.Brand>
 
           <div className="ms-auto d-flex align-items-center">
             {/* Theme toggle button */}
             <button
               className="btn btn-link text-dark me-2"
-              onClick={toggleTheme}
-              aria-label={theme === 'dark' ? t('layout.header.themeToggle.activateLightAria') : t('layout.header.themeToggle.activateDarkAria')}
-              title={theme === 'dark' ? t('layout.header.themeToggle.activateLightAria') : t('layout.header.themeToggle.activateDarkAria')}
+              onClick={vm.toggleTheme}
+              aria-label={vm.theme === 'dark' ? vm.t('layout.header.themeToggle.activateLightAria') : vm.t('layout.header.themeToggle.activateDarkAria')}
+              title={vm.theme === 'dark' ? vm.t('layout.header.themeToggle.activateLightAria') : vm.t('layout.header.themeToggle.activateDarkAria')}
               style={{ fontSize: 20 }}
             >
-              {theme === 'dark' ? <FaSun /> : <FaMoon />}
+              {vm.theme === 'dark' ? <FaSun /> : <FaMoon />}
             </button>
 
             {/* Notifications Dropdown */}
             <Dropdown align="end" className="me-3">
-              <Dropdown.Toggle variant="link" className="nav-link p-0 text-dark position-relative" aria-label={t('layout.header.notifications.ariaLabel')} id="dropdown-notifications">
+              <Dropdown.Toggle variant="link" className="nav-link p-0 text-dark position-relative" aria-label={vm.t('layout.header.notifications.ariaLabel')} id="dropdown-notifications">
                 <FaBell aria-hidden="true" />
-                {unreadCount > 0 && (
-                  <span 
+                {vm.unreadCount > 0 && (
+                  <span
                     className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
                     role="status" 
-                    aria-label={t('layout.header.notifications.unreadBadgeAriaLabel', { count: unreadCount })}
+                    aria-label={vm.t('layout.header.notifications.unreadBadgeAriaLabel', { count: vm.unreadCount })}
                   >
-                    {unreadCount > 99 ? '99+' : unreadCount}
+                    {vm.unreadCount > 99 ? '99+' : vm.unreadCount}
                   </span>
                 )}
               </Dropdown.Toggle>
               <Dropdown.Menu style={{ width: '320px', maxHeight: '400px', overflowY: 'auto' }} aria-labelledby="dropdown-notifications">
                 <div className="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
-                  <h6 className="mb-0">{t('layout.header.notifications.title')}</h6>
-                  {unreadCount > 0 && (
+                  <h6 className="mb-0">{vm.t('layout.header.notifications.title')}</h6>
+                  {vm.unreadCount > 0 && (
                     <Button
                       variant="link"
                       size="sm"
                       className="text-decoration-none p-0"
-                      onClick={() => markAllAsRead()}
+                      onClick={() => vm.markAllAsRead()}
                     >
-                      <small>{t('layout.header.notifications.markAllAsRead')}</small>
+                      <small>{vm.t('layout.header.notifications.markAllAsRead')}</small>
                     </Button>
                   )}
                 </div>
-                {notifications.length === 0 ? (
-                  <Dropdown.Item disabled>{t('layout.header.notifications.noNotifications')}</Dropdown.Item>
+                {vm.notifications.length === 0 ? (
+                  <Dropdown.Item disabled>{vm.t('layout.header.notifications.noNotifications')}</Dropdown.Item>
                 ) : (
                   <>
-                    {notifications?.slice(0, 5).map(notificationItem => ( // Renamed notification to notificationItem
+                    {vm.notifications?.slice(0, 5).map(notificationItem => (
                       <Dropdown.Item
                         key={notificationItem.id}
                         className={`border-bottom ${!notificationItem.isRead ? 'bg-light' : ''}`}
-                        onClick={() => markAsRead(notificationItem.id)}
+                        onClick={() => vm.markAsRead(notificationItem.id)}
                         aria-current={!notificationItem.isRead ? 'true' : undefined}
                       >
                         <div className="d-flex align-items-start">
@@ -117,7 +106,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                             <small className="text-muted">{notificationItem.message}</small>
                             <div>
                               <small className="text-muted">
-                                {formatDate(notificationItem.createdAt)}
+                                {vm.formatDate(notificationItem.createdAt)}
                               </small>
                             </div>
                           </div>
@@ -125,7 +114,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                       </Dropdown.Item>
                     ))}
                     <Dropdown.Item as={Link} to="/notifications" className="text-center">
-                      <small>{t('layout.header.notifications.viewAll')}</small>
+                      <small>{vm.t('layout.header.notifications.viewAll')}</small>
                     </Dropdown.Item>
                   </>
                 )}
@@ -134,7 +123,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
             {/* User Profile Dropdown */}
             <Dropdown align="end">
-              <Dropdown.Toggle variant="link" className="nav-link p-0 text-dark d-flex align-items-center" aria-label={t('layout.header.userMenu.ariaLabel')} id="dropdown-user">
+              <Dropdown.Toggle variant="link" className="nav-link p-0 text-dark d-flex align-items-center" aria-label={vm.t('layout.header.userMenu.ariaLabel')} id="dropdown-user">
                 <div className="d-flex align-items-center">
                   <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
                        style={{ width: '32px', height: '32px' }}>
@@ -144,13 +133,13 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               </Dropdown.Toggle>
               <Dropdown.Menu aria-labelledby="dropdown-user">
                 <Dropdown.ItemText>
-                  <span className="fw-bold">{user?.name || t('layout.header.userMenu.defaultUserName')}</span>
+                  <span className="fw-bold">{vm.user?.name || vm.t('layout.header.userMenu.defaultUserName')}</span>
                   <br />
-                  <small className="text-muted">{user?.email}</small>
+                  <small className="text-muted">{vm.user?.email}</small>
                 </Dropdown.ItemText>
                 <Dropdown.Divider />
-                <Dropdown.Item as={Link} to="/profile">{t('layout.header.userMenu.profile')}</Dropdown.Item>
-                <Dropdown.Item onClick={logout}>{t('layout.header.userMenu.logout')}</Dropdown.Item>
+                <Dropdown.Item as={Link} to="/profile">{vm.t('layout.header.userMenu.profile')}</Dropdown.Item>
+                <Dropdown.Item onClick={vm.logout}>{vm.t('layout.header.userMenu.logout')}</Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </div>

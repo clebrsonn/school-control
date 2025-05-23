@@ -419,5 +419,51 @@
         "registerFailed": "Registration failed. Please try again."
       }
     }
+  },
+  "layout": {
+    "header": {
+      "ariaLabel": "Main navigation bar",
+      "toggleSidebarAriaLabel": "Toggle sidebar",
+      "brandAriaLabel": "School Control brand",
+      "brandText": "School Control",
+      "themeToggle": {
+        "activateLightAria": "Switch to light mode",
+        "activateDarkAria": "Switch to dark mode"
+      },
+      "notifications": {
+        "ariaLabel": "Notifications",
+        "unreadBadgeAriaLabel": "You have {{count}} unread notifications",
+        "title": "Notifications",
+        "markAllAsRead": "Mark all as read",
+        "noNotifications": "No notifications",
+        "viewAll": "View all"
+      },
+      "userMenu": {
+        "ariaLabel": "User menu",
+        "defaultUserName": "User",
+        "profile": "Profile",
+        "logout": "Logout"
+      }
+    },
+    "sidebar": {
+      "ariaLabel": "Sidebar navigation",
+      "brand": "School Control",
+      "toggleCollapseAriaLabel": "Collapse sidebar",
+      "toggleExpandAriaLabel": "Expand sidebar",
+      "nav": {
+        "dashboard": "Dashboard",
+        "parents": "Parents",
+        "students": "Students",
+        "payments": "Payments",
+        "classes": "Classes",
+        "discounts": "Discounts"
+      },
+      "logoutButton": "Logout",
+      "logoutAriaLabel": "Logout"
+    },
+    "footer": {
+      "ariaLabel": "Footer",
+      "copyright": "© {{year}} School Control. All rights reserved."
+    }
   }
 }

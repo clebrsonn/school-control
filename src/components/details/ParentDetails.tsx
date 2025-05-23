@@ -1,18 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import Modal from 'react-modal';
-import { useTranslation } from 'react-i18next';
-import { Button, Card, Col, ListGroup, Row, Table, Badge } from 'react-bootstrap'; // Added Badge
-import { PaymentMethod, PaymentResponse } from '../../features/payments/types/PaymentTypes.ts';
-import { getPaymentsByResponsible, processPayment } from '../../features/payments/services/PaymentService.ts';
-import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
-import { useParentDetails } from '../../features/parents/components/useParentDetails.ts';
-import { ErrorBoundary } from '../common/ErrorBoundary.tsx';
-import notification from '../common/Notification.tsx';
-import ErrorMessage from '../common/ErrorMessage.tsx';
+import { Badge, Button, Card, Col, ListGroup, Row, Table } from 'react-bootstrap';
 import { FaCreditCard, FaEnvelope, FaPhone, FaPlus, FaUser, FaUserGraduate } from 'react-icons/fa';
-import { getConsolidatedStatement } from '../../features/billing/services/BillingService.ts';
-import { ConsolidatedStatement, StatementLineItem } from '../../features/billing/types/BillingTypes.ts';
+import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
+import { ErrorBoundary } from '../common/ErrorBoundary.tsx';
+import ErrorMessage from '../common/ErrorMessage.tsx';
+import { useParentDetailsViewModel } from './viewmodels/useParentDetailsViewModel';
 import StudentManager from '../managers/StudentManager.tsx'; // Corrected import path
 
 /**
@@ -24,117 +18,12 @@ import StudentManager from '../managers/StudentManager.tsx'; // Corrected import
  * @returns {React.FC} The ParentDetails component.
  */
 const ParentDetails: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
-    const { t, i18n } = useTranslation(); // i18n instance for date/currency localization
-    const { parent, students, error: parentDetailsError } = useParentDetails(id as string); // Renamed error for clarity
-    const [modalIsOpen, setModalIsOpen] = useState(false);
-    const [payments, setPayments] = useState<PaymentResponse[]>([]);
-    const [consolidatedStatement, setConsolidatedStatement] = useState<ConsolidatedStatement | null>(null);
-    const [loadingPayments, setLoadingPayments] = useState<boolean>(true);
-    const [loadingStatement, setLoadingStatement] = useState<boolean>(true);
+    const vm = useParentDetailsViewModel();
 
-    // Effect for loading realized payments
-    useEffect(() => {
-        const loadPayments = async () => {
-            if (!id) return;
-            setLoadingPayments(true);
-            try {
-                const fetchedPayments = await getPaymentsByResponsible(id);
-                setPayments(fetchedPayments);
-            } catch (err: any) {
-                notification(err.message || t('parentDetails.notifications.fetchPaymentsError'), 'error');
-            } finally {
-                setLoadingPayments(false);
-            }
-        };
-        loadPayments();
-    }, [id, t]);
+    if (vm.parentDetailsError) return <ErrorMessage message={vm.parentDetailsError?.message || String(vm.parentDetailsError)} />;
+    if (!vm.parent) return <LoadingSpinner />;
 
-    // Effect for loading consolidated (pending) statement
-    useEffect(() => {
-        const loadConsolidatedStatement = async () => {
-            if (!id) return;
-            setLoadingStatement(true);
-            try {
-                const currentDate = new Date();
-                const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-                const statement = await getConsolidatedStatement(id, yearMonth);
-                setConsolidatedStatement(statement);
-            } catch (error: any) {
-                notification(error.message || t('parentDetails.notifications.loadInvoicesError'), 'error');
-            } finally {
-                setLoadingStatement(false);
-            }
-        };
-        loadConsolidatedStatement();
-    }, [id, t]); // Added t to dependency array
-
-    /**
-     * Groups payments by month and year for display.
-     * @param {PaymentResponse[]} paymentsArray - Array of payment responses.
-     * @returns {Object.<string, PaymentResponse[]>} Payments grouped by month string.
-     */
-    const groupPaymentsByMonth = (paymentsArray: PaymentResponse[]): { [month: string]: PaymentResponse[] } => {
-        const groupedPayments: { [month: string]: PaymentResponse[] } = {};
-        paymentsArray.forEach(payment => {
-            // Use i18n.language for month localization
-            const month = new Date(payment.paymentDate).toLocaleString(i18n.language, { month: 'long', year: 'numeric' });
-            if (!groupedPayments[month]) {
-                groupedPayments[month] = [];
-            }
-            groupedPayments[month].push(payment);
-        });
-        return groupedPayments;
-    };
-
-    const groupedPayments = groupPaymentsByMonth(payments);
-
-    /**
-     * Handles the processing of a payment for a specific invoice item.
-     * @param {StatementLineItem} invoiceItem - The invoice item to be paid.
-     */
-    const handleProcessPayment = async (invoiceItem: StatementLineItem) => {
-        if (!id) return;
-        try {
-            await processPayment({
-                invoiceId: invoiceItem.invoiceId,
-                amount: invoiceItem.amount,
-                paymentMethod: PaymentMethod.PIX, // Defaulting to PIX
-                paymentDate: new Date()
-            });
-            notification(t('parentDetails.notifications.paymentSuccess'), 'success');
-            // Refresh pending payments after successful payment
-            setLoadingStatement(true);
-            const currentDate = new Date();
-            const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-            const updatedStatement = await getConsolidatedStatement(id, yearMonth);
-            setConsolidatedStatement(updatedStatement);
-            // Also refresh realized payments
-            setLoadingPayments(true);
-            const fetchedPayments = await getPaymentsByResponsible(id);
-            setPayments(fetchedPayments);
-
-        } catch (error: any) {
-            notification(error.message || t('parentDetails.notifications.paymentError'), 'error');
-        } finally {
-            setLoadingStatement(false); // Ensure loading state is reset
-            setLoadingPayments(false);
-        }
-    };
-    
-    /**
-     * Formats a date string or Date object into a localized date string.
-     * @param {string | Date} dateString - The date to format.
-     * @returns {string} The formatted date string.
-     */
-    const formatDate = (dateString: string | Date): string => {
-        const date = new Date(dateString);
-        const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        return date.toLocaleDateString(i18n.language, options); // Use i18n.language
-    };
-
-    if (parentDetailsError) return <ErrorMessage message={parentDetailsError?.message || String(parentDetailsError)} />;
-    if (!parent) return <LoadingSpinner />; // Main parent data loading
+    const groupedPayments = vm.groupPaymentsByMonth(vm.payments);
 
     return (
         <ErrorBoundary>
@@ -142,16 +31,15 @@ const ParentDetails: React.FC = () => {
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <h1 className="mb-0">
                         <FaUser className="me-2" />
-                        {t('parentDetails.title')}
+                        {vm.t('parentDetails.title')}
                     </h1>
                 </div>
-
                 {/* Personal Information Section */}
                 <Row className="mb-4">
                     <Col md={12}>
                         <Card className="dashboard-card border-0">
                             <Card.Body>
-                                <h5 className="mb-4">{t('parentDetails.personalInfoTitle')}</h5>
+                                <h5 className="mb-4">{vm.t('parentDetails.personalInfoTitle')}</h5>
                                 <Row>
                                     <Col md={4} className="mb-3">
                                         <div className="d-flex align-items-center">
@@ -159,8 +47,8 @@ const ParentDetails: React.FC = () => {
                                                 <FaUser className="text-primary" />
                                             </div>
                                             <div>
-                                                <div className="text-muted small">{t('parentDetails.labels.name')}</div>
-                                                <div className="fw-bold">{parent.name}</div>
+                                                <div className="text-muted small">{vm.t('parentDetails.labels.name')}</div>
+                                                <div className="fw-bold">{vm.parent.name}</div>
                                             </div>
                                         </div>
                                     </Col>
@@ -170,8 +58,8 @@ const ParentDetails: React.FC = () => {
                                                 <FaEnvelope className="text-info" />
                                             </div>
                                             <div>
-                                                <div className="text-muted small">{t('parentDetails.labels.email')}</div>
-                                                <div className="fw-bold">{parent.email || t('parentDetails.labels.notInformed')}</div>
+                                                <div className="text-muted small">{vm.t('parentDetails.labels.email')}</div>
+                                                <div className="fw-bold">{vm.parent.email || vm.t('parentDetails.labels.notInformed')}</div>
                                             </div>
                                         </div>
                                     </Col>
@@ -181,8 +69,8 @@ const ParentDetails: React.FC = () => {
                                                 <FaPhone className="text-success" />
                                             </div>
                                             <div>
-                                                <div className="text-muted small">{t('parentDetails.labels.phone')}</div>
-                                                <div className="fw-bold">{parent.phone || t('parentDetails.labels.notInformed')}</div>
+                                                <div className="text-muted small">{vm.t('parentDetails.labels.phone')}</div>
+                                                <div className="fw-bold">{vm.parent.phone || vm.t('parentDetails.labels.notInformed')}</div>
                                             </div>
                                         </div>
                                     </Col>
@@ -191,164 +79,153 @@ const ParentDetails: React.FC = () => {
                         </Card>
                     </Col>
                 </Row>
-
                 {/* Students Section */}
                 <Card className="dashboard-card border-0 mb-4">
                     <Card.Header className="bg-transparent d-flex justify-content-between align-items-center">
                         <h5 className="mb-0">
                             <FaUserGraduate className="me-2 text-info" />
-                            {t('parentDetails.studentsTitle')}
+                            {vm.t('parentDetails.studentsTitle')}
                         </h5>
                         <Button
                             variant="outline-primary"
                             size="sm"
-                            onClick={() => setModalIsOpen(true)}
+                            onClick={() => vm.setModalIsOpen(true)}
                             className="d-flex align-items-center"
                         >
                             <FaPlus className="me-2" />
-                            {t('parentDetails.buttons.addStudent')}
+                            {vm.t('parentDetails.buttons.addStudent')}
                         </Button>
                     </Card.Header>
                     <Card.Body>
-                        {students.length > 0 ? (
+                        {vm.students && vm.students.length > 0 ? (
                             <ListGroup variant="flush">
-                                {students.map((student) => (
-                                    <ListGroup.Item key={student.id}
-                                                    className="d-flex justify-content-between align-items-center px-0 py-3 border-bottom">
-                                        <div className="d-flex align-items-center">
-                                            <div className="rounded-circle bg-info bg-opacity-10 p-2 me-3">
-                                                <FaUserGraduate className="text-info" />
-                                            </div>
-                                            <div>
-                                                <Link to={`/students/${student.id}`}
-                                                      className="text-decoration-none fw-bold">{student.name}</Link>
-                                            </div>
+                                {vm.students.map(student => (
+                                    <ListGroup.Item key={student.id} className="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <FaUserGraduate className="me-2 text-info" />
+                                            <span className="fw-bold">{student.name}</span>
                                         </div>
-                                        <Link to={`/students/${student.id}`} className="btn btn-sm btn-outline-primary">
-                                            {t('parentDetails.buttons.viewDetails')}
-                                        </Link>
+                                        <div>
+                                            <Button as={Link} to={`/students/${student.id}`} variant="outline-secondary" size="sm">
+                                                {vm.t('parentDetails.buttons.viewDetails')}
+                                            </Button>
+                                        </div>
                                     </ListGroup.Item>
                                 ))}
                             </ListGroup>
                         ) : (
-                            <p className="text-muted text-center my-4">{t('parentDetails.noStudentsRegistered')}</p>
+                            <div className="text-muted">{vm.t('parentDetails.noStudentsRegistered')}</div>
                         )}
                     </Card.Body>
                 </Card>
-
                 {/* Realized Payments Section */}
                 <Card className="dashboard-card border-0 mb-4">
-                    <Card.Header className="bg-transparent d-flex justify-content-between align-items-center">
-                        <h5 className="mb-0">
-                            <FaCreditCard className="me-2 text-success" />
-                            {t('parentDetails.realizedPaymentsTitle')}
-                        </h5>
+                    <Card.Header className="bg-transparent">
+                        <h5 className="mb-0">{vm.t('parentDetails.realizedPaymentsTitle')}</h5>
                     </Card.Header>
                     <Card.Body>
-                        {loadingPayments ? <LoadingSpinner /> : Object.entries(groupedPayments).length > 0 ? (
-                            Object.entries(groupedPayments).map(([month, monthPayments]) => (
+                        {vm.loadingPayments ? (
+                            <LoadingSpinner />
+                        ) : Object.keys(groupedPayments).length === 0 ? (
+                            <div className="text-muted">{vm.t('parentDetails.noPaymentsRegistered')}</div>
+                        ) : (
+                            Object.entries(groupedPayments).map(([month, payments]) => (
                                 <div key={month} className="mb-4">
-                                    <h6 className="mb-3 fw-bold">{month}</h6>
-                                    <div className="table-responsive">
-                                        <Table hover className="border-0">
-                                            <thead className="table-light">
+                                    <h6 className="fw-bold mb-2">{month}</h6>
+                                    <Table size="sm" responsive bordered hover>
+                                        <thead>
                                             <tr>
-                                                <th>{t('parentDetails.table.paymentDate')}</th>
-                                                <th>{t('parentDetails.table.value')}</th>
-                                                <th>{t('parentDetails.table.method')}</th>
-                                                <th>{t('parentDetails.table.invoiceId')}</th>
+                                                <th>{vm.t('parentDetails.table.paymentDate')}</th>
+                                                <th>{vm.t('parentDetails.table.value')}</th>
+                                                <th>{vm.t('parentDetails.table.method')}</th>
+                                                <th>{vm.t('parentDetails.table.invoiceId')}</th>
+                                                <th>{vm.t('parentDetails.table.description')}</th>
+                                                <th>{vm.t('parentDetails.table.paymentDate')}</th>
+                                                <th>{vm.t('parentDetails.table.status')}</th>
                                             </tr>
-                                            </thead>
-                                            <tbody>
-                                            {monthPayments.map(payment => (
+                                        </thead>
+                                        <tbody>
+                                            {payments.map(payment => (
                                                 <tr key={payment.id}>
-                                                    <td>{formatDate(payment.paymentDate)}</td>
-                                                    {/* Currency formatting kept as BRL for now */}
-                                                    <td className="fw-bold">{payment.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                                    <td>{payment.paymentMethod}</td>
-                                                    <td><small className="text-muted">{payment.invoiceId}</small></td>
+                                                    <td>{vm.formatDate(payment.paymentDate)}</td>
+                                                    <td>{payment.amount.toLocaleString(vm.i18n.language, { style: 'currency', currency: 'BRL' })}</td>
+                                                    <td>{vm.t(`paymentDetails.paymentMethods.${payment.paymentMethod}`)}</td>
+                                                    <td>{payment.invoiceId}</td>
+                                                    <td>{payment.description}</td>
+                                                    <td>{vm.formatDate(payment.paymentDate)}</td>
+                                                    <td>
+                                                        <Badge bg={payment.paymentDate ? 'success' : 'secondary'}>
+                                                            {payment.paymentDate ? vm.t('parentDetails.statusPaid') : vm.t('parentDetails.statusPending')}
+                                                        </Badge>
+                                                    </td>
                                                 </tr>
                                             ))}
-                                            </tbody>
-                                        </Table>
-                                    </div>
+                                        </tbody>
+                                    </Table>
                                 </div>
                             ))
-                        ) : (
-                            <p className="text-muted text-center my-4">{t('parentDetails.noPaymentsRegistered')}</p>
                         )}
                     </Card.Body>
                 </Card>
-
                 {/* Pending Payments Section */}
-                <Card className="dashboard-card border-0">
-                    <Card.Header className="bg-transparent d-flex justify-content-between align-items-center">
-                        <h5 className="mb-0">
-                            <FaCreditCard className="me-2 text-warning" />
-                            {t('parentDetails.pendingPaymentsTitle')}
-                        </h5>
+                <Card className="dashboard-card border-0 mb-4">
+                    <Card.Header className="bg-transparent">
+                        <h5 className="mb-0">{vm.t('parentDetails.pendingPaymentsTitle')}</h5>
                     </Card.Header>
                     <Card.Body>
-                        {loadingStatement ? <LoadingSpinner /> : consolidatedStatement && consolidatedStatement.items.length > 0 ? (
-                            <div>
-                                <h6 className="mb-3 fw-bold">
-                                    {t('parentDetails.totalOpenPayments')} {consolidatedStatement.totalAmountDue.toLocaleString(i18n.language, {
-                                    style: 'currency',
-                                    currency: 'BRL' // Assuming BRL currency
-                                })}
-                                </h6>
-                                <div className="table-responsive">
-                                    <Table hover className="border-0">
-                                        <thead className="table-light">
+                        {vm.loadingStatement ? (
+                            <LoadingSpinner />
+                        ) : !vm.consolidatedStatement || vm.consolidatedStatement.items.length === 0 ? (
+                            <div className="text-muted">{vm.t('parentDetails.noPendingPayments')}</div>
+                        ) : (
+                            <>
+                                <Table size="sm" responsive bordered hover>
+                                    <thead>
                                         <tr>
-                                            <th>{t('parentDetails.table.student')}</th>
-                                            <th>{t('parentDetails.table.description')}</th>
-                                            <th>{t('parentDetails.table.value')}</th>
-                                            <th>{t('parentDetails.table.dueDate')}</th>
-                                            <th>{t('parentDetails.table.status')}</th>
-                                            <th>{t('parentDetails.table.actions')}</th>
+                                            <th>{vm.t('parentDetails.table.description')}</th>
+                                            <th>{vm.t('parentDetails.table.dueDate')}</th>
+                                            <th>{vm.t('parentDetails.table.value')}</th>
+                                            <th>{vm.t('parentDetails.table.status')}</th>
+                                            <th>{vm.t('parentDetails.table.actions')}</th>
                                         </tr>
-                                        </thead>
-                                        <tbody>
-                                        {consolidatedStatement.items.map((item: StatementLineItem) => (
+                                    </thead>
+                                    <tbody>
+                                        {vm.consolidatedStatement.items.map(item => (
                                             <tr key={item.invoiceId}>
-                                                <td>{item.studentName}</td>
                                                 <td>{item.description}</td>
-                                                <td className="fw-bold">{item.amount.toLocaleString(i18n.language, { style: 'currency', currency: 'BRL' })}</td>
-                                                <td>{formatDate(item.dueDate)}</td>
+                                                <td>{vm.formatDate(item.dueDate)}</td>
+                                                <td>{item.amount.toLocaleString(vm.i18n.language, { style: 'currency', currency: 'BRL' })}</td>
                                                 <td>
                                                     <Badge bg={item.status === 'PAID' ? 'success' : 'warning'}>
-                                                        {item.status === 'PAID' ? t('parentDetails.statusPaid') : t('parentDetails.statusPending')}
+                                                        {item.status === 'PAID' ? vm.t('parentDetails.statusPaid') : vm.t('parentDetails.statusPending')}
                                                     </Badge>
                                                 </td>
                                                 <td>
-                                                    {item.status !== 'PAID' && item.amount > 0 && ( // Ensure item is not already paid
+                                                    {item.status !== 'PAID' && (
                                                         <Button
-                                                            variant="primary"
+                                                            variant="success"
                                                             size="sm"
-                                                            onClick={() => handleProcessPayment(item)}
-                                                            disabled={processPayment.isLoading} // Assuming processPayment is a mutation from useMutation
+                                                            onClick={() => vm.handleProcessPayment(item)}
                                                         >
-                                                            {t('parentDetails.buttons.pay')}
+                                                            <FaCreditCard className="me-1" /> {vm.t('parentDetails.buttons.pay')}
                                                         </Button>
                                                     )}
                                                 </td>
                                             </tr>
                                         ))}
-                                        </tbody>
-                                    </Table>
+                                    </tbody>
+                                </Table>
+                                <div className="fw-bold mt-3">
+                                    {vm.t('parentDetails.totalOpenPayments')}{' '}
+                                    {vm.consolidatedStatement.totalAmountDue.toLocaleString(vm.i18n.language, { style: 'currency', currency: 'BRL' })}
                                 </div>
-                            </div>
-                        ) : (
-                            <p className="text-muted text-center my-4">{t('parentDetails.noPendingPayments')}</p>
+                            </>
                         )}
                     </Card.Body>
                 </Card>
-
-                {/* Modal for Adding Student */}
                 <Modal
-                    isOpen={modalIsOpen}
-                    onRequestClose={() => setModalIsOpen(false)}
+                    isOpen={vm.modalIsOpen}
+                    onRequestClose={() => vm.setModalIsOpen(false)}
                     style={{ /* Styles remain unchanged */
                         content: {
                             top: '50%',
@@ -370,9 +247,8 @@ const ParentDetails: React.FC = () => {
                     }}
                     ariaHideApp={false} // Important for test environments
                 >
-                    {id && <StudentManager responsible={id} />}
-                </Modal>
-            </div>
+                    {vm.id && <StudentManager responsible={vm.id} />}
+                </Modal>            </div>
         </ErrorBoundary>
     );
 };

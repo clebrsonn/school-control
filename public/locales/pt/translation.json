@@ -419,5 +419,51 @@
         "registerFailed": "Falha no registro. Por favor, tente novamente."
       }
     }
+  },
+  "layout": {
+    "header": {
+      "ariaLabel": "Barra de navegação principal",
+      "toggleSidebarAriaLabel": "Alternar barra lateral",
+      "brandAriaLabel": "Marca School Control",
+      "brandText": "School Control",
+      "themeToggle": {
+        "activateLightAria": "Ativar modo claro",
+        "activateDarkAria": "Ativar modo escuro"
+      },
+      "notifications": {
+        "ariaLabel": "Notificações",
+        "unreadBadgeAriaLabel": "Você tem {{count}} notificações não lidas",
+        "title": "Notificações",
+        "markAllAsRead": "Marcar todas como lidas",
+        "noNotifications": "Sem notificações",
+        "viewAll": "Ver todas"
+      },
+      "userMenu": {
+        "ariaLabel": "Menu do usuário",
+        "defaultUserName": "Usuário",
+        "profile": "Perfil",
+        "logout": "Sair"
+      }
+    },
+    "sidebar": {
+      "ariaLabel": "Navegação lateral",
+      "brand": "School Control",
+      "toggleCollapseAriaLabel": "Recolher barra lateral",
+      "toggleExpandAriaLabel": "Expandir barra lateral",
+      "nav": {
+        "dashboard": "Dashboard",
+        "parents": "Responsáveis",
+        "students": "Alunos",
+        "payments": "Pagamentos",
+        "classes": "Turmas",
+        "discounts": "Descontos"
+      },
+      "logoutButton": "Sair",
+      "logoutAriaLabel": "Sair"
+    },
+    "footer": {
+      "ariaLabel": "Rodapé",
+      "copyright": "© {{year}} School Control. Todos os direitos reservados."
+    }
   }
 }
