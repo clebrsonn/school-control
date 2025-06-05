@@ -16,6 +16,7 @@ export function useSidebarViewModel() {
     { path: '/payments', icon: 'FaCreditCard', labelKey: 'layout.sidebar.nav.payments' },
     { path: '/classes', icon: 'FaChalkboardTeacher', labelKey: 'layout.sidebar.nav.classes' },
     { path: '/discounts', icon: 'FaPercentage', labelKey: 'layout.sidebar.nav.discounts' },
+    { path: '/expenses', icon: 'FaFileInvoice', labelKey: 'layout.sidebar.nav.expenses' },
   ];
 
   return {

@@ -47,4 +47,7 @@ export const countInvoicesByStatus = async ( status: string): Promise<number> =>
 export const getConsolidatedMonth = async ( yearMonth: string): Promise<number> => {
   return await get<number>(`/billing/total-month/${yearMonth}`);
 };
+// export const getConsolidatedMonth = async (): Promise<{totalPendingInvoices: number, totalPendingBalance: number, totalOverdueInvoices: number, totalOverdueBalance: number, totalPaidOnTimeInPeriod: number, totalPaidLateInPeriod: number, overdueInvoicesList:[], pendingInvoicesList:[]}> => {
+//   return await get<{totalPendingInvoices: number, totalPendingBalance: number, totalOverdueInvoices: number, totalOverdueBalance: number, totalPaidOnTimeInPeriod: number, totalPaidLateInPeriod: number, overdueInvoicesList:[], pendingInvoicesList:[]}>(`/billing/invoices/summary/overall`);
+// };
 

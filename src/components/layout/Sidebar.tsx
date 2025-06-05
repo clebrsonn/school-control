@@ -6,6 +6,7 @@ import {
     FaBars,
     FaChalkboardTeacher,
     FaCreditCard,
+    FaFileInvoice,
     FaHome,
     FaPercentage,
     FaSignOutAlt,
@@ -32,7 +33,7 @@ interface SidebarProps {
  * @param {SidebarProps} props - The props for the component.
  * @returns {React.ReactElement} The Sidebar navigation component.
  */
-const Sidebar: React.FC<SidebarProps> = ({ expanded, toggleSidebar }) => {
+const Sidebar: React.FC<SidebarProps> = ({ expanded, toggleSidebar }: SidebarProps): React.ReactElement => {
     const vm = useSidebarViewModel();
     const iconMap: Record<string, React.ElementType> = {
         FaHome,
@@ -41,6 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ expanded, toggleSidebar }) => {
         FaCreditCard,
         FaChalkboardTeacher,
         FaPercentage,
+        FaFileInvoice
     };
 
     return (
