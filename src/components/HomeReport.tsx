@@ -19,6 +19,9 @@ import {
     generateMonthlyBiling,
     getConsolidatedMonth
 } from '../features/billing/services/BillingService';
+import { getExpenseReport } from '../features/expenses/services/ExpenseReportService';
+import { getAllClassRooms } from '../features/classes/services/ClassService';
+import { get } from '../config/axios';
 import notification from './common/Notification.tsx';
 
 const HomeReport: React.FC = () => {
@@ -40,9 +43,39 @@ const HomeReport: React.FC = () => {
         queryKey: ['invoicesCount', 'OVERDUE'],
         queryFn: () => countInvoicesByStatus('OVERDUE')
     });
+    // Busca relatório de despesas do mês atual
+    const startOfMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-01`;
+    // Corrige o cálculo do último dia do mês
+    const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+    const endOfMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    const { data: expenseReport = { totalExpenses: 0, reportDate: '', details: '' }, isLoading: loadingExpenses, error: errorExpenses } = useQuery({
+        queryKey: ['expenseReport', startOfMonth, endOfMonth],
+        queryFn: () => getExpenseReport(startOfMonth, endOfMonth)
+    });
+    // Busca turmas e quantidade de matrículas por turma
+    const { data: classRooms = { content: [] }, isLoading: loadingClasses, error: errorClasses } = useQuery({
+        queryKey: ['classRoomsHome'],
+        queryFn: () => getAllClassRooms({ page: 0, size: 10 })
+    });
+    // Busca quantidade de matrículas por turma (top 5)
+    const [enrollmentsByClass, setEnrollmentsByClass] = React.useState<{ [classId: string]: number }>({});
+    React.useEffect(() => {
+        if (classRooms.content && classRooms.content.length > 0) {
+            Promise.all(
+                classRooms.content.slice(0, 5).map(async (c: any) => {
+                    const res = await get(`/classrooms/${c.id}/enrollments?page=0&size=1`);
+                    return { id: c.id, count: res.totalElements || 0, name: c.name };
+                })
+            ).then(results => {
+                const map: { [classId: string]: number } = {};
+                results.forEach(r => { map[r.name] = r.count; });
+                setEnrollmentsByClass(map);
+            });
+        }
+    }, [classRooms]);
 
-    const loading = loadingTotal || loadingOpen || loadingLate;
-    const error = errorTotal || errorOpen || errorLate;
+    const loading = loadingTotal || loadingOpen || loadingLate || loadingExpenses || loadingClasses;
+    const error = errorTotal || errorOpen || errorLate || errorExpenses || errorClasses;
 
     const handleGenerateBilling = async () => {
         try {
@@ -147,6 +180,38 @@ const HomeReport: React.FC = () => {
                             <div className="mt-auto">
                                 <Badge bg="success" className="me-2">0 responsáveis</Badge>
                             </div>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
+
+            <Row className="mb-4">
+                <Col md={3} className="mb-4">
+                    <Card className="shadow-sm">
+                        <Card.Body>
+                            <div className="d-flex align-items-center mb-2">
+                                <FaMoneyBillWave className="me-2 text-danger" />
+                                <span className="fw-bold">Despesas do mês</span>
+                            </div>
+                            <h3 className="mb-0">
+                                <Badge bg="danger">R$ {expenseReport.totalExpenses?.toFixed(2) ?? '0,00'}</Badge>
+                            </h3>
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col md={3} className="mb-4">
+                    <Card className="shadow-sm">
+                        <Card.Body>
+                            <div className="d-flex align-items-center mb-2">
+                                <FaChalkboardTeacher className="me-2 text-info" />
+                                <span className="fw-bold">Matrículas por turma</span>
+                            </div>
+                            <ul className="mb-0 ps-3">
+                                {Object.entries(enrollmentsByClass).length === 0 && <li className="text-muted">Carregando...</li>}
+                                {Object.entries(enrollmentsByClass).map(([name, count]) => (
+                                    <li key={name}><strong>{name}:</strong> {count} alunos</li>
+                                ))}
+                            </ul>
                         </Card.Body>
                     </Card>
                 </Col>

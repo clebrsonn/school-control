@@ -5,7 +5,8 @@ import {
     cancelEnrollment,
     enrollStudent,
     getStudentEnrollments,
-    renewEnrollment
+    renewEnrollment,
+    updateMonthlyFee
 } from '../../features/enrollments/services/EnrollmentService.ts';
 import { ClassRoomResponse } from '../../features/classes/types/ClassRoomTypes';
 import { EnrollmentResponse } from '../../features/enrollments/types/EnrollmentTypes';
@@ -32,11 +33,13 @@ const StudentDetails: React.FC = () => {
     const [classes, setClasses] = useState<ClassRoomResponse[]>([]);
     const [selectedClassId, setSelectedClassId] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
-    const [currentDate, setCurrentDate] = useState<Date>(new Date());
+    const [currentDate] = useState<Date>(new Date());
     const [enrollmentFee, setEnrollmentFee] = useState<number | undefined>(undefined);
     const [monthlyFee, setMonthlyFee] = useState<number | undefined>(undefined);
     const [loading, setLoading] = useState<boolean>(true);
     const [polling, setPolling] = useState<NodeJS.Timeout | null>(null);
+    const [editingMonthlyFeeId, setEditingMonthlyFeeId] = useState<string | null>(null);
+    const [newMonthlyFee, setNewMonthlyFee] = useState<number | undefined>(undefined);
 
     // Função para buscar dados do aluno com cache
     const fetchStudentData = useCallback(async () => {
@@ -111,8 +114,8 @@ const StudentDetails: React.FC = () => {
     )), [classes]);
 
     // Feedback visual de loading
-    if (loading) return <LoadingSpinner message="Carregando dados do aluno..." />;
-    if (error) <ErrorMessage message={error} />;
+    if (loading) return <LoadingSpinner />;
+    if (error) return <ErrorMessage message={error} />;
     if (!student) return null;
 
     const handleEnroll = async () => {
@@ -122,7 +125,7 @@ const StudentDetails: React.FC = () => {
                 return;
             }
             await enrollStudent({
-                studentId: id,
+                studentId: id || '',
                 classRoomId: selectedClassId,
                 enrollmentFee,
                 monthyFee: monthlyFee
@@ -131,7 +134,8 @@ const StudentDetails: React.FC = () => {
             notification('Student successfully enrolled or updated!');
             fetchStudentData(); // Refresh data after enrollment
         } catch (err: unknown) {
-            setError(err.message || 'Failed to enroll student.');
+            if (err instanceof Error) setError(err.message);
+            else setError('Failed to enroll student.');
         }
     };
 
@@ -142,7 +146,8 @@ const StudentDetails: React.FC = () => {
             notification('Enrollment successfully canceled!');
             fetchStudentData(); // Refresh data after cancellation
         } catch (err: unknown) {
-            setError(err.message || 'Failed to cancel enrollment.');
+            if (err instanceof Error) setError(err.message);
+            else setError('Failed to cancel enrollment.');
         }
     };
 
@@ -153,7 +158,25 @@ const StudentDetails: React.FC = () => {
             notification('Enrollment successfully renewed!');
             fetchStudentData(); // Refresh data after renewal
         } catch (err: unknown) {
-            setError(err.message || 'Failed to renew enrollment.');
+            if (err instanceof Error) setError(err.message);
+            else setError('Failed to renew enrollment.');
+        }
+    };
+
+    const handleUpdateMonthlyFee = async (enrollmentId: string) => {
+        if (newMonthlyFee === undefined || isNaN(newMonthlyFee)) {
+            setError('Informe um valor válido para a mensalidade.');
+            return;
+        }
+        try {
+            await updateMonthlyFee(enrollmentId, newMonthlyFee);
+            setError(null);
+            notification('Mensalidade atualizada com sucesso!');
+            setEditingMonthlyFeeId(null);
+            setNewMonthlyFee(undefined);
+            fetchEnrollments();
+        } catch (err: any) {
+            setError(err.message || 'Erro ao atualizar mensalidade.');
         }
     };
 
@@ -279,7 +302,7 @@ const StudentDetails: React.FC = () => {
                                                     <div>
                                                         <div className="text-muted small">Data de Matrícula</div>
                                                         <div
-                                                            className="fw-bold">{new Date(enroll.enrollmentDate).toLocaleDateString()}</div>
+                                                            className="fw-bold">{enroll.enrollmentDate ? new Date(enroll.enrollmentDate).toLocaleDateString() : 'Sem data'}</div>
                                                     </div>
                                                 </div>
                                             </Col>
@@ -293,6 +316,45 @@ const StudentDetails: React.FC = () => {
                                                         <div className="fw-bold">
                                                             {enroll.endDate ? new Date(enroll.endDate).toLocaleDateString() : 'Sem data de término'}
                                                         </div>
+                                                    </div>
+                                                </div>
+                                            </Col>
+                                            <Col md={4} className="mb-3">
+                                                <div className="d-flex align-items-center">
+                                                    <div className="rounded-circle bg-secondary bg-opacity-10 p-3 me-3">
+                                                        <FaExchangeAlt className="text-secondary" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-muted small">Mensalidade</div>
+                                                        {editingMonthlyFeeId === enroll.id ? (
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                <Form.Control
+                                                                    type="number"
+                                                                    value={newMonthlyFee ?? enroll.monthlyFee ?? ''}
+                                                                    onChange={e => setNewMonthlyFee(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                                                    style={{ width: 120 }}
+                                                                />
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="success"
+                                                                    onClick={() => handleUpdateMonthlyFee(enroll.id)}
+                                                                >Salvar</Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline-secondary"
+                                                                    onClick={() => { setEditingMonthlyFeeId(null); setNewMonthlyFee(undefined); }}
+                                                                >Cancelar</Button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="fw-bold d-flex align-items-center gap-2">
+                                                                R$ {enroll.monthlyFee?.toFixed(2) ?? 'N/A'}
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline-primary"
+                                                                    onClick={() => { setEditingMonthlyFeeId(enroll.id); setNewMonthlyFee(enroll.monthlyFee); }}
+                                                                >Editar</Button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </Col>

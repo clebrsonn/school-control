@@ -1,6 +1,7 @@
 export interface EnrollmentRequest {
   studentId: string;
-  classRoomId: string;
+  classRoomId?: string;
+  classroomName?: string;
   enrollmentFee?: number;
   monthyFee?: number;
 }
@@ -12,7 +13,8 @@ export interface EnrollmentResponse {
   classRoomId: string;
   classRoomName: string;
   classRoomYear: string;
-  enrollmentDate: Date;
-  endDate: Date;
+  monthlyFee?: number;
+  enrollmentDate?: string; // date-time
+  endDate?: string; // date-time
   status: string;
 }

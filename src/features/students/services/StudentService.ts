@@ -24,6 +24,15 @@ export const createStudent = async (studentData: StudentRequest): Promise<Studen
 };
 
 /**
+ * Create students in bulk
+ * @param students Array of StudentRequest
+ * @returns void
+ */
+export const createStudentsBulk = async (students: StudentRequest[]): Promise<void> => {
+  await post<StudentRequest[], void>(`${API_URL}/bulk`, students);
+};
+
+/**
  * Update student
  * @param id Student ID
  * @param studentData Student request data

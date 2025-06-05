@@ -1,4 +1,4 @@
-import { get, post } from '../../../config/axios';
+import { get, patch, post } from '../../../config/axios';
 import { EnrollmentRequest, EnrollmentResponse } from '../types/EnrollmentTypes';
 
 /**
@@ -38,3 +38,18 @@ export const renewEnrollment = async (enrollmentId: string) => {
   const response = await get<{ enrollmentId: string }>(`/enrollments/${enrollmentId}/renew`);
   return response;
 };
+
+/**
+ * Atualiza o valor da mensalidade de uma matrícula
+ * @param enrollmentId ID da matrícula
+ * @param monthlyFee Novo valor da mensalidade
+ * @returns EnrollmentResponse atualizado
+ */
+export const updateMonthlyFee = async (enrollmentId: string, monthlyFee: number): Promise<EnrollmentResponse> => {
+  const response = await patch<{ monthlyFee: number }, EnrollmentResponse>(
+    `/enrollments/${enrollmentId}/monthly-fee`,
+    { monthlyFee }
+  );
+  return response;
+};
+
