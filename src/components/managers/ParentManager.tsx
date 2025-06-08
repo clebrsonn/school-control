@@ -1,174 +1,261 @@
 import React, { useState } from 'react';
+import notification from '../common/Notification.tsx';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { parentSchema, ParentFormData } from '@/features/parents/types/parentSchemas.ts';
 import {
     createResponsible,
     deleteResponsible,
-    getAllResponsibles
+    getAllResponsibles,
+    updateResponsible,
 } from '../../features/parents/services/ParentService.ts';
-import ErrorMessage from '../common/ErrorMessage.tsx';
-import notification from '../common/Notification.tsx';
-import { Button, Card, Col, Form, Row } from 'react-bootstrap';
 import ListRegistries from '../common/ListRegistries.tsx';
-import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
-import { ResponsibleRequest, ResponsibleResponse } from '../../features/parents/types/ResponsibleTypes.ts';
-import { useCrudManager } from '../../hooks/useCrudManager';
-import FormField from '../common/FormField';
-import { extractFieldErrors } from '../../utils/errorUtils';
-import { FaList, FaSave, FaUsers } from 'react-icons/fa';
+import ErrorMessage from '../common/ErrorMessage.tsx';
+import { ResponsibleRequest, ResponsibleResponse, PageResponse } from '../../features/parents/types/ResponsibleTypes.ts';
+import { Users2, List, Save, Undo } from 'lucide-react'; // Users2 for FaUsers
+import { extractFieldErrors } from '../../utils/errorUtils.ts';
 
-const INITIAL_PARENT_STATE: ResponsibleRequest = { name: '', phone: '', email: '' };
+// Shadcn/UI imports
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Form as ShadcnForm, FormControl, FormField as ShadcnFormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
 
 const ParentManager: React.FC = () => {
-    const {
-        pageData,
-        isLoading,
-        error,
-        currentPage,
-        setCurrentPage,
-        create,
-        remove,
-        refetch
-    } = useCrudManager<ResponsibleResponse, ResponsibleRequest>({
-        entityName: 'parents',
-        fetchPage: (page, size) => getAllResponsibles({ page, size }),
-        createItem: createResponsible,
-        deleteItem: deleteResponsible
+    const [editingParent, setEditingParent] = useState<ResponsibleResponse | null>(null);
+    const [apiFieldErrors, setApiFieldErrors] = useState<Record<string, string>>({});
+
+    const queryClient = useQueryClient();
+    const [currentPage, setCurrentPage] = useState(0);
+
+    const form = useForm<ParentFormData>({
+        resolver: zodResolver(parentSchema),
+        defaultValues: {
+            name: '',
+            email: '',
+            phone: '',
+            address: '',
+        }
     });
 
-    const [formState, setFormState] = useState(INITIAL_PARENT_STATE);
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [submitting, setSubmitting] = useState<boolean>(false);
+    const {
+        data: parentPage,
+        isLoading: isLoadingParents,
+        error: errorParents,
+        refetch: refetchParents,
+    } = useQuery<PageResponse<ResponsibleResponse>, Error>({
+        queryKey: ['parents', currentPage],
+        queryFn: () => getAllResponsibles({ page: currentPage, size: 10, sort: 'name' }),
+    });
 
-    if (isLoading) {
-        return <LoadingSpinner />;
+    const createParentMutation = useMutation<ResponsibleResponse, Error, ParentFormData>({
+        mutationFn: (parentData) => createResponsible(parentData as ResponsibleRequest),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['parents', currentPage] });
+            notification('Responsável adicionado com sucesso!', 'success');
+            form.reset();
+            setEditingParent(null);
+            setApiFieldErrors({});
+        },
+        onError: (error: any) => {
+            const errors = extractFieldErrors(error);
+            setApiFieldErrors(errors);
+            notification(`Erro ao adicionar responsável: ${error.message || 'Verifique os dados.'}`, 'error');
+        }
+    });
+
+    const updateParentMutation = useMutation<ResponsibleResponse, Error, { id: string; parentData: ParentFormData }>({
+        mutationFn: ({ id, parentData }) => updateResponsible(id, parentData as ResponsibleRequest),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['parents', currentPage] });
+            notification('Responsável atualizado com sucesso!', 'success');
+            form.reset();
+            setEditingParent(null);
+            setApiFieldErrors({});
+        },
+        onError: (error: any) => {
+            const errors = extractFieldErrors(error);
+            setApiFieldErrors(errors);
+            notification(`Erro ao atualizar responsável: ${error.message || 'Verifique os dados.'}`, 'error');
+        }
+    });
+
+    const deleteParentMutation = useMutation<void, Error, string>({
+        mutationFn: deleteResponsible,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['parents', currentPage] });
+            notification('Responsável removido com sucesso!', 'success');
+            if (editingParent) {
+                 clearFormAndEditingState();
+            }
+        },
+        onError: (error: any) => {
+            notification(`Erro ao remover responsável: ${error.message || 'Erro desconhecido.'}`, 'error');
+        }
+    });
+
+    const clearFormAndEditingState = () => {
+        form.reset({ name: '', email: '', phone: '', address: '' });
+        setEditingParent(null);
+        setApiFieldErrors({});
+    };
+
+    const onSubmit = (data: ParentFormData) => {
+        setApiFieldErrors({});
+        if (editingParent) {
+            updateParentMutation.mutate({ id: editingParent.id, parentData: data });
+        } else {
+            createParentMutation.mutate(data);
+        }
+    };
+
+    const handleEditParent = (parent: ResponsibleResponse) => {
+        setEditingParent(parent);
+        form.reset({
+            name: parent.name,
+            email: parent.email || '',
+            phone: parent.phone || '',
+            address: parent.address || '',
+        });
+        setApiFieldErrors({});
+    };
+
+    const handleDeleteParent = (id: string) => {
+        deleteParentMutation.mutate(id);
+    };
+
+    if (isLoadingParents && !parentPage) { // Show full page loader only on initial load
+        return <LoadingSpinner fullScreen />;
     }
 
-    const updateFormState = (field: keyof typeof formState, value: string) => {
-        setFormState((prev) => ({ ...prev, [field]: value }));
-    };
-
-    const handleAddParent = async () => {
-        setFieldErrors({});
-        setSubmitting(true);
-
-        const clientErrors: Record<string, string> = {};
-        if (!formState.name) clientErrors.name = 'Nome do responsável é obrigatório';
-        if (!formState.phone) clientErrors.phone = 'Telefone do responsável é obrigatório';
-
-        if (Object.keys(clientErrors).length > 0) {
-            setFieldErrors(clientErrors);
-            setSubmitting(false);
-            return;
-        }
-
-        try {
-            await create(formState);
-            setFormState(INITIAL_PARENT_STATE);
-            notification('Responsável adicionado com sucesso', 'success');
-            refetch();
-        } catch (err: unknown) {
-            const errors = extractFieldErrors(err);
-            setFieldErrors(errors);
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const handleDelete = async (id: string) => {
-        try {
-            await remove(id);
-            notification('Responsável removido com sucesso.', 'success');
-            refetch();
-        } catch (err: unknown) {
-            notification('Erro ao remover o responsável.', 'error');
-        }
-    };
-
     return (
-        <div>
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <h1 className="mb-0">
-                    <FaUsers className="me-2" />
+        <div className="p-4 space-y-6">
+            <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-semibold flex items-center">
+                    <Users2 className="mr-2 h-6 w-6" />
                     Gerenciar Responsáveis
                 </h1>
             </div>
 
-            {error && <ErrorMessage message={error} />}
+            {errorParents && !parentPage && <ErrorMessage message={`Erro ao carregar responsáveis: ${errorParents.message}`} />}
 
-            <Card className="form-card mb-4">
-                <Card.Header className="d-flex justify-content-between align-items-center">
-                    <h5 className="mb-0">Adicionar Responsável</h5>
-                </Card.Header>
-                <Card.Body>
-                    <Form>
-                        <Row>
-                            <Col md={12}>
-                                <FormField
-                                    id="formParentName"
-                                    label="Nome"
-                                    type="text"
-                                    placeholder="Nome do Responsável"
-                                    value={formState.name || ''}
-                                    onChange={(e) => updateFormState('name', e.target.value)}
-                                    error={fieldErrors.name || null}
-                                    required
+            <Card>
+                <CardHeader>
+                    <CardTitle>
+                        {editingParent ? 'Editar Responsável' : 'Adicionar Responsável'}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                    <ShadcnForm {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <ShadcnFormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Nome</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Nome do Responsável" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                            {apiFieldErrors.name && !form.formState.errors.name && <p className="text-sm font-medium text-destructive">{apiFieldErrors.name}</p>}
+                                        </FormItem>
+                                    )}
                                 />
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col md={6}>
-                                <FormField
-                                    id="formParentEmail"
-                                    label="Email"
-                                    type="email"
-                                    placeholder="Email do Responsável"
-                                    value={formState.email || ''}
-                                    onChange={(e) => updateFormState('email', e.target.value)}
-                                    error={fieldErrors.email || null}
+                                <ShadcnFormField
+                                    control={form.control}
+                                    name="phone"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Telefone</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Telefone do Responsável" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                            {apiFieldErrors.phone && !form.formState.errors.phone && <p className="text-sm font-medium text-destructive">{apiFieldErrors.phone}</p>}
+                                        </FormItem>
+                                    )}
                                 />
-                            </Col>
-                            <Col md={6}>
-                                <FormField
-                                    id="formParentPhone"
-                                    label="Telefone"
-                                    type="text"
-                                    placeholder="Telefone do Responsável"
-                                    value={formState.phone || ''}
-                                    onChange={(e) => updateFormState('phone', e.target.value)}
-                                    error={fieldErrors.phone || null}
-                                    required
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <ShadcnFormField
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Email</FormLabel>
+                                            <FormControl>
+                                                <Input type="email" placeholder="Email do Responsável" {...field} value={field.value ?? ""} />
+                                            </FormControl>
+                                            <FormMessage />
+                                            {apiFieldErrors.email && !form.formState.errors.email && <p className="text-sm font-medium text-destructive">{apiFieldErrors.email}</p>}
+                                        </FormItem>
+                                    )}
                                 />
-                            </Col>
-                        </Row>
-                        <div className="d-flex mt-3">
-                            <Button
-                                variant="primary"
-                                onClick={handleAddParent}
-                                className="d-flex align-items-center"
-                                disabled={submitting}
-                            >
-                                <FaSave className="me-2" />
-                                {submitting ? 'Salvando...' : 'Salvar'}
-                            </Button>
-                        </div>
-                    </Form>
-                </Card.Body>
+                                 <ShadcnFormField
+                                    control={form.control}
+                                    name="address"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Endereço</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Endereço do Responsável" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                            {apiFieldErrors.address && !form.formState.errors.address && <p className="text-sm font-medium text-destructive">{apiFieldErrors.address}</p>}
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="flex pt-4 space-x-2">
+                                <Button type="submit" disabled={createParentMutation.isPending || updateParentMutation.isPending}>
+                                    <Save className="mr-2 h-4 w-4" />
+                                    {createParentMutation.isPending || updateParentMutation.isPending
+                                        ? (editingParent ? 'Atualizando...' : 'Salvando...')
+                                        : (editingParent ? 'Atualizar' : 'Salvar')
+                                    }
+                                </Button>
+                                {editingParent && (
+                                    <Button type="button" variant="outline" onClick={clearFormAndEditingState}>
+                                        <Undo className="mr-2 h-4 w-4" />
+                                        Cancelar
+                                    </Button>
+                                )}
+                            </div>
+                        </form>
+                    </ShadcnForm>
+                </CardContent>
             </Card>
 
-            <Card className="table-card">
-                <Card.Header className="d-flex justify-content-between align-items-center">
-                    <h5 className="mb-0">
-                        <FaList className="me-2" />
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center">
+                        <List className="mr-2 h-5 w-5" />
                         Lista de Responsáveis
-                    </h5>
-                </Card.Header>
-                <Card.Body>
-                    <ListRegistries
-                        page={pageData || { content: [], number: 0, totalPages: 1, size: 10 }}
-                        entityName="parents"
-                        onDelete={handleDelete}
-                        onPageChange={(page) => setCurrentPage(page - 1)}
-                    />
-                </Card.Body>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {isLoadingParents && parentPage && <div className="text-center p-4"><LoadingSpinner /></div>}
+                    {!isLoadingParents && errorParents && <ErrorMessage message={`Erro ao carregar lista: ${errorParents.message}`} />}
+                    {!isLoadingParents && !errorParents && parentPage && (
+                         <ListRegistries
+                            page={parentPage}
+                            entityName="parents" // Pass a more generic or specific name if needed for ListRegistries
+                            onDelete={handleDeleteParent}
+                            onEdit={handleEditParent}
+                            onPageChange={(page) => setCurrentPage(page - 1)}
+                            // Define columns for parents if ListRegistries is generic
+                            // columns={[{ accessor: 'name', Header: 'Nome' }, { accessor: 'email', Header: 'Email' }, { accessor: 'phone', Header: 'Telefone' }]}
+                        />
+                    )}
+                     {!isLoadingParents && !errorParents && !parentPage?.content.length && (
+                        <p className="text-center text-muted-foreground py-4">Nenhum responsável encontrado.</p>
+                    )}
+                </CardContent>
             </Card>
         </div>
     );

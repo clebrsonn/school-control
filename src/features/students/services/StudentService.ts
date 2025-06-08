@@ -52,3 +52,15 @@ export const getStudentById = async (id: string): Promise<StudentResponse> => {
 export const deleteStudent = async (id: string): Promise<void> => {
   await axiosDelete(`${API_URL}/${id}`);
 };
+
+/**
+ * Get students by Classroom ID
+ * @param classroomId Classroom ID
+ * @param pageable Pagination parameters
+ * @returns Page of student responses
+ */
+export const getStudentsByClassId = async (classroomId: string, pageable: { page: number, size: number, sort?: string }): Promise<PageResponse<StudentResponse>> => {
+  return await get<PageResponse<StudentResponse>>(`${API_URL}/classroom/${classroomId}`, { params: pageable }); // Assuming endpoint like /students/classroom/{classroomId} or /students?classroomId=...
+  // If the backend expects /students?classroomId=XYZ, the call would be:
+  // return await get<PageResponse<StudentResponse>>(API_URL, { params: { ...pageable, classroomId } });
+};

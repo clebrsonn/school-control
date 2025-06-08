@@ -1,10 +1,22 @@
 import React from 'react';
-import { Badge, Button, Container, Dropdown, Navbar } from 'react-bootstrap';
-import { FaBars, FaBell, FaMoon, FaSun, FaUser } from 'react-icons/fa';
+// import { Badge, Button as BsButton, Container, Dropdown, Navbar } from 'react-bootstrap'; // Replaced
+import { Menu as MenuIcon, Bell, Moon, Sun, User as UserIcon, LogOut, Settings } from 'lucide-react'; // Replaced Fa-icons
 import { useAuth } from '../../features/auth/contexts/AuthProvider';
 import { useNotifications } from '../../features/notifications/contexts/NotificationProvider';
 import { useTheme } from '../../hooks/useTheme';
 import { Link } from 'react-router-dom';
+
+import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -15,119 +27,143 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { theme, toggleTheme } = useTheme();
 
+  const getInitials = (name?: string) => {
+    if (!name) return "?";
+    const names = name.split(' ');
+    if (names.length > 1) {
+      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   return (
-    <header>
-      <Navbar bg="white" className="border-bottom shadow-sm" as="nav" role="navigation" aria-label="Barra superior">
-        <Container fluid className="px-4">
-          <button
-            className="btn btn-link text-dark d-md-none"
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-4 shadow-sm">
+      <div className="flex items-center">
+        <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden" // Only show on small screens
             onClick={toggleSidebar}
             aria-label="Abrir menu lateral"
-          >
-            <FaBars />
-          </button>
+        >
+            <MenuIcon className="h-6 w-6" />
+        </Button>
+        <Link to="/" className="hidden md:block text-lg font-semibold text-primary ml-2">
+            School Control
+        </Link>
+      </div>
 
-          <Navbar.Brand className="d-none d-md-block fw-bold text-primary" tabIndex={0} aria-label="School Control Dashboard">
-            School Control Dashboard
-          </Navbar.Brand>
+      <div className="flex items-center space-x-3 md:space-x-4">
+        <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
+            title={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
+        >
+            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </Button>
 
-          <div className="ms-auto d-flex align-items-center">
-            {/* Botão de alternância de tema */}
-            <button
-              className="btn btn-link text-dark me-2"
-              onClick={toggleTheme}
-              aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
-              title={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
-              style={{ fontSize: 20 }}
-            >
-              {theme === 'dark' ? <FaSun /> : <FaMoon />}
-            </button>
-
-            <Dropdown align="end" className="me-3">
-              <Dropdown.Toggle variant="link" className="nav-link p-0 text-dark position-relative" aria-label="Notificações" id="dropdown-notifications">
-                <FaBell aria-hidden="true" />
-                {unreadCount > 0 && (
-                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" role="status" aria-label={`Você tem ${unreadCount} notificações não lidas`}>
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-              </Dropdown.Toggle>
-              <Dropdown.Menu style={{ width: '320px', maxHeight: '400px', overflowY: 'auto' }} aria-labelledby="dropdown-notifications">
-                <div className="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
-                  <h6 className="mb-0">Notificações</h6>
-                  {unreadCount > 0 && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="text-decoration-none p-0"
-                      onClick={() => markAllAsRead()}
-                    >
-                      <small>Marcar todas como lidas</small>
-                    </Button>
-                  )}
-                </div>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white" role="status" aria-label={`Você tem ${unreadCount} notificações não lidas`}>
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                    )}
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 max-h-[400px] overflow-y-auto">
+                <DropdownMenuLabel className="flex justify-between items-center px-3 py-2">
+                    <span className="font-semibold">Notificações</span>
+                    {unreadCount > 0 && (
+                        <Button
+                            variant="link"
+                            size="sm"
+                            className="p-0 h-auto text-xs"
+                            onClick={(e) => { e.stopPropagation(); markAllAsRead(); }}
+                        >
+                            Marcar todas como lidas
+                        </Button>
+                    )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 {notifications.length === 0 ? (
-                  <Dropdown.Item disabled>Não há notificações</Dropdown.Item>
+                    <DropdownMenuItem disabled>Não há notificações</DropdownMenuItem>
                 ) : (
-                  <>
-                    {notifications?.slice(0, 5).map(notification => (
-                      <Dropdown.Item
-                        key={notification.id}
-                        className={`border-bottom ${!notification.isRead ? 'bg-light' : ''}`}
-                        onClick={() => markAsRead(notification.id)}
-                        aria-current={!notification.isRead ? 'true' : undefined}
-                      >
-                        <div className="d-flex align-items-start">
-                          <div className="me-2">
-                            {!notification.isRead ? (
-                              <Badge bg="primary" className="rounded-circle p-1" />
-                            ) : (
-                              <Badge bg="secondary" className="rounded-circle p-1 opacity-25" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="fw-bold">{notification.title}</div>
-                            <small className="text-muted">{notification.message}</small>
-                            <div>
-                              <small className="text-muted">
-                                {new Date(notification.createdAt).toLocaleDateString()}
-                              </small>
-                            </div>
-                          </div>
-                        </div>
-                      </Dropdown.Item>
-                    ))}
-                    <Dropdown.Item as={Link} to="/notifications" className="text-center">
-                      <small>Ver todas as notificações</small>
-                    </Dropdown.Item>
-                  </>
+                    <>
+                        {notifications.slice(0, 5).map(notification => (
+                            <DropdownMenuItem
+                                key={notification.id}
+                                className={`border-b last:border-b-0 ${!notification.isRead ? 'bg-muted/50' : ''}`}
+                                onClick={() => markAsRead(notification.id)}
+                                // Prevent dropdown from closing when clicking to mark as read, if desired (might need custom handling)
+                            >
+                                <div className="flex items-start space-x-2 py-1">
+                                    {!notification.isRead ? (
+                                        <span className="mt-1 block h-2 w-2 rounded-full bg-primary" />
+                                    ) : (
+                                        <span className="mt-1 block h-2 w-2 rounded-full bg-gray-400 opacity-50" />
+                                    )}
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium">{notification.title}</p>
+                                        <p className="text-xs text-muted-foreground">{notification.message}</p>
+                                        <p className="text-xs text-muted-foreground/70">
+                                            {new Date(notification.createdAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                </div>
+                            </DropdownMenuItem>
+                        ))}
+                         <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link to="/notifications" className="flex justify-center">
+                                Ver todas as notificações
+                            </Link>
+                        </DropdownMenuItem>
+                    </>
                 )}
-              </Dropdown.Menu>
-            </Dropdown>
+            </DropdownMenuContent>
+        </DropdownMenu>
 
-            <Dropdown align="end">
-              <Dropdown.Toggle variant="link" className="nav-link p-0 text-dark d-flex align-items-center" aria-label="Usuário" id="dropdown-user">
-                <div className="d-flex align-items-center">
-                  <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                       style={{ width: '32px', height: '32px' }}>
-                    <FaUser aria-hidden="true" />
-                  </div>
-                </div>
-              </Dropdown.Toggle>
-              <Dropdown.Menu aria-labelledby="dropdown-user">
-                <Dropdown.ItemText>
-                  <span className="fw-bold">{user?.name || 'Usuário'}</span>
-                  <br />
-                  <small className="text-muted">{user?.email}</small>
-                </Dropdown.ItemText>
-                <Dropdown.Divider />
-                <Dropdown.Item as={Link} to="/profile">Perfil</Dropdown.Item>
-                <Dropdown.Item onClick={logout}>Sair</Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
-          </div>
-        </Container>
-      </Navbar>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                        {/* TODO: Add user avatar image if available */}
+                        {/* <AvatarImage src={user?.avatarUrl} alt={user?.name} /> */}
+                        <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
+                    </Avatar>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuLabel>
+                    <div className="font-medium">{user?.name || 'Usuário'}</div>
+                    <div className="text-xs text-muted-foreground">{user?.email}</div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                    <Link to="/profile">
+                        <UserIcon className="mr-2 h-4 w-4" />
+                        <span>Perfil</span>
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                     <Link to="/settings"> {/* Assuming a settings page */}
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Configurações</span>
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sair</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </header>
   );
 };

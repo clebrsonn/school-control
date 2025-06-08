@@ -1,17 +1,20 @@
 import React from 'react';
-import { Nav } from 'react-bootstrap';
+// import { Nav } from 'react-bootstrap'; // Removed
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../features/auth/contexts/AuthProvider';
 import {
-    FaBars,
-    FaChalkboardTeacher,
-    FaCreditCard,
-    FaHome,
-    FaPercentage,
-    FaSignOutAlt,
-    FaUserGraduate,
-    FaUsers
-} from 'react-icons/fa';
+    Home,
+    Users,
+    GraduationCap,
+    CreditCard,
+    School,
+    Percent,
+    LogOut,
+    Menu, // For toggle button
+    ChevronsLeft, // Icon for collapsing
+    ChevronsRight // Icon for expanding
+} from 'lucide-react';
+import { Button } from "@/components/ui/button"; // For toggle and logout
 
 interface SidebarProps {
     expanded: boolean;
@@ -19,99 +22,67 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ expanded, toggleSidebar }) => {
-    const { user, logout } = useAuth();
+    const { user, logout } = useAuth(); // Assuming user might be used later for role-based links
     const location = useLocation();
 
-    const isActive = (path: string) => location.pathname === path;
+    const isActive = (path: string) => location.pathname === path || (path !== "/" && location.pathname.startsWith(path));
+
+
+    const navItems = [
+        { path: "/", icon: <Home className="h-5 w-5" />, label: "Dashboard" },
+        { path: "/parents", icon: <Users className="h-5 w-5" />, label: "Responsáveis" },
+        { path: "/students", icon: <GraduationCap className="h-5 w-5" />, label: "Estudantes" },
+        { path: "/payments", icon: <CreditCard className="h-5 w-5" />, label: "Pagamentos" },
+        { path: "/classes", icon: <School className="h-5 w-5" />, label: "Turmas" },
+        { path: "/discounts", icon: <Percent className="h-5 w-5" />, label: "Descontos" },
+    ];
 
     return (
-        <nav className={`sidebar bg-dark text-white ${expanded ? 'expanded' : 'collapsed'}`} aria-label="Menu lateral"
-             role="navigation">
-            <div className="sidebar-header d-flex justify-content-between align-items-center p-3">
-                {expanded && <h5 className="m-0">School Control</h5>}
-                <button
-                    className="btn btn-link text-white p-0"
+        <aside
+            className={`fixed top-0 left-0 bottom-0 z-40 flex flex-col bg-card text-card-foreground shadow-lg transition-width duration-300 ease-in-out ${
+                expanded ? 'w-64' : 'w-20'
+            }`}
+            aria-label="Menu lateral"
+        >
+            <div className={`flex items-center p-4 border-b border-border ${expanded ? 'justify-between' : 'justify-center'}`}>
+                {expanded && <h5 className="text-lg font-semibold">School Control</h5>}
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={toggleSidebar}
                     aria-label={expanded ? 'Recolher menu lateral' : 'Expandir menu lateral'}
                 >
-                    <FaBars />
-                </button>
+                    {expanded ? <ChevronsLeft className="h-5 w-5" /> : <ChevronsRight className="h-5 w-5" />}
+                </Button>
             </div>
 
-            <Nav className="flex-column" as="ul">
-                <Nav.Item as="li">
+            <nav className="flex-1 space-y-1 p-2">
+                {navItems.map((item) => (
                     <Link
-                        to="/"
-                        className={`nav-link py-3 ${isActive('/') ? 'active' : ''}`}
-                        aria-current={isActive('/') ? 'page' : undefined}
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors
+                                    ${isActive(item.path)
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'hover:bg-muted hover:text-muted-foreground'
+                                    }
+                                    ${!expanded ? 'justify-center' : ''}
+                                  `}
+                        aria-current={isActive(item.path) ? 'page' : undefined}
                     >
-                        <FaHome className="me-2" aria-hidden="true" />
-                        {expanded && <span>Dashboard</span>}
+                        {item.icon}
+                        {expanded && <span className="ml-3">{item.label}</span>}
                     </Link>
-                </Nav.Item>
+                ))}
+            </nav>
 
-                <Nav.Item as="li">
-                    <Link
-                        to="/parents"
-                        className={`nav-link py-3 ${isActive('/parents') ? 'active' : ''}`}
-                        aria-current={isActive('/parents') ? 'page' : undefined}
-                    >
-                        <FaUsers className="me-2" aria-hidden="true" />
-                        {expanded && <span>Responsáveis</span>}
-                    </Link>
-                </Nav.Item>
-
-                <Nav.Item as="li">
-                    <Link
-                        to="/students"
-                        className={`nav-link py-3 ${isActive('/students') ? 'active' : ''}`}
-                        aria-current={isActive('/students') ? 'page' : undefined}
-                    >
-                        <FaUserGraduate className="me-2" aria-hidden="true" />
-                        {expanded && <span>Estudantes</span>}
-                    </Link>
-                </Nav.Item>
-
-                <Nav.Item as="li">
-                    <Link
-                        to="/payments"
-                        className={`nav-link py-3 ${isActive('/payments') ? 'active' : ''}`}
-                        aria-current={isActive('/payments') ? 'page' : undefined}
-                    >
-                        <FaCreditCard className="me-2" aria-hidden="true" />
-                        {expanded && <span>Pagamentos</span>}
-                    </Link>
-                </Nav.Item>
-
-                <Nav.Item as="li">
-                    <Link
-                        to="/classes"
-                        className={`nav-link py-3 ${isActive('/classes') ? 'active' : ''}`}
-                        aria-current={isActive('/classes') ? 'page' : undefined}
-                    >
-                        <FaChalkboardTeacher className="me-2" aria-hidden="true" />
-                        {expanded && <span>Turmas</span>}
-                    </Link>
-                </Nav.Item>
-
-                <Nav.Item as="li">
-                    <Link
-                        to="/discounts"
-                        className={`nav-link py-3 ${isActive('/discounts') ? 'active' : ''}`}
-                        aria-current={isActive('/discounts') ? 'page' : undefined}
-                    >
-                        <FaPercentage className="me-2" aria-hidden="true" />
-                        {expanded && <span>Descontos</span>}
-                    </Link>
-                </Nav.Item>
-            </Nav>
-            <div className="mt-auto p-3 border-top">
-                <button className="btn btn-outline-light w-100" onClick={logout} aria-label="Sair">
-                    <FaSignOutAlt className="me-2" aria-hidden="true" />
+            <div className="mt-auto p-3 border-t border-border">
+                <Button variant="outline" className="w-full" onClick={logout} aria-label="Sair">
+                    <LogOut className={`h-5 w-5 ${expanded ? 'mr-2' : ''}`} />
                     {expanded && <span>Sair</span>}
-                </button>
+                </Button>
             </div>
-        </nav>
+        </aside>
     );
 };
 

@@ -1,135 +1,126 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Card, Col, Row } from 'react-bootstrap';
+import React from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { getClassRoomById } from '../../features/classes/services/ClassService.ts';
-import notification from '../common/Notification.tsx';
-import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
-import { FaCalendarAlt, FaChalkboardTeacher, FaClock } from 'react-icons/fa';
+import { getStudentsByClassId } from '../../features/students/services/StudentService.ts'; // Assuming this service function exists or will be created
 import { ClassRoomResponse } from '../../features/classes/types/ClassRoomTypes.ts';
+import { StudentResponse, PageResponse as StudentPageResponse } from '../../features/students/types/StudentTypes.ts';
+import { LoadingSpinner } from '../common/LoadingSpinner.tsx';
+import ErrorMessage from '../common/ErrorMessage.tsx';
+
+// Shadcn/UI Imports
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+// Lucide Icons
+import { School, CalendarDays, Clock, Users, ArrowLeft, Info } from 'lucide-react';
+
+const DetailItem: React.FC<{ icon: React.ElementType; label: string; value: React.ReactNode; iconColorClass?: string }> = ({ icon: Icon, label, value, iconColorClass = "text-primary" }) => (
+    <div className="flex items-start space-x-3">
+        <div className={`p-2 rounded-full bg-muted`}>
+            <Icon className={`h-5 w-5 ${iconColorClass}`} />
+        </div>
+        <div>
+            <p className="text-sm text-muted-foreground">{label}</p>
+            <p className="font-medium">{value || 'Não informado'}</p>
+        </div>
+    </div>
+);
 
 const ClassDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [classItem, setClassItem] = useState<ClassRoomResponse>();
+  const { id: classId } = useParams<{ id: string }>();
 
-  useEffect(() => {
-    const getClass = async () => {
-        try{
-            const classData = await getClassRoomById(id as string);
-            setClassItem(classData);
-        }catch (e) {
-            notification(e.message || 'Failed to fetch class data.', 'error');
-        }
+  const { data: classItem, isLoading: isLoadingClass, error: errorClass } = useQuery<ClassRoomResponse, Error>({
+    queryKey: ['classroom', classId],
+    queryFn: () => getClassRoomById(classId!),
+    enabled: !!classId,
+  });
 
-    };
-    getClass();
-  }, [id]);
+  // Query for Students in this Class
+  // Assuming getStudentsByClassId returns a PageResponse<StudentResponse> or StudentResponse[]
+  // For simplicity, let's assume it returns StudentResponse[] directly or we take .content
+  const { data: studentsData, isLoading: isLoadingStudents, error: errorStudents } = useQuery<StudentPageResponse<StudentResponse> | StudentResponse[], Error>({
+    queryKey: ['studentsByClass', classId],
+    // TODO: Ensure getStudentsByClassId exists and handles pagination if necessary, or fetches all for a class.
+    // For now, assuming it fetches a list that can be handled.
+    // If it's paginated, ListRegistries could be used. For a simple list, map directly.
+    queryFn: () => getStudentsByClassId(classId!, { page: 0, size: 100 }), // Adjust pagination as needed
+    enabled: !!classId,
+  });
 
-  if (!classItem) {
-    return <LoadingSpinner />;
-  }
+  const students = Array.isArray(studentsData) ? studentsData : studentsData?.content || [];
+
+
+  if (isLoadingClass) return <LoadingSpinner fullScreen message="Carregando detalhes da turma..." />;
+  if (errorClass) return <ErrorMessage message={`Erro ao carregar turma: ${errorClass.message}`} title="Erro"/>;
+  if (!classItem) return <ErrorMessage message="Turma não encontrada." title="Não Encontrado" />;
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="mb-0">
-          <FaChalkboardTeacher className="me-2" />
-          Detalhes da Turma
-        </h1>
-      </div>
+    <div className="p-4 md:p-6 space-y-6">
+        <Button variant="outline" asChild className="mb-4">
+            <Link to="/classes"> {/* Assuming /classes is the route for ClassManager */}
+                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para Turmas
+            </Link>
+        </Button>
 
-      <Row className="mb-4">
-        <Col md={12}>
-          <Card className="dashboard-card border-0">
-            <Card.Body>
-              <h5 className="mb-4">Informações da Turma</h5>
-              <Row>
-                <Col md={6} className="mb-3">
-                  <div className="d-flex align-items-center">
-                    <div className="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
-                      <FaChalkboardTeacher className="text-primary" />
-                    </div>
-                    <div>
-                      <div className="text-muted small">Nome da Turma</div>
-                      <div className="fw-bold">{classItem.name}</div>
-                    </div>
-                  </div>
-                </Col>
-                {/*<Col md={6} className="mb-3">*/}
-                {/*  <div className="d-flex align-items-center">*/}
-                {/*    <div className="rounded-circle bg-success bg-opacity-10 p-3 me-3">*/}
-                {/*      <FaMoneyBillWave className="text-success" />*/}
-                {/*    </div>*/}
-                {/*    <div>*/}
-                {/*      <div className="text-muted small">Mensalidade</div>*/}
-                {/*      <div className="fw-bold">*/}
-                {/*        {classItem.monthlyFee ? `R$ ${classItem.monthlyFee}` : 'Não definido'}*/}
-                {/*      </div>*/}
-                {/*    </div>*/}
-                {/*  </div>*/}
-                {/*</Col>*/}
-              </Row>
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle className="flex items-center text-2xl">
+                    <School className="mr-3 h-7 w-7 text-primary" />
+                    Detalhes da Turma: {classItem.name}
+                </CardTitle>
+                {classItem.description && <CardDescription className="pt-2">{classItem.description}</CardDescription>}
+            </CardHeader>
+            <CardContent className="pt-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
+                    <DetailItem icon={School} label="Nome da Turma" value={classItem.name} iconColorClass="text-blue-600" />
+                    <DetailItem icon={CalendarDays} label="Ano Letivo" value={classItem.schoolYear} iconColorClass="text-green-600" />
+                    <DetailItem icon={Clock} label="Horário de Início" value={classItem.startTime || 'N/A'} iconColorClass="text-purple-600" />
+                    <DetailItem icon={Clock} label="Horário de Término" value={classItem.endTime || 'N/A'} iconColorClass="text-red-600" />
+                    {/* Add other relevant fields from ClassRoomResponse if any */}
+                </div>
+            </CardContent>
+        </Card>
 
-              <Row>
-                {/*<Col md={6} className="mb-3">*/}
-                {/*  <div className="d-flex align-items-center">*/}
-                {/*    <div className="rounded-circle bg-warning bg-opacity-10 p-3 me-3">*/}
-                {/*      <FaMoneyBillWave className="text-warning" />*/}
-                {/*    </div>*/}
-                {/*    <div>*/}
-                {/*      <div className="text-muted small">Taxa de Matrícula</div>*/}
-                {/*      <div className="fw-bold">*/}
-                {/*        {classItem.enrollmentFee ? `R$ ${classItem.enrollmentFee}` : 'Não definido'}*/}
-                {/*      </div>*/}
-                {/*    </div>*/}
-                {/*  </div>*/}
-                {/*</Col>*/}
-                <Col md={6} className="mb-3">
-                  <div className="d-flex align-items-center">
-                    <div className="rounded-circle bg-info bg-opacity-10 p-3 me-3">
-                      <FaCalendarAlt className="text-info" />
-                    </div>
-                    <div>
-                      <div className="text-muted small">Ano Letivo</div>
-                      <div className="fw-bold">
-                        {classItem.schoolYear || 'Não definido'}
-                      </div>
-                    </div>
-                  </div>
-                </Col>
-              </Row>
-
-              <Row>
-                <Col md={6} className="mb-3">
-                  <div className="d-flex align-items-center">
-                    <div className="rounded-circle bg-secondary bg-opacity-10 p-3 me-3">
-                      <FaClock className="text-secondary" />
-                    </div>
-                    <div>
-                      <div className="text-muted small">Horário de Início</div>
-                      <div className="fw-bold">
-                        {classItem.startTime || 'Não definido'}
-                      </div>
-                    </div>
-                  </div>
-                </Col>
-                <Col md={6} className="mb-3">
-                  <div className="d-flex align-items-center">
-                    <div className="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
-                      <FaClock className="text-danger" />
-                    </div>
-                    <div>
-                      <div className="text-muted small">Horário de Término</div>
-                      <div className="fw-bold">
-                        {classItem.endTime || 'Não definido'}
-                      </div>
-                    </div>
-                  </div>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center">
+                    <Users className="mr-2 h-5 w-5 text-indigo-600" />
+                    Alunos Matriculados
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                {isLoadingStudents && <LoadingSpinner />}
+                {errorStudents && <ErrorMessage message={`Erro ao carregar alunos da turma: ${errorStudents.message}`} />}
+                {!isLoadingStudents && !errorStudents && students.length > 0 ? (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Nome do Aluno</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead className="text-right">Ações</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {students.map((student) => (
+                                <TableRow key={student.id}>
+                                    <TableCell className="font-medium">{student.name}</TableCell>
+                                    <TableCell>{student.email || 'N/A'}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="outline" size="sm" asChild>
+                                            <Link to={`/students/${student.id}`}>Ver Aluno</Link>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                ) : (
+                    !isLoadingStudents && <p className="text-sm text-muted-foreground text-center py-4">Nenhum aluno matriculado nesta turma.</p>
+                )}
+            </CardContent>
+        </Card>
     </div>
   );
 };

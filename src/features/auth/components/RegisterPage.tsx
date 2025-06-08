@@ -1,92 +1,161 @@
 import React, { useState } from 'react';
-import { Button, Form } from 'react-bootstrap';
-import { FaUserPlus } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthProvider.tsx';
-import FormField from '../../../components/common/FormField';
-import { extractFieldErrors } from '../../../utils/errorUtils';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { registerSchema, RegisterFormData } from '../types/authSchemas';
+import { useAuth } from '../contexts/AuthProvider';
+import notification from '../../../components/common/Notification.tsx';
+import { extractFieldErrors } from '../../../utils/errorUtils.ts';
 
-function RegisterPage() {
-    const [email, setEmail] = useState('');
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [loading, setLoading] = useState(false); // novo estado
-    const {register} = useAuth();
+// Shadcn/UI Imports
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form as ShadcnForm, FormControl, FormField as ShadcnFormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { UserPlus } from 'lucide-react'; // Icon
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setFieldErrors({});
-        setLoading(true); // inicia carregamento
+const RegisterPage: React.FC = () => {
+    const [isLoading, setIsLoading] = useState(false);
+    const { register } = useAuth();
+    const navigate = useNavigate();
+
+    const form = useForm<RegisterFormData>({
+        resolver: zodResolver(registerSchema),
+        defaultValues: {
+            name: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+        },
+    });
+
+    const onSubmit = async (data: RegisterFormData) => {
+        setIsLoading(true);
+        form.clearErrors();
 
         try {
-            await register({ username, email, password });
-        } catch (error) {
-            const errors = extractFieldErrors(error);
-            setFieldErrors(errors);
+            // The 'confirmPassword' field is only for client-side validation by Zod.
+            // We only send name, email, password to the register function.
+            await register({ name: data.name, email: data.email, password: data.password });
+            notification('Registro bem-sucedido! Você será redirecionado.', 'success');
+            // Navigation to login or dashboard will likely be handled by AuthProvider
+            // or you can navigate explicitly here after a delay for the notification.
+            // navigate('/login');
+        } catch (error: any) {
+            const apiErrors = extractFieldErrors(error);
+            let errorMessage = "Falha no registro. Verifique os dados fornecidos.";
+
+            if (Object.keys(apiErrors).length > 0) {
+                 Object.entries(apiErrors).forEach(([field, message]) => {
+                    if (field === 'name' || field === 'email' || field === 'password' || field === 'non_field_errors' || field === 'detail') {
+                        form.setError(field === 'non_field_errors' || field === 'detail' ? 'root.serverError' : field as keyof RegisterFormData, {
+                            type: 'server',
+                            message: message,
+                        });
+                    }
+                });
+                if (apiErrors.non_field_errors) errorMessage = apiErrors.non_field_errors;
+                else if (apiErrors.detail) errorMessage = apiErrors.detail;
+                // More specific error messages can be set if needed
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            if (!form.formState.isValid && (form.formState.errors.email || form.formState.errors.password || form.formState.errors.name || form.formState.errors.confirmPassword)){
+                // Zod errors will be shown by FormMessage
+            } else {
+                 notification(errorMessage, 'error');
+            }
         } finally {
-            setLoading(false); // encerra carregamento
+            setIsLoading(false);
         }
     };
 
     return (
-        <div>
-            <div className="text-center mb-4">
-                <FaUserPlus size={60} className="text-primary mb-3" />
-                <h2>Criar Conta</h2>
-                <p className="text-muted">Preencha os dados abaixo para criar sua conta</p>
-            </div>
-
-            <Form onSubmit={handleSubmit}>
-                <FormField
-                    id="formBasicUsername"
-                    label="Username"
-                    type="text"
-                    placeholder="Digite seu nome de usuário"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    error={fieldErrors.username || null}
-                    required
-                />
-                <FormField
-                    id="formBasicEmail"
-                    label="Email"
-                    type="email"
-                    placeholder="Digite seu email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    error={fieldErrors.email || null}
-                    required
-                />
-
-                <FormField
-                    id="formBasicPassword"
-                    label="Senha"
-                    type="password"
-                    placeholder="Digite sua senha"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    error={fieldErrors.password || null}
-                    required
-                />
-
-                <Button variant="primary" type="submit" className="w-100" disabled={loading}>
-                    {loading ? (
-                        <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            Registrando...
-                        </>
-                    ) : (
-                        'Registrar'
-                    )}
-                </Button>
-
-                <div className="text-center mt-3">
-                    <p className="mb-0">Já possui uma conta? <Link to="/login" className="text-decoration-none">Faça login</Link></p>
-                </div>
-            </Form>
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+            <Card className="w-full max-w-md shadow-xl">
+                <CardHeader className="text-center">
+                    <div className="mx-auto mb-4">
+                        <UserPlus className="h-12 w-12 text-primary" />
+                    </div>
+                    <CardTitle className="text-2xl font-bold">Criar Conta</CardTitle>
+                    <CardDescription>Preencha os dados abaixo para criar sua conta.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ShadcnForm {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4"> {/* Reduced space for more fields */}
+                            <ShadcnFormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Nome Completo</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Seu nome completo" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <ShadcnFormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Email</FormLabel>
+                                        <FormControl>
+                                            <Input type="email" placeholder="seu@email.com" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <ShadcnFormField
+                                control={form.control}
+                                name="password"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Senha</FormLabel>
+                                        <FormControl>
+                                            <Input type="password" placeholder="Crie uma senha" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <ShadcnFormField
+                                control={form.control}
+                                name="confirmPassword"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Confirmar Senha</FormLabel>
+                                        <FormControl>
+                                            <Input type="password" placeholder="Confirme sua senha" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            {form.formState.errors.root?.serverError && (
+                                <p className="text-sm font-medium text-destructive">
+                                    {form.formState.errors.root.serverError.message}
+                                </p>
+                            )}
+                            <Button type="submit" className="w-full" disabled={isLoading}>
+                                {isLoading ? 'Registrando...' : 'Registrar'}
+                            </Button>
+                        </form>
+                    </ShadcnForm>
+                    <div className="mt-6 text-center text-sm">
+                        Já possui uma conta?{' '}
+                        <Link to="/login" className="font-medium text-primary hover:underline">
+                            Faça login
+                        </Link>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
-}
+};
 
 export default RegisterPage;

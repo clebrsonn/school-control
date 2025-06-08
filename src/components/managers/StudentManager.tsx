@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Col, Form, Row } from 'react-bootstrap';
 import notification from '../common/Notification.tsx';
-import { useCrudManager } from '../../hooks/useCrudManager';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { studentSchema, StudentFormData } from '@/features/students/types/studentSchemas.ts'; // Ensure this path is correct
 import {
     createStudent,
     deleteStudent,
@@ -14,318 +16,362 @@ import { getAllClassRooms } from '../../features/classes/services/ClassService.t
 import ErrorMessage from '../common/ErrorMessage.tsx';
 import { ClassRoomResponse } from '../../features/classes/types/ClassRoomTypes.ts';
 import { ResponsibleResponse } from '../../features/parents/types/ResponsibleTypes.ts';
-import { StudentRequest, StudentResponse } from '../../features/students/types/StudentTypes.ts';
-import { FaList, FaSave, FaUndo, FaUserGraduate } from 'react-icons/fa';
-import FormField from '../common/FormField';
-import { extractFieldErrors } from '../../utils/errorUtils';
+import { StudentRequest, StudentResponse, PageResponse } from '../../features/students/types/StudentTypes.ts'; // Assuming PageResponse is here
+import { GraduationCap, List, Save, Undo } from 'lucide-react';
+import { extractFieldErrors } from '../../utils/errorUtils.ts';
+
+// Shadcn/UI imports
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form as ShadcnForm, FormControl, FormField as ShadcnFormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 interface StudentManagerProps {
-    responsible: string | undefined;
+    responsible?: string; // Optional as per original logic where it might not be provided
 }
 
 const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
-    const [classes, setClasses] = useState<ClassRoomResponse[]>([]);
-    const [parents, setParents] = useState<ResponsibleResponse[]>([]);
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [classId, setClassId] = useState('');
-    const [selectedResponsible, setSelectedResponsible] = useState(responsible);
-    const [selectedResponsibleName, setSelectedResponsibleName] = useState('');
-    const [enrollmentFee, setEnrollmentFee] = useState<number | undefined>(undefined);
-    const [monthlyFee, setMonthlyFee] = useState<number | undefined>(undefined);
     const [editingStudent, setEditingStudent] = useState<StudentResponse | null>(null);
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [loading, setLoading] = useState(false);
+    const [apiFieldErrors, setApiFieldErrors] = useState<Record<string, string>>({});
 
-    const {
-        pageData: studentPage,
-        isLoading,
-        error,
-        currentPage,
-        setCurrentPage,
-        create,
-        update,
-        remove,
-        refetch
-    } = useCrudManager<StudentResponse, StudentRequest>({
-        entityName: 'students',
-        fetchPage: (page, size) => responsible
-            ? getStudentsByResponsibleId(responsible, { page, size })
-            : getAllStudents({ page, size, sort: 'name,responsible' }),
-        createItem: createStudent,
-        updateItem: updateStudent,
-        deleteItem: deleteStudent
+    const queryClient = useQueryClient();
+    const [currentPage, setCurrentPage] = useState(0);
+
+    const form = useForm<StudentFormData>({
+        resolver: zodResolver(studentSchema),
+        defaultValues: {
+            name: '',
+            email: '',
+            responsibleId: responsible || '',
+            classroomId: '',
+            enrollmentFee: 0,
+            monthlyFee: 0,
+        }
+    });
+     // Effect to update default responsibleId in form when prop changes (e.g. navigating to this page with a new responsible context)
+     useEffect(() => {
+        if (responsible) {
+            form.setValue('responsibleId', responsible);
+        }
+    }, [responsible, form]);
+
+
+    const { data: classesData = [], isLoading: isLoadingClasses, error: errorClasses } = useQuery<ClassRoomResponse[], Error>({
+        queryKey: ['classrooms'],
+        queryFn: async () => {
+            const response = await getAllClassRooms({ page: 0, size: 500 });
+            return response.content;
+        }
     });
 
-    useEffect(() => {
-        const getClasses = async () => {
-            try {
-                const classData = await getAllClassRooms();
-                setClasses(classData.content as ClassRoomResponse[]);
-            } catch {}
-        };
-        const getParents = async () => {
-            try {
-                const parentData = await getAllResponsibles({ page: 0, size:100, sort: 'name' });
-                setParents(parentData.content);
-            } catch {}
-        };
-        getClasses();
-        if (!responsible) getParents();
-    }, [responsible]);
+    const { data: parentsData = [], isLoading: isLoadingParents, error: errorParents } = useQuery<ResponsibleResponse[], Error>({
+        queryKey: ['responsibles'],
+        queryFn: async () => {
+            const response = await getAllResponsibles({ page: 0, size: 500, sort: 'name' });
+            return response.content;
+        },
+        enabled: !responsible
+    });
 
-    useEffect(() => {
-        if (selectedResponsible) {
-            const parent = parents.find(p => p.id === selectedResponsible);
-            if (parent) {
-                setSelectedResponsibleName(parent.name);
-            }
+    const {
+        data: studentPage,
+        isLoading: isLoadingStudents,
+        error: errorStudents,
+        refetch: refetchStudents, // Keep refetch for manual refresh if needed elsewhere
+    } = useQuery<PageResponse<StudentResponse>, Error>({ // Specify PageResponse type
+        queryKey: ['students', currentPage, responsible],
+        queryFn: () => responsible
+            ? getStudentsByResponsibleId(responsible, { page: currentPage, size: 10 })
+            : getAllStudents({ page: currentPage, size: 10, sort: 'name,responsible' }),
+    });
+
+    const createStudentMutation = useMutation<StudentResponse, Error, StudentFormData>({
+        mutationFn: (studentData) => {
+            // Map StudentFormData to StudentRequest if necessary
+            const requestData: StudentRequest = {
+                ...studentData,
+                classroom: studentData.classroomId, // Map classroomId to classroom
+                monthyFee: studentData.monthlyFee, // Ensure correct field name if backend expects 'monthyFee'
+            };
+            return createStudent(requestData);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['students', currentPage, responsible] });
+            notification('Aluno adicionado com sucesso!', 'success');
+            form.reset();
+            setEditingStudent(null);
+            setApiFieldErrors({});
+        },
+        onError: (error: any) => {
+            const apiErrors = extractFieldErrors(error);
+            setApiFieldErrors(apiErrors);
+            notification(`Erro ao adicionar aluno: ${error.message || 'Verifique os dados.'}`, 'error');
         }
-    }, [selectedResponsible, parents]);
+    });
 
-    const resetForm = () => {
-        setName('');
-        setEmail('');
-        setClassId('');
-        setSelectedResponsible(responsible || '');
-        setSelectedResponsibleName('');
-        setEnrollmentFee(undefined);
-        setMonthlyFee(undefined);
+    const updateStudentMutation = useMutation<StudentResponse, Error, { id: string; studentData: StudentFormData }>({
+        mutationFn: ({ id, studentData }) => {
+            const requestData: StudentRequest = {
+                ...studentData,
+                classroom: studentData.classroomId,
+                monthyFee: studentData.monthlyFee,
+            };
+            return updateStudent(id, requestData);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['students', currentPage, responsible] });
+            notification('Aluno atualizado com sucesso!', 'success');
+            form.reset();
+            setEditingStudent(null);
+            setApiFieldErrors({});
+        },
+        onError: (error: any) => {
+            const apiErrors = extractFieldErrors(error);
+            setApiFieldErrors(apiErrors);
+            notification(`Erro ao atualizar aluno: ${error.message || 'Verifique os dados.'}`, 'error');
+        }
+    });
+
+    const deleteStudentMutation = useMutation<void, Error, string>({
+        mutationFn: deleteStudent,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['students', currentPage, responsible] });
+            notification('Estudante removido com sucesso!', 'success');
+            if (editingStudent) { // If deleting the student being edited, clear form
+                clearFormAndEditingState();
+            }
+        },
+        onError: (error: any) => {
+            notification(`Erro ao remover estudante: ${error.message || 'Erro desconhecido.'}`, 'error');
+        }
+    });
+
+    const clearFormAndEditingState = () => {
+        form.reset({
+            name: '',
+            email: '',
+            responsibleId: responsible || '',
+            classroomId: '',
+            enrollmentFee: 0,
+            monthlyFee: 0,
+        });
         setEditingStudent(null);
+        setApiFieldErrors({});
     };
 
-    const handleAddOrUpdateStudent = async () => {
-        setFieldErrors({});
-        setLoading(true);
-
-        const clientErrors: Record<string, string> = {};
-        if (!name) clientErrors.name = 'Nome do aluno é obrigatório';
-        if (!responsible && !selectedResponsible) clientErrors.responsibleId = 'Responsável é obrigatório';
-        if (!classId) clientErrors.classId = 'Turma é obrigatório';
-        if (Object.keys(clientErrors).length > 0) {
-            setFieldErrors(clientErrors);
-            setLoading(false);
-            return;
-        }
-
-        try {
-            let studentData: StudentRequest = {
-                name,
-                email,
-                responsibleId: (responsible || selectedResponsible) as string,
-                classroom: classId,
-                enrollmentFee: enrollmentFee || 0,
-                monthyFee: monthlyFee || 0,
-            };
-
-            if (editingStudent) {
-                await update(editingStudent.id, studentData);
-                notification('Aluno atualizado com sucesso', 'success');
-            } else {
-                await create(studentData);
-                notification('Aluno adicionado com sucesso', 'success');
-            }
-
-            resetForm();
-            refetch();
-        } catch (err: any) {
-            const errors = extractFieldErrors(err);
-            setFieldErrors(errors);
-        } finally {
-            setLoading(false);
+    const onSubmit = (data: StudentFormData) => {
+        setApiFieldErrors({});
+        if (editingStudent) {
+            updateStudentMutation.mutate({ id: editingStudent.id, studentData: data });
+        } else {
+            createStudentMutation.mutate(data);
         }
     };
 
     const handleEdit = (student: StudentResponse) => {
         setEditingStudent(student);
-        setName(student.name);
-        setEmail(student.email || '');
-        setClassId(student.classroom || '');
-        setSelectedResponsible(student.responsibleId || '');
-        setSelectedResponsibleName(student.responsibleName || '');
-        setEnrollmentFee(student.enrollmentFee || undefined);
-        setMonthlyFee(student.monthyFee || undefined);
+        form.reset({
+            name: student.name,
+            email: student.email || '',
+            responsibleId: student.responsibleId || '',
+            classroomId: student.classroomId || student.classroom || '',
+            enrollmentFee: student.enrollmentFee || 0,
+            monthlyFee: student.monthlyFee || student.monthyFee || 0,
+        });
+        setApiFieldErrors({});
     };
 
-    const handleDelete = async (id: string) => {
-        try {
-            await remove(id);
-            notification('Estudante removido com sucesso.', 'success');
-            refetch();
-        } catch {
-            notification('Erro ao remover o estudante.', 'error');
-        }
+    const handleDelete = (id: string) => {
+        deleteStudentMutation.mutate(id);
     };
+
+    if (isLoadingClasses) return <div className="p-4">Carregando turmas...</div>;
+    if (errorClasses) return <ErrorMessage message={`Erro ao carregar turmas: ${errorClasses.message}`} />;
+    if (!responsible && isLoadingParents) return <div className="p-4">Carregando responsáveis...</div>;
+    if (!responsible && errorParents) return <ErrorMessage message={`Erro ao carregar responsáveis: ${errorParents.message}`} />;
 
     return (
-        <div>
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <h1 className="mb-0">
-                    <FaUserGraduate className="me-2" />
+        <div className="p-4 space-y-6">
+            <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-semibold flex items-center">
+                    <GraduationCap className="mr-2 h-6 w-6" />
                     Gerenciar Alunos
                 </h1>
             </div>
 
-            {error && <ErrorMessage message={error} />}
+            {errorStudents && <ErrorMessage message={`Erro ao carregar alunos: ${errorStudents.message}`} />}
 
-            <Card className="form-card mb-4">
-                <Card.Header className="d-flex justify-content-between align-items-center">
-                    <h5 className="mb-0">
+            <Card>
+                <CardHeader>
+                    <CardTitle>
                         {editingStudent ? 'Editar Aluno' : 'Adicionar Aluno'}
-                    </h5>
-                </Card.Header>
-                <Card.Body>
-                    <Form>
-                        <Row>
-                            <Col md={6}>
-                                <FormField
-                                    id="formStudentName"
-                                    label="Nome do Aluno"
-                                    type="text"
-                                    placeholder="Nome do Aluno"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    error={fieldErrors.name || null}
-                                    required
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <ShadcnForm {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <ShadcnFormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Nome do Aluno</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Nome do Aluno" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                            {apiFieldErrors.name && <p className="text-sm font-medium text-destructive">{apiFieldErrors.name}</p>}
+                                        </FormItem>
+                                    )}
                                 />
-                            </Col>
-                            <Col md={6}>
-                                <FormField
-                                    id="formStudentEmail"
-                                    label="Email"
-                                    type="email"
-                                    placeholder="Email do Aluno"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    error={fieldErrors.email || null}
+                                <ShadcnFormField
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Email</FormLabel>
+                                            <FormControl>
+                                                <Input type="email" placeholder="Email do Aluno" {...field} value={field.value ?? ""} />
+                                            </FormControl>
+                                            <FormMessage />
+                                            {apiFieldErrors.email && <p className="text-sm font-medium text-destructive">{apiFieldErrors.email}</p>}
+                                        </FormItem>
+                                    )}
                                 />
-                            </Col>
-                        </Row>
+                            </div>
 
-                        <Row>
-                            <Col md={6}>
-                                <Form.Group className="mb-3" controlId="formEnrollmentFee">
-                                    <Form.Label>Taxa de Matrícula</Form.Label>
-                                    <Form.Control
-                                        type="number"
-                                        placeholder="Digite a taxa de matrícula"
-                                        value={enrollmentFee || ''}
-                                        onChange={(e) => setEnrollmentFee(e.target.value ? parseFloat(e.target.value) : undefined)}
-                                        isInvalid={!!fieldErrors.enrollmentFee}
-                                    />
-                                    {fieldErrors.enrollmentFee && (
-                                        <Form.Control.Feedback type="invalid">
-                                            {fieldErrors.enrollmentFee}
-                                        </Form.Control.Feedback>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <ShadcnFormField
+                                    control={form.control}
+                                    name="enrollmentFee"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Taxa de Matrícula</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" placeholder="Valor da taxa" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} value={field.value || ''}/>
+                                            </FormControl>
+                                            <FormMessage />
+                                            {apiFieldErrors.enrollmentFee && <p className="text-sm font-medium text-destructive">{apiFieldErrors.enrollmentFee}</p>}
+                                        </FormItem>
                                     )}
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3" controlId="formMonthlyFee">
-                                    <Form.Label>Mensalidade</Form.Label>
-                                    <Form.Control
-                                        type="number"
-                                        placeholder="Digite o valor da mensalidade"
-                                        value={monthlyFee || ''}
-                                        onChange={(e) => setMonthlyFee(e.target.value ? parseFloat(e.target.value) : undefined)}
-                                        isInvalid={!!fieldErrors.monthyFee}
-                                        min={0}
-                                    />
-                                    {fieldErrors.monthyFee && (
-                                        <Form.Control.Feedback type="invalid">
-                                            {fieldErrors.monthyFee}
-                                        </Form.Control.Feedback>
+                                />
+                                <ShadcnFormField
+                                    control={form.control}
+                                    name="monthlyFee"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Mensalidade</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" placeholder="Valor da mensalidade" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} value={field.value || ''} />
+                                            </FormControl>
+                                            <FormMessage />
+                                            {apiFieldErrors.monthlyFee && <p className="text-sm font-medium text-destructive">{apiFieldErrors.monthlyFee}</p>}
+                                        </FormItem>
                                     )}
-                                </Form.Group>
-                            </Col>
-                        </Row>
+                                />
+                            </div>
 
-                        <Row>
-                            <Col md={6}>
-                                <Form.Group className="mb-3" controlId="formParent">
-                                    <Form.Label>Responsável</Form.Label>
-                                    <Form.Control
-                                        as="select"
-                                        value={selectedResponsible}
-                                        onChange={(e) => setSelectedResponsible(e.target.value)}
-                                        isInvalid={!!fieldErrors.responsibleId}
-                                        disabled={!!responsible}
-                                    >
-                                        <option value="">Selecione um responsável</option>
-                                        {parents.map((parent) => (
-                                            <option key={parent.id} value={parent.id}>
-                                                {parent.name}
-                                            </option>
-                                        ))}
-                                    </Form.Control>
-                                    {fieldErrors.responsibleId && (
-                                        <Form.Control.Feedback type="invalid">
-                                            {fieldErrors.responsibleId}
-                                        </Form.Control.Feedback>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <ShadcnFormField
+                                    control={form.control}
+                                    name="responsibleId"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Responsável</FormLabel>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                value={field.value || ''}
+                                                disabled={!!responsible || isLoadingParents}
+                                                defaultValue={field.value || ''}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Selecione um responsável" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {!responsible && <SelectItem value=""><em>Selecione um responsável</em></SelectItem>}
+                                                    {parents?.map((parent) => (
+                                                        <SelectItem key={parent.id} value={parent.id}>
+                                                            {parent.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                     {responsible && parents.find(p => p.id === responsible) && (
+                                                        <SelectItem value={responsible} disabled>
+                                                            {parents.find(p => p.id === responsible)?.name}
+                                                        </SelectItem>
+                                                    )}
+                                                    {responsible && !parents.find(p => p.id === responsible) && (
+                                                        // If responsible prop is set but not in the list (e.g. list is filtered or not loaded yet)
+                                                        // We might need a way to display the name of the 'responsible' prop if available
+                                                        // This case needs careful handling based on how `parents` list is populated when `responsible` prop is active
+                                                        <SelectItem value={responsible} disabled>{form.getValues("responsibleId")}</SelectItem>
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                            {apiFieldErrors.responsibleId && <p className="text-sm font-medium text-destructive">{apiFieldErrors.responsibleId}</p>}
+                                        </FormItem>
                                     )}
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3" controlId="formStudentClass">
-                                    <Form.Label>Turma</Form.Label>
-                                    <Form.Control
-                                        as="select"
-                                        value={classId}
-                                        onChange={(e) => setClassId(e.target.value)}
-                                        isInvalid={!!fieldErrors.classId}
-                                    >
-                                        <option value="">Selecione uma turma</option>
-                                        {classes?.map((classItem) => (
-                                            <option key={classItem.id as string} value={classItem.id as string}>
-                                                {classItem.name}
-                                            </option>
-                                        ))}
-                                    </Form.Control>
-                                    {fieldErrors.classId && (
-                                        <Form.Control.Feedback type="invalid">
-                                            {fieldErrors.classId}
-                                        </Form.Control.Feedback>
+                                />
+                                <ShadcnFormField
+                                    control={form.control}
+                                    name="classroomId"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Turma</FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value || ''} defaultValue={field.value || ''} disabled={isLoadingClasses}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Selecione uma turma" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value=""><em>Selecione uma turma</em></SelectItem>
+                                                    {classes?.map((classItem) => (
+                                                        <SelectItem key={classItem.id as string} value={classItem.id as string}>
+                                                            {classItem.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                            {apiFieldErrors.classroomId && <p className="text-sm font-medium text-destructive">{apiFieldErrors.classroomId}</p>}
+                                        </FormItem>
                                     )}
-                                </Form.Group>
-                            </Col>
-                        </Row>
+                                />
+                            </div>
 
-                        <div className="d-flex mt-3">
-                            <Button
-                                variant="primary"
-                                onClick={handleAddOrUpdateStudent}
-                                className="me-2 d-flex align-items-center"
-                                disabled={loading}
-                            >
-                                <FaSave className="me-2" />
-                                {loading
-                                    ? (editingStudent ? 'Atualizando...' : 'Salvando...')
-                                    : (editingStudent ? 'Atualizar' : 'Salvar')
-                                }
-                            </Button>
-                            {editingStudent && (
-                                <Button
-                                    variant="secondary"
-                                    onClick={resetForm}
-                                    className="d-flex align-items-center"
-                                >
-                                    <FaUndo className="me-2" />
-                                    Cancelar
+                            <div className="flex pt-4 space-x-2">
+                                <Button type="submit" disabled={createStudentMutation.isPending || updateStudentMutation.isPending || isLoadingStudents}>
+                                    <Save className="mr-2 h-4 w-4" />
+                                    {createStudentMutation.isPending || updateStudentMutation.isPending
+                                        ? (editingStudent ? 'Atualizando...' : 'Salvando...')
+                                        : (editingStudent ? 'Atualizar' : 'Salvar')
+                                    }
                                 </Button>
-                            )}
-                        </div>
-                    </Form>
-                </Card.Body>
+                                {editingStudent && (
+                                    <Button type="button" variant="outline" onClick={clearFormAndEditingState}>
+                                        <Undo className="mr-2 h-4 w-4" />
+                                        Cancelar
+                                    </Button>
+                                )}
+                            </div>
+                        </form>
+                    </ShadcnForm>
+                </CardContent>
             </Card>
 
-            <Card className="table-card">
-                <Card.Header className="d-flex justify-content-between align-items-center">
-                    <h5 className="mb-0">
-                        <FaList className="me-2" />
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center">
+                        <List className="mr-2 h-5 w-5" />
                         Lista de Alunos
-                    </h5>
-                </Card.Header>
-                <Card.Body>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
                     <ListRegistries
                         page={studentPage || { content: [], number: 0, totalPages: 1, size: 10 }}
                         entityName={'students'}
@@ -333,11 +379,10 @@ const StudentManager: React.FC<StudentManagerProps> = ({ responsible }) => {
                         onEdit={handleEdit}
                         onPageChange={(page) => setCurrentPage(page - 1)}
                     />
-                </Card.Body>
+                </CardContent>
             </Card>
         </div>
     );
 };
 
 export default StudentManager;
-

@@ -1,27 +1,21 @@
 import React from 'react';
+import { AlertTriangle } from 'lucide-react'; // Or another suitable icon like XCircle
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface ErrorMessageProps {
   message: string | null;
+  title?: string; // Optional title
 }
 
-const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => {
+const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, title }) => {
   if (!message) return null;
 
   return (
-    <div style={{
-      color: '#842029',
-      background: '#f8d7da',
-      border: '1px solid #f5c2c7',
-      borderRadius: 4,
-      padding: '0.75rem 1rem',
-      marginBottom: '1rem',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem'
-    }}>
-      <span aria-hidden="true" style={{fontWeight: 'bold', fontSize: '1.2em'}}>⚠️</span>
-      <span>{message}</span>
-    </div>
+    <Alert variant="destructive" className="mb-4">
+      <AlertTriangle className="h-4 w-4" />
+      {title && <AlertTitle>{title}</AlertTitle>}
+      <AlertDescription>{message}</AlertDescription>
+    </Alert>
   );
 };
 
