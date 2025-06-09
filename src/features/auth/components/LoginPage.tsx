@@ -22,7 +22,7 @@ const LoginPage: React.FC = () => {
     const form = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
-            email: '',
+            username: '', // Changed from email
             password: '',
         },
     });
@@ -32,34 +32,35 @@ const LoginPage: React.FC = () => {
         form.clearErrors(); // Clear previous errors
 
         try {
-            await login(data.email, data.password);
+            // Use data.username from LoginFormData, which is now { username: string, password: string }
+            await login(data.username, data.password);
             // Navigation to dashboard or intended page will be handled by AuthProvider via useEffect on user state change
-            // For example, navigate('/');
         } catch (error: any) {
             const apiErrors = extractFieldErrors(error);
             let errorMessage = "Falha no login. Verifique suas credenciais.";
 
             if (Object.keys(apiErrors).length > 0) {
                 Object.entries(apiErrors).forEach(([field, message]) => {
-                    if (field === 'email' || field === 'password' || field === 'non_field_errors' || field === 'detail') {
-                        // Set error for specific fields or a general form error
+                    // Check against 'username' now instead of 'email' for field-specific errors
+                    if (field === 'username' || field === 'password' || field === 'non_field_errors' || field === 'detail') {
                         form.setError(field === 'non_field_errors' || field === 'detail' ? 'root.serverError' : field as keyof LoginFormData, {
                             type: 'server',
-                            message: message,
+                            message: message as string,
                         });
                     }
                 });
                 if (apiErrors.non_field_errors) errorMessage = apiErrors.non_field_errors;
                 else if (apiErrors.detail) errorMessage = apiErrors.detail;
-                else if (apiErrors.email) errorMessage = apiErrors.email;
+                else if (apiErrors.username) errorMessage = apiErrors.username; // Check for username error
                 else if (apiErrors.password) errorMessage = apiErrors.password;
 
             } else if (error.message) {
                 errorMessage = error.message;
             }
 
-            if (!form.formState.isValid && (form.formState.errors.email || form.formState.errors.password)){
-                // Zod errors will be shown by FormMessage, no need for extra notification unless it's a server error
+            // Check form.formState.errors for 'username' instead of 'email'
+            if (!form.formState.isValid && (form.formState.errors.username || form.formState.errors.password)){
+                // Zod errors will be shown by FormMessage
             } else {
                  notification(errorMessage, 'error');
             }
@@ -83,12 +84,12 @@ const LoginPage: React.FC = () => {
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                             <ShadcnFormField
                                 control={form.control}
-                                name="email"
+                                name="username" // Changed from email to username
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Email</FormLabel>
+                                        <FormLabel>Usuário</FormLabel> {/* Changed label */}
                                         <FormControl>
-                                            <Input type="text" placeholder="seu@email.com" {...field} />
+                                            <Input type="text" placeholder="Seu nome de usuário" {...field} /> {/* Changed type and placeholder */}
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
