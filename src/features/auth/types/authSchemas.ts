@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // Schema for Login
 export const loginSchema = z.object({
-  username: z.string().min(1, { message: "Usuário é obrigatório." }), // Changed from email to username
+  email: z.string().email({ message: "Email inválido." }).min(1, { message: "Email é obrigatório." }), // Reverted to email
   password: z.string().min(1, { message: "Senha é obrigatória." }),
 });
 export type LoginFormData = z.infer<typeof loginSchema>;
