@@ -88,7 +88,7 @@ const LoginPage: React.FC = () => {
                                     <FormItem>
                                         <FormLabel>Email</FormLabel>
                                         <FormControl>
-                                            <Input type="email" placeholder="seu@email.com" {...field} />
+                                            <Input type="text" placeholder="seu@email.com" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
